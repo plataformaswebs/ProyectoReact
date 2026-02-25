@@ -4,3 +4,21 @@
     width: 100vw !important;
     position: fixed !important;
 }
+
+.pwbot-pulse {
+    animation: pwbotPulse 2s infinite;
+}
+
+@keyframes pwbotPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6);
+    }
+
+    70% {
+        box-shadow: 0 0 0 15px rgba(37, 211, 102, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+    }
+}

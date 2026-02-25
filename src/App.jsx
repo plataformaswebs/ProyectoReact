@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
-import { CssBaseline, Box, IconButton, useMediaQuery, Snackbar, Alert } from "@mui/material";
+import { CssBaseline, Box, IconButton, useMediaQuery, Snackbar, Alert, Dialog } from "@mui/material";
+import Slide from "@mui/material/Slide";
 import theme from "./theme";
 import { ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
@@ -11,8 +12,7 @@ const Evidencias2 = lazy(() => import("./components/Evidencias2"));
 const Footer = lazy(() => import("./components/Footer"));
 const Navbar = lazy(() => import("./components/Navbar"));
 const MusicaApp = lazy(() => import("./components/MusicaApp"));
-
-import { WhatsApp as WhatsAppIcon, ArrowUpward as ArrowUpwardIcon } from "@mui/icons-material";
+import { ArrowUpward as ArrowUpwardIcon } from "@mui/icons-material";
 import { useLocation, Outlet } from "react-router-dom";
 import Cargando from './components/Cargando';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -20,6 +20,7 @@ import "./components/css/App.css";
 import { initGoogleAnalytics, trackPageView } from "./helpers/HelperAnalytics.js"; //GOOGLE ANALYTICS
 import DialogTrabajoEnRevision from "./components/DialogTrabajoEnRevision";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import Chat from "./components/PWBot/Chat";
 
 function App() {
   const [showContacto, setShowContacto] = useState(false);
@@ -40,6 +41,7 @@ function App() {
   const navigate = useNavigate();
   const [openRevision, setOpenRevision] = useState(false);
   const [revisionId, setRevisionId] = useState(null);
+  const [openChat, setOpenChat] = useState(false);
 
   //EFECTO CAMBIAR DE RUTA
   useEffect(() => {
@@ -323,33 +325,70 @@ function App() {
         {/* Botón WhatsApp */}
         {location.pathname !== "/administracion" && location.pathname !== "/dashboard" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/configurar-en-revision" && location.pathname !== "/clientes" && location.pathname !== "/reservas" && (
           <Box sx={{ position: "fixed", bottom: "75px", right: "15px", zIndex: 100, transition: "bottom 0.3s ease", }}>
-            <IconButton onClick={() => { window.open("https://api.whatsapp.com/send?phone=56946873014", "_blank"); }} sx={{
-              width: 60, height: 60, backgroundColor: "#25d366", color: "#FFF", borderRadius: "50%", boxShadow: "2px 2px 3px #999", "&:hover": { backgroundColor: "#1ebe5d" }, zIndex: 101
-            }}>
-              <WhatsAppIcon sx={{ fontSize: 30 }} />
+            <IconButton
+              className="pwbot-pulse"
+              onClick={() => setOpenChat(true)}
+              sx={{
+                width: 65,
+                height: 65,
+                borderRadius: "50%",
+                background: "linear-gradient(145deg, #25D366, #1ebe5d)",
+                border: "4px solid #ffffff",
+                position: "fixed",
+                bottom: 70,
+                right: 15,
+                cursor: "pointer",
+                zIndex: 101,
+                transform: openChat ? "scale(0.75)" : "scale(1)",
+                opacity: openChat ? 0 : 1,
+                pointerEvents: openChat ? "none" : "auto",
+                transition: "transform 0.2s ease, opacity 0.2s ease",
+                "&:active": {
+                  transform: "scale(0.9)",
+                }
+              }}
+            >
+              <Box
+                component="img"
+                src="/PWBot.png"
+                alt="PWBot"
+                sx={{
+                  width: 50,
+                  height: 50,
+                  objectFit: "contain",
+                  zIndex: 2,
+                  position: "relative",
+                }}
+              />
             </IconButton>
-
             {/* Burbuja de mensaje */}
             {openBubble && (
               <Box
+                onClick={() => setOpenChat(true)}
                 sx={{
                   position: "fixed",
-                  bottom: 140,
+                  bottom: 150,
                   right: 20,
-                  backgroundColor: "#fff",
-                  color: "#000",
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                  borderRadius: "20px",
-                  padding: "8px 16px",
+                  background: "linear-gradient(145deg, #ffffff, #f3f3f3)",
+                  color: "#061F35",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+                  borderRadius: "25px",
+                  padding: "10px 18px",
                   fontFamily: "Poppins, sans-serif",
+                  fontWeight: 500,
+                  fontSize: "0.9rem",
                   zIndex: 102,
+                  cursor: "pointer",
                   opacity: openBubble ? 1 : 0,
                   transform: openBubble ? "translateX(0)" : "translateX(100%)",
-                  transition: "transform 0.5s ease, opacity 0.5s ease",
+                  transition: "all 0.4s ease",
+                  "&:hover": {
+                    transform: "translateX(0) scale(1.05)",
+                    boxShadow: "0 10px 25px rgba(18, 194, 162, 0.4)",
+                  },
                 }}
-                onClick={() => setOpenBubble(false)}
               >
-                En linea 24/7
+                Hablemos de tu proyecto 🤖
               </Box>
             )}
           </Box>
@@ -385,6 +424,48 @@ function App() {
         onClose={handleCloseRevision}
         revisionId={revisionId}
       />
+      <AnimatePresence>
+        {openChat && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              style={{
+                position: "fixed",
+                inset: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.85)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                zIndex: 1500,
+              }}
+              onClick={() => setOpenChat(false)}
+            />
+
+            {/* Chat */}
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              style={{
+                position: "fixed",
+                bottom: isMobile
+                  ? "calc(env(safe-area-inset-bottom) + 40px)"
+                  : 75,
+                right: isMobile ? "5%" : 20,
+                width: isMobile ? "90%" : "600px",
+                height: isMobile ? "85vh" : "600px",
+                zIndex: 2000,
+              }}
+            >
+              <Chat onClose={() => setOpenChat(false)} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </ThemeProvider >
   );
 }

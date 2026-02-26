@@ -436,7 +436,7 @@ function App() {
               style={{
                 position: "fixed",
                 inset: 0,
-                backgroundColor: "rgba(0, 0, 0, 0.85)",
+                backgroundColor: "rgba(0, 0, 0, 0.88)",
                 backdropFilter: "blur(6px)",
                 WebkitBackdropFilter: "blur(6px)",
                 zIndex: 1500,
@@ -452,9 +452,7 @@ function App() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               style={{
                 position: "fixed",
-                bottom: isMobile
-                  ? "calc(env(safe-area-inset-bottom) + 40px)"
-                  : 75,
+                bottom: 0,
                 right: isMobile ? "5%" : 20,
                 width: isMobile ? "90%" : "600px",
                 height: isMobile ? "85vh" : "600px",

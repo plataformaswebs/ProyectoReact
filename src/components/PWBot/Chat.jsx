@@ -169,9 +169,11 @@ export default function Chat({ onClose }) {
         window.addEventListener("closeChat", handleClose);
         return () => window.removeEventListener("closeChat", handleClose);
     }, []);
+
     useEffect(() => {
         setSpin(true);
     }, []);
+
     return (
         <Box
             sx={{

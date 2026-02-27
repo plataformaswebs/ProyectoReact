@@ -1,20 +1,14 @@
 const axios = require("axios");
 const AWS = require("aws-sdk");
 
-// 🧩 Inicializa S3 (usa MY_* o AWS_*)
+// 🧩 Inicializa S3
 const s3 = new AWS.S3({
-    region: process.env.MY_AWS_REGION || "us-east-2",  // Usa la región us-east-2
-    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,    // Usa MY_AWS_ACCESS_KEY_ID
-    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,  // Usa MY_AWS_SECRET_ACCESS_KEY
+    region: process.env.MY_AWS_REGION || "us-east-2",
+    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,
 });
 
 exports.handler = async (event) => {
-    console.log("🛰️ [suscribirse] Nueva solicitud:", {
-        method: event.httpMethod,
-        origin: event.headers.origin,
-        host: event.headers.host,
-    });
-
     // 🌍 CORS
     const allowedOrigins = [
         "http://localhost:5174",
@@ -30,34 +24,98 @@ exports.handler = async (event) => {
         "Access-Control-Allow-Headers": "Content-Type",
         "Access-Control-Allow-Credentials": "true",
     };
-
-    if (event.httpMethod === "OPTIONS") {
-        console.log("🟡 [suscribirse] Preflight OPTIONS");
-        return { statusCode: 200, headers: corsHeaders, body: "" };
-    }
+    if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers: corsHeaders, body: "" };
 
     try {
-        console.log("🟢 [suscribirse] Body recibido:", event.body);
-        const { nombre, email, sitioWeb, idCliente } = JSON.parse(event.body || "{}");
+        const { nombre, email, sitioWeb, idCliente, clienteInternacional } = JSON.parse(event.body || "{}");
 
         if (!nombre || !email || !idCliente) {
             throw new Error("Faltan parámetros requeridos (nombre, email, idCliente)");
         }
 
-        // 🔑 ¿Tenemos llaves de producción?
+        const esInternacional =
+            (clienteInternacional === true ||
+                clienteInternacional === 1 ||
+                clienteInternacional === "1" ||
+                String(clienteInternacional).toLowerCase() === "true");
+
+        const isLocal = origin.startsWith("http://localhost");
+        const hasPaypalCreds = process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_SECRET;
+
+        if (esInternacional) {
+            console.log(`🌎 Cliente internacional detectado → flujo PayPal (${isLocal ? "modo integración" : "producción"})`);
+
+            if (isLocal || !hasPaypalCreds) {
+                // 🛠 Modo integración/desarrollo: link dummy
+                const dummyLink = "https://www.paypal.com/dummy-link-para-dev";
+                console.log("💡 [suscribirse] Modo integración PayPal → link dummy:", dummyLink);
+
+                return {
+                    statusCode: 200,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        tipo: "paypal",
+                        clienteInternacional: 1,
+                        approvalUrl: dummyLink,
+                    }),
+                };
+            }
+
+            // ✅ Modo producción: flujo real de PayPal
+            try {
+                const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`).toString("base64");
+                const tokenResponse = await axios.post(
+                    "https://api-m.paypal.com/v1/oauth2/token",
+                    "grant_type=client_credentials",
+                    { headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" } }
+                );
+
+                const accessToken = tokenResponse.data.access_token;
+                if (!accessToken) throw new Error("No se obtuvo access token de PayPal");
+
+                const subscriptionResponse = await axios.post(
+                    "https://api-m.paypal.com/v1/billing/subscriptions",
+                    {
+                        plan_id: process.env.PAYPAL_PLAN_ID,
+                        subscriber: { name: { given_name: nombre }, email_address: email },
+                        application_context: {
+                            brand_name: "Plataformas Web",
+                            locale: "es-CL",
+                            user_action: "SUBSCRIBE_NOW",
+                            return_url: "https://plataformas-web.cl/paypal-exito",
+                            cancel_url: "https://plataformas-web.cl/paypal-cancelado",
+                        },
+                    },
+                    { headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" } }
+                );
+
+                const approvalLink = subscriptionResponse.data.links?.find(l => l.rel === "approve")?.href;
+                if (!approvalLink) throw new Error("No se pudo obtener el link de aprobación de PayPal");
+
+                return {
+                    statusCode: 200,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        tipo: "paypal",
+                        clienteInternacional: 1,
+                        approvalUrl: approvalLink,
+                    }),
+                };
+            } catch (paypalErr) {
+                console.error("❌ Error flujo PayPal producción:", paypalErr.response?.data || paypalErr.message || paypalErr);
+                throw new Error("Error en el flujo PayPal, revisar logs del backend");
+            }
+        }
+
+        // 🔑 Flujo WebPay
         const hasProdKeys =
             process.env.TBK_OCM_API_KEY_ID?.startsWith("5970") &&
             process.env.TBK_OCM_API_KEY_SECRET?.length > 10;
 
         const environment = hasProdKeys ? "PRODUCCION" : "INTEGRACION";
-
-        // 🧠 Detectar si usuario inició desde localhost
         const originHeader = event.headers.origin || "";
         const cameFromLocal = originHeader.startsWith("http://localhost");
 
-        console.log("📍 Origen del usuario:", cameFromLocal ? "LOCALHOST" : "PRODUCCIÓN");
-
-        // 🌐 Endpoint inscripción
         const inscriptionUrl = hasProdKeys
             ? "https://webpay3g.transbank.cl/rswebpaytransaction/api/oneclick/v1.0/inscriptions"
             : "https://webpay3gint.transbank.cl/rswebpaytransaction/api/oneclick/v1.0/inscriptions";
@@ -74,69 +132,47 @@ exports.handler = async (event) => {
                 "Content-Type": "application/json",
             };
 
-        // 🔁 URL donde TBK devolverá tras la inscripción
         const returnBase = cameFromLocal ? "http://localhost:8888" : "https://plataformas-web.cl";
         const returnUrl = `${returnBase}/.netlify/functions/confirmarSuscripcion`;
 
-        console.log("⚙️ [suscribirse] Registrando inscripción OneClick...", {
-            inscriptionUrl,
-            returnUrl,
-            environment,
-            hasProdKeys,
-            cameFromLocal,
-        });
-
-        // 🧾 Solicitud a Transbank
         const response = await axios.post(
             inscriptionUrl,
             { username: email, email, response_url: returnUrl },
             { headers }
         );
 
-        console.log("✅ [suscribirse] Respuesta Transbank:", response.data);
-
         const token = response.data.token;
         const url_webpay = response.data.url_webpay || response.data.url;
 
         if (!token || !url_webpay) throw new Error("Respuesta incompleta desde Transbank");
 
-        // 💾 Guardar token en S3
+        // 💾 Guardar token en S3 (opcional)
         const hasCredentials =
             (process.env.AWS_ACCESS_KEY_ID || process.env.MY_AWS_ACCESS_KEY_ID) &&
             (process.env.AWS_SECRET_ACCESS_KEY || process.env.MY_AWS_SECRET_ACCESS_KEY);
 
         if (hasCredentials) {
             try {
-                const bucketName = "plataformas-web-buckets";
-                const key = `tokens/${token}.json`;  // Verifica que esta clave sea correcta
-
-                const data = {
-                    idCliente,
-                    nombre,
-                    email,
-                    sitioWeb,
-                    entorno: environment,
-                    cameFromLocal, // 👈 agregado
-                    creado: new Date().toISOString(),
-                };
-
                 await s3.putObject({
-                    Bucket: bucketName,
-                    Key: key,
-                    Body: JSON.stringify(data),
+                    Bucket: "plataformas-web-buckets",
+                    Key: `tokens/${token}.json`,
+                    Body: JSON.stringify({ idCliente, nombre, email, sitioWeb, entorno: environment, cameFromLocal, creado: new Date().toISOString() }),
                     ContentType: "application/json",
                 }).promise();
-
-                console.log(`💾 [suscribirse] Token guardado en S3: ${key}`);
             } catch (s3Err) {
-                console.warn("⚠️ [suscribirse] No se pudo guardar en S3:", s3Err.message);
+                console.warn("⚠️ No se pudo guardar en S3:", s3Err.message);
             }
         }
 
         return {
             statusCode: 200,
             headers: corsHeaders,
-            body: JSON.stringify({ token, url_webpay }),
+            body: JSON.stringify({
+                tipo: "webpay",
+                clienteInternacional: 0,
+                token,
+                url: url_webpay
+            }),
         };
 
     } catch (err) {
@@ -144,9 +180,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers: corsHeaders,
-            body: JSON.stringify({
-                error_message: err.response?.data?.error_message || err.message,
-            }),
+            body: JSON.stringify({ error_message: err.response?.data?.error_message || err.message }),
         };
     }
 };

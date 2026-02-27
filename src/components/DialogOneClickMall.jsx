@@ -60,9 +60,10 @@ export default function DialogOneClickMall({
 
 
 
-  // 🔍 Validar sitio web y buscar en Excel
+  // 🔍 Validar sitio web y buscar en Excel (LOCK REAL)
   const handleValidateWebsite = async () => {
     if (sitioWeb.trim()) setTouched(true);
+
     setError("");
     setSitioValido(false);
     setCliente(null);
@@ -79,46 +80,63 @@ export default function DialogOneClickMall({
     }
 
     setLoadingCheck(true);
-    try {
-      const url = sitioWeb.startsWith("http") ? sitioWeb : `https://${sitioWeb}`;
-      await fetch(url, { method: "HEAD", mode: "no-cors" });
-      setSitioValido(true);
 
-      // 🔸 Normaliza dominio
-      const dominio = sitioWeb
+    try {
+      const dominioIngresado = sitioWeb
         .replace(/^https?:\/\//, "")
+        .replace(/^www\./, "")
         .replace(/\/$/, "")
         .toLowerCase()
         .trim();
 
-      // 🧾 Cargar clientes desde el Excel
       const listaClientes = await cargarClientesDesdeExcel();
 
-      // 🔍 Buscar coincidencia por dominio o contiene
       const encontrado = listaClientes.find((c) => {
-        const sitio = c.sitioWeb?.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
-        return sitio === dominio || dominio.includes(sitio) || sitio.includes(dominio);
+        if (!c.sitioWeb) return false;
+
+        const dominioCliente = c.sitioWeb
+          .replace(/^https?:\/\//, "")
+          .replace(/^www\./, "")
+          .replace(/\/$/, "")
+          .toLowerCase()
+          .trim();
+
+        return (
+          dominioCliente === dominioIngresado ||
+          dominioIngresado.endsWith("." + dominioCliente) ||
+          dominioCliente.endsWith("." + dominioIngresado)
+        );
       });
 
-      if (encontrado) {
-        setCliente({
-          nombre: encontrado.cliente,
-          correo: encontrado.correo,
-          idCliente: encontrado.idCliente,
-          logoCliente: encontrado.logoCliente
-        });
-      } else {
+      if (!encontrado) {
+        console.warn("⛔ Cliente NO encontrado para dominio:", dominioIngresado);
         setError("No se encontró el Cliente en la base de datos.");
-        setCliente(null);
+        return;
       }
+
+      const clienteInternacionalSeguro = encontrado.clienteInternacional ?? 0;
+
+      console.log(
+        `🔒 VALIDACIÓN EXITOSA → ID: ${encontrado.idCliente} | Cliente: ${encontrado.cliente} | Internacional: ${clienteInternacionalSeguro}`
+      );
+
+      setCliente({
+        nombre: encontrado.cliente,
+        correo: encontrado.correo,
+        idCliente: encontrado.idCliente,
+        logoCliente: encontrado.logoCliente,
+        clienteInternacional: clienteInternacionalSeguro,
+      });
+
+      setSitioValido(true);
+
     } catch (err) {
-      console.error("Error verificando sitio:", err);
-      setError("No se pudo verificar el sitio web, Contactar Soporte.");
+      console.error("❌ Error validando cliente:", err);
+      setError("Error interno validando cliente. Contactar soporte.");
     } finally {
       setLoadingCheck(false);
     }
   };
-
   // 🔸 Confirmar suscripción
   const handleConfirm = async () => {
     if (!sitioValido || !cliente) {
@@ -349,7 +367,6 @@ export default function DialogOneClickMall({
                   (Ejemplo: plataformas-web.cl)
                 </Box>
               </Typography>
-
 
               {/* Sitio Web */}
               <TextField
@@ -777,9 +794,6 @@ export default function DialogOneClickMall({
           )}
         </Button>
       </DialogActions>
-
-
-
     </Dialog >
   );
 }

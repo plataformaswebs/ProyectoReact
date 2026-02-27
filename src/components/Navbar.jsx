@@ -167,29 +167,26 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
   }, [mostrarAnimacion]);
 
 
-  // 🚀 Inscripción OneClick Mall
-  const handleSuscribirse = async (nombre, email, sitioWeb, idCliente) => {
+  // 🚀 Inscripción OneClick Mall + PayPal
+  const handleSuscribirse = async (nombre, email, sitioWeb, idCliente, cliente) => {
     try {
       const isLocal = window.location.hostname === "localhost";
       const endpoint = isLocal
         ? "http://localhost:8888/.netlify/functions/suscribirse"
         : "/.netlify/functions/suscribirse";
 
-      console.log("🛰️ Datos enviados al backend:", {
-        nombre,
-        email,
-        sitioWeb,
-        idCliente,
-        ambiente: isLocal ? "INTEGRACIÓN" : "PRODUCCIÓN",
-      });
-
       const resp = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email, sitioWeb, idCliente }),
+        body: JSON.stringify({
+          nombre,
+          email,
+          sitioWeb,
+          idCliente,
+          clienteInternacional: cliente?.clienteInternacional ?? 0,
+        }),
       });
 
-      // ⚠️ Si Transbank o Netlify devuelven error
       if (!resp.ok) {
         const errorText = await resp.text();
         console.error("❌ Error HTTP suscribirse:", errorText);
@@ -198,16 +195,18 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
       }
 
       const data = await resp.json();
-      console.log("🔵 Respuesta suscribirse OneClick:", data);
+      console.log("🔵 Respuesta suscribirse:", data);
 
-      // ✅ Si Transbank devolvió token + url válidos
-      if (data.url_webpay && data.token) {
-        console.log(`🚀 Redirigiendo a Transbank...`);
+      // ===============================
+      // 🇨🇱 FLUJO TRANSBANK (NO SE TOCA)
+      // ===============================
+      if (data.tipo === "webpay" && data.url && data.token) {
+        console.log("🚀 Redirigiendo a Transbank...");
         console.log(`🔑 Token: ${data.token}`);
 
         const form = document.createElement("form");
         form.method = "POST";
-        form.action = data.url_webpay;
+        form.action = data.url;
 
         const input = document.createElement("input");
         input.type = "hidden";
@@ -217,16 +216,28 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
 
         document.body.appendChild(form);
         form.submit();
-      } else {
-        console.error("⚠️ Respuesta inválida:", data);
-        alert("No se pudo iniciar la inscripción. Revisa la consola.");
+        return;
       }
+
+      // ===============================
+      // 🌎 FLUJO PAYPAL (NUEVO)
+      // ===============================
+      if (data.tipo === "paypal" && data.approvalUrl) {
+        console.log("🌎 Redirigiendo a PayPal...");
+        window.location.href = data.approvalUrl;
+        return;
+      }
+
+      // ===============================
+      // ⚠️ RESPUESTA INVÁLIDA
+      // ===============================
+      console.error("⚠️ Respuesta inválida:", data);
+      alert("No se pudo iniciar la inscripción. Revisa la consola.");
     } catch (err) {
       console.error("❌ Error en handleSuscribirse:", err);
       alert("Error al iniciar la suscripción. Ver consola para más detalles.");
     }
   };
-
   // 🟢 Abre el diálogo para suscribirse
   const handleOpenOneClick = (nombre, correo, idCliente) => {
     setPendingUser({ nombre, correo, idCliente });

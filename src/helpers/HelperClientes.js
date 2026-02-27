@@ -39,7 +39,10 @@ export const cargarClientesDesdeExcel = async () => {
         fechaPago: row.fechapago || "",
         estado: row.estado === 1 || row.estado === "1",
         logoCliente: row.logocliente?.trim() || "",
-
+        clienteInternacional:
+          row.clienteinternacional === 1 || row.clienteinternacional === "1" || String(row.clienteinternacional).trim().toLowerCase() === "true"
+            ? 1
+            : 0,
         // 🧾 Datos de suscripción
         suscripcion:
           row.suscripcion === 1 ||

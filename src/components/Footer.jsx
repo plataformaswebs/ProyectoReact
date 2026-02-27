@@ -117,7 +117,7 @@ const Footer = () => {
 
               <Typography sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <img src="location-icon.png" alt="Ubicación" width={16} />
-                Juan Martinez de Rozas #3800, Santiago.
+                Patricio Canto #6978, Santiago.
               </Typography>
             </Box>
 

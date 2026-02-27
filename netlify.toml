@@ -6,6 +6,8 @@
   command = "npm run dev"
   targetPort = 5174
   port = 8888
+  publish = "dist"
+  framework = "vite"
 
 [[headers]]
   for = "/.netlify/functions/*"

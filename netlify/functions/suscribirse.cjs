@@ -17,7 +17,7 @@ exports.handler = async (event) => {
 
     // 🌍 CORS
     const allowedOrigins = [
-        "http://localhost:5173",
+        "http://localhost:5174",
         "http://localhost:8888",
         "https://plataformas-web.cl",
         "https://www.plataformas-web.cl"

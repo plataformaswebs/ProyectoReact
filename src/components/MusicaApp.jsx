@@ -134,11 +134,11 @@ export default function MusicaApp({
     return () => window.removeEventListener("bgm:unlockAudio", onUnlock);
   }, []);
 
-  const iconSize = Math.max(14, Math.round(btnSize * 0.5));
+  const iconSize = Math.max(12, Math.round(btnSize * 0.5));
   const btnStyle = {
     position: "fixed",
-    right: 20,
-    bottom: 22,
+    left: 15,      // 👈 ahora en la izquierda
+    bottom: 15,    // 👈 misma altura que el chat
     zIndex: 1099,
     width: btnSize,
     height: btnSize,

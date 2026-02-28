@@ -57,7 +57,7 @@ const InformationsPromotions = ({
           buyOrder: "RSW-" + Date.now().toString().slice(-10),
           sessionId: "SES-" + Date.now(),
           returnUrl: isLocal
-            ? "http://localhost:5175/reserva"
+            ? "http://localhost:5173/reserva"
             : "https://plataformas-web.cl/reserva",
           email, // 👈 correo capturado
         }),

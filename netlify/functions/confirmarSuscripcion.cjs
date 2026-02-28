@@ -140,7 +140,7 @@ exports.handler = async (event) => {
         // ----------------------------------------------------------
         const cameFromLocal = existingData?.cameFromLocal === true;
         const redirectBase = cameFromLocal
-            ? "http://localhost:5175"
+            ? "http://localhost:5173"
             : "https://plataformas-web.cl";
 
         console.log("🔀 Redirigiendo a:", redirectBase);
@@ -157,7 +157,7 @@ exports.handler = async (event) => {
 
         const cameFromLocal = existingData?.cameFromLocal === true;
         const redirectBase = cameFromLocal
-            ? "http://localhost:5175"
+            ? "http://localhost:5173"
             : "https://plataformas-web.cl";
 
         const redirectError = `${redirectBase}/suscripcion?status=error&msg=${encodeURIComponent(

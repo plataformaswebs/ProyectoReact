@@ -223,7 +223,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       {location.pathname !== "/administracion" && location.pathname !== "/dashboard" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/configurar-en-revision" && location.pathname !== "/clientes" && (
-        <MusicaApp src="/musica-app.mp3" volume={0.25} btnSize={40} />
+        <MusicaApp src="/musica-app.mp3" volume={0.25} btnSize={33} />
       )}
       {/* Pantalla de carga */}
       <AnimatePresence>
@@ -335,7 +335,7 @@ function App() {
                 background: "linear-gradient(145deg, #25D366, #1ebe5d)",
                 border: "4px solid #ffffff",
                 position: "fixed",
-                bottom: 70,
+                bottom: 10,
                 right: 15,
                 cursor: "pointer",
                 zIndex: 101,
@@ -367,7 +367,7 @@ function App() {
                 onClick={() => setOpenChat(true)}
                 sx={{
                   position: "fixed",
-                  bottom: 150,
+                  bottom: 83,
                   right: 20,
                   background: "linear-gradient(145deg, #ffffff, #f3f3f3)",
                   color: "#061F35",
@@ -377,7 +377,7 @@ function App() {
                   fontFamily: "Poppins, sans-serif",
                   fontWeight: 500,
                   fontSize: "0.9rem",
-                  zIndex: 102,
+                  zIndex: 100,
                   cursor: "pointer",
                   opacity: openBubble ? 1 : 0,
                   transform: openBubble ? "translateX(0)" : "translateX(100%)",
@@ -399,7 +399,7 @@ function App() {
           <IconButton onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             sx={{
               position: "fixed",
-              bottom: "145px",
+              bottom: "85px",
               right: "15px",
               backgroundColor: "#fff",
               color: "#000",

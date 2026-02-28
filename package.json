@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5175",
+    "dev": "vite --port 5173",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -30,7 +30,6 @@
     "html-pdf": "^3.0.1",
     "html-pdf-node": "^1.0.8",
     "leaflet": "^1.9.4",
-    "netlify-cli": "^20.0.2",
     "particles-bg": "^2.5.5",
     "pdfkit": "^0.17.1",
     "puppeteer-core": "^10.4.0",
@@ -45,7 +44,7 @@
     "react-router-dom": "^7.5.0",
     "react-tsparticles": "^2.12.2",
     "recharts": "^2.15.2",
-    "swiper": "^11.2.6",
+    "swiper": "^12.1.2",
     "three": "^0.174.0",
     "transbank-sdk": "^6.1.0",
     "tsparticles": "^3.8.1",

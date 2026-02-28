@@ -82,7 +82,7 @@ DEV: netlify dev
 PRD: netlify deploy --prod
 
 
-Kill puerto: npx kill-port 5175
+Kill puerto: npx kill-port 5173
 
 REVISAR INSTALADO: npm install @google-analytics/data
 AUTORIZAR NETLIFY: netlify deploy --prod
@@ -92,6 +92,8 @@ API NETLIFY: npx netlify functions:serve getAnalyticsStats
 CORRER SERVICIOS: npx netlify dev
 
 //LIMPIAR TAREAS
+netstat -ano | findstr 5173
+taskkill //PID 25908 //F
  taskkill /F /IM node.exe
 
 227689800 (CONSULTAR OPCIONES DE PAGOS PARA EL CREDITO) TESORERIA NACIONAL DE LA REPUBLICA

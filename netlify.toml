@@ -4,10 +4,10 @@
 
 [dev]
   command = "npm run dev"
-  targetPort = 5175
+  targetPort = 5173
   port = 8888
   publish = "dist"
-  framework = "vite"
+  framework = "#static"
 
 [[headers]]
   for = "/.netlify/functions/*"

@@ -4,17 +4,17 @@ const AWS = require("aws-sdk");
 // 🧩 Inicializa S3
 const s3 = new AWS.S3({
     region: process.env.MY_AWS_REGION || "us-east-2",
-    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY,
 });
 
 exports.handler = async (event) => {
     // 🌍 CORS
     const allowedOrigins = [
-        "http://localhost:5174",
+        "http://localhost:5175",
         "http://localhost:8888",
         "https://plataformas-web.cl",
-        "https://www.plataformas-web.cl"
+        "https://www.plataformas-web.cl",
     ];
     const origin = event.headers.origin || "";
     const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
@@ -34,22 +34,28 @@ exports.handler = async (event) => {
         }
 
         const esInternacional =
-            (clienteInternacional === true ||
-                clienteInternacional === 1 ||
-                clienteInternacional === "1" ||
-                String(clienteInternacional).toLowerCase() === "true");
+            clienteInternacional === 1 ||
+            clienteInternacional === "1" ||
+            clienteInternacional === true ||
+            String(clienteInternacional).toLowerCase() === "true";
 
         const isLocal = origin.startsWith("http://localhost");
-        const hasPaypalCreds = process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_SECRET;
+
+        // 🔑 PayPal: selecciona sandbox o prod
+        const PAYPAL_CLIENT_ID = isLocal ? process.env.PAYPAL_CLIENT_ID_SANDBOX : process.env.PAYPAL_CLIENT_ID;
+        const PAYPAL_SECRET = isLocal ? process.env.PAYPAL_SECRET_SANDBOX : process.env.PAYPAL_SECRET;
+        const PAYPAL_PLAN_ID = isLocal ? process.env.PAYPAL_PLAN_ID_SANDBOX : process.env.PAYPAL_PLAN_ID;
+        const PAYPAL_API_URL = isLocal ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";
+
+        const hasCredentials =
+            (process.env.AWS_ACCESS_KEY_ID || process.env.MY_AWS_ACCESS_KEY_ID) &&
+            (process.env.AWS_SECRET_ACCESS_KEY || process.env.MY_AWS_SECRET_ACCESS_KEY);
 
         if (esInternacional) {
-            console.log(`🌎 Cliente internacional detectado → flujo PayPal (${isLocal ? "modo integración" : "producción"})`);
+            console.log(`🌎 Cliente internacional → flujo PayPal (${isLocal ? "sandbox" : "producción"})`);
 
-            if (isLocal || !hasPaypalCreds) {
-                // 🛠 Modo integración/desarrollo: link dummy
+            if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET || !PAYPAL_PLAN_ID) {
                 const dummyLink = "https://www.paypal.com/dummy-link-para-dev";
-                console.log("💡 [suscribirse] Modo integración PayPal → link dummy:", dummyLink);
-
                 return {
                     statusCode: 200,
                     headers: corsHeaders,
@@ -61,61 +67,82 @@ exports.handler = async (event) => {
                 };
             }
 
-            // ✅ Modo producción: flujo real de PayPal
-            try {
-                const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`).toString("base64");
-                const tokenResponse = await axios.post(
-                    "https://api-m.paypal.com/v1/oauth2/token",
-                    "grant_type=client_credentials",
-                    { headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" } }
-                );
+            // ⚡ Flujo real PayPal
+            const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString("base64");
+            const tokenResponse = await axios.post(
+                `${PAYPAL_API_URL}/v1/oauth2/token`,
+                "grant_type=client_credentials",
+                { headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" } }
+            );
 
-                const accessToken = tokenResponse.data.access_token;
-                if (!accessToken) throw new Error("No se obtuvo access token de PayPal");
+            const accessToken = tokenResponse.data.access_token;
+            if (!accessToken) throw new Error("No se obtuvo access token de PayPal");
 
-                const subscriptionResponse = await axios.post(
-                    "https://api-m.paypal.com/v1/billing/subscriptions",
-                    {
-                        plan_id: process.env.PAYPAL_PLAN_ID,
-                        subscriber: { name: { given_name: nombre }, email_address: email },
-                        application_context: {
-                            brand_name: "Plataformas Web",
-                            locale: "es-CL",
-                            user_action: "SUBSCRIBE_NOW",
-                            return_url: "https://plataformas-web.cl/paypal-exito",
-                            cancel_url: "https://plataformas-web.cl/paypal-cancelado",
-                        },
+            const subscriptionResponse = await axios.post(
+                `${PAYPAL_API_URL}/v1/billing/subscriptions`,
+                {
+                    plan_id: PAYPAL_PLAN_ID,
+                    subscriber: { name: { given_name: nombre }, email_address: email },
+                    application_context: {
+                        brand_name: "Plataformas Web",
+                        locale: "es-CL",
+                        user_action: "SUBSCRIBE_NOW",
+                        return_url: "https://plataformas-web.cl/paypal-exito",
+                        cancel_url: "https://plataformas-web.cl/paypal-cancelado",
                     },
-                    { headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" } }
-                );
+                },
+                { headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" } }
+            );
 
-                const approvalLink = subscriptionResponse.data.links?.find(l => l.rel === "approve")?.href;
-                if (!approvalLink) throw new Error("No se pudo obtener el link de aprobación de PayPal");
+            const approvalLink = subscriptionResponse.data.links?.find(l => l.rel === "approve")?.href;
+            if (!approvalLink) throw new Error("No se pudo obtener el link de aprobación de PayPal");
 
-                return {
-                    statusCode: 200,
-                    headers: corsHeaders,
-                    body: JSON.stringify({
-                        tipo: "paypal",
-                        clienteInternacional: 1,
-                        approvalUrl: approvalLink,
-                    }),
-                };
-            } catch (paypalErr) {
-                console.error("❌ Error flujo PayPal producción:", paypalErr.response?.data || paypalErr.message || paypalErr);
-                throw new Error("Error en el flujo PayPal, revisar logs del backend");
+            // 💾 Guardar suscripción PayPal en S3
+            if (hasCredentials) {
+                try {
+                    const subscriptionId = subscriptionResponse.data.id;
+                    await s3.putObject({
+                        Bucket: "plataformas-web-buckets",
+                        Key: `paypal_subscriptions/${subscriptionId}.json`,
+                        Body: JSON.stringify({
+                            idCliente,
+                            nombre,
+                            email,
+                            sitioWeb,
+                            entorno: isLocal ? "SANDBOX" : "PRODUCCION",
+                            planId: PAYPAL_PLAN_ID,
+                            subscriptionId,
+                            approvalUrl: approvalLink,
+                            creado: new Date().toISOString(),
+                        }),
+                        ContentType: "application/json",
+                    }).promise();
+                    console.log(`✅ Suscripción PayPal guardada en S3: ${subscriptionResponse.data.id}`);
+                } catch (s3Err) {
+                    console.warn("⚠️ No se pudo guardar la suscripción PayPal en S3:", s3Err.message);
+                }
             }
+
+            return {
+                statusCode: 200,
+                headers: corsHeaders,
+                body: JSON.stringify({
+                    tipo: "paypal",
+                    clienteInternacional: 1,
+                    approvalUrl: approvalLink,
+                }),
+            };
         }
 
-        // 🔑 Flujo WebPay
+        // ===============================
+        // 🇨🇱 FLUJO TRANSBANK
+        // ===============================
         const hasProdKeys =
             process.env.TBK_OCM_API_KEY_ID?.startsWith("5970") &&
             process.env.TBK_OCM_API_KEY_SECRET?.length > 10;
 
         const environment = hasProdKeys ? "PRODUCCION" : "INTEGRACION";
-        const originHeader = event.headers.origin || "";
-        const cameFromLocal = originHeader.startsWith("http://localhost");
-
+        const cameFromLocal = origin.startsWith("http://localhost");
         const inscriptionUrl = hasProdKeys
             ? "https://webpay3g.transbank.cl/rswebpaytransaction/api/oneclick/v1.0/inscriptions"
             : "https://webpay3gint.transbank.cl/rswebpaytransaction/api/oneclick/v1.0/inscriptions";
@@ -143,14 +170,9 @@ exports.handler = async (event) => {
 
         const token = response.data.token;
         const url_webpay = response.data.url_webpay || response.data.url;
-
         if (!token || !url_webpay) throw new Error("Respuesta incompleta desde Transbank");
 
-        // 💾 Guardar token en S3 (opcional)
-        const hasCredentials =
-            (process.env.AWS_ACCESS_KEY_ID || process.env.MY_AWS_ACCESS_KEY_ID) &&
-            (process.env.AWS_SECRET_ACCESS_KEY || process.env.MY_AWS_SECRET_ACCESS_KEY);
-
+        // 💾 Guardar token Webpay en S3
         if (hasCredentials) {
             try {
                 await s3.putObject({
@@ -171,10 +193,9 @@ exports.handler = async (event) => {
                 tipo: "webpay",
                 clienteInternacional: 0,
                 token,
-                url: url_webpay
+                url: url_webpay,
             }),
         };
-
     } catch (err) {
         console.error("❌ [suscribirse] Error:", err.response?.data || err.message || err);
         return {

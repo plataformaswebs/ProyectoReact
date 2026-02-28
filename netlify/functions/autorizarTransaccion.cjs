@@ -4,7 +4,7 @@ exports.handler = async (event) => {
     console.log("🚀 [autorizarTransaccion] Nueva solicitud de cobro");
 
     // 🌍 CORS
-    const allowedOrigins = ["http://localhost:5174", "http://localhost:8888", "https://plataformas-web.cl"];
+    const allowedOrigins = ["http://localhost:5175", "http://localhost:8888", "https://plataformas-web.cl"];
     const origin = event.headers.origin || "";
     const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
 

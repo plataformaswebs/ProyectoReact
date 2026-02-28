@@ -82,7 +82,7 @@ DEV: netlify dev
 PRD: netlify deploy --prod
 
 
-Kill puerto: npx kill-port 5174
+Kill puerto: npx kill-port 5175
 
 REVISAR INSTALADO: npm install @google-analytics/data
 AUTORIZAR NETLIFY: netlify deploy --prod
@@ -91,6 +91,55 @@ API NETLIFY: npx netlify functions:serve getAnalyticsStats
 
 CORRER SERVICIOS: npx netlify dev
 
-
+//LIMPIAR TAREAS
+ taskkill /F /IM node.exe
 
 227689800 (CONSULTAR OPCIONES DE PAGOS PARA EL CREDITO) TESORERIA NACIONAL DE LA REPUBLICA
+
+
+*** PAY PAL - PLAN ***
+curl -s -u "ASqGPrpMqekcTN4tWrMDuisHzi4wYjz8KjFdC48uFrdlnP4lA9yWRcIPTs909tMYjrtg-wFgf02w2Axy:EKDrID-iMqCHxQPlyxixeF-kHbQcrV4NZwvdLSInZ_M2Nxd6xw18bZ4CzBbD6ZgCeG9tWSgCGOYalzOA" \
+  https://api-m.paypal.com/v1/oauth2/token \
+  -d "grant_type=client_credentials"
+
+
+curl -v -X POST https://api-m.paypal.com/v1/billing/plans \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer A21AAM9Y42YvSxqy_PQSSbNPhkXFUxhnSsEz7RnR_hF1dSz_qzQYYUvusymP73Vkcmk6J9HcM59mKvA65rThwvvf9Y3XeaDdw" \
+  -d '{
+        "product_id": "PROD-57P335166G714234C",
+        "name": "Plan Mensual SPA",
+        "description": "Acceso completo a la plataforma SPA - pago mensual",
+        "billing_cycles": [
+          {
+            "frequency": {
+              "interval_unit": "MONTH",
+              "interval_count": 1
+            },
+            "tenure_type": "REGULAR",
+            "sequence": 1,
+            "total_cycles": 0,
+            "pricing_scheme": {
+              "fixed_price": {
+                "value": "300.00",
+                "currency_code": "USD"
+              }
+            }
+          }
+        ],
+        "payment_preferences": {
+          "auto_bill_outstanding": true,
+          "setup_fee": {
+            "value": "0",
+            "currency_code": "USD"
+          },
+          "setup_fee_failure_action": "CONTINUE",
+          "payment_failure_threshold": 3
+        }
+      }'
+
+CLIENT_ID: ASqGPrpMqekcTN4tWrMDuisHzi4wYjz8KjFdC48uFrdlnP4lA9yWRcIPTs909tMYjrtg
+SECRET_CLIENT: EKDrID-iMqCHxQPlyxixeF-kHbQcrV4NZwvdLSInZ_M2Nxd6xw18bZ4CzBbD6ZgCeG9tWSgCGOYalzOA
+ACCESS_KEY: A21AAM9Y42YvSxqy_PQSSbNPhkXFUxhnSsEz7RnR_hF1dSz_qzQYYUvusymP73Vkcmk6J9HcM59mKvA65rThwvvf9Y3XeaDdw
+Plan ID: P-5LC37433HN414072XNGREBOA
+Producto asociado: PROD-57P335166G714234C

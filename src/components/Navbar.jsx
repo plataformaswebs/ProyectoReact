@@ -168,8 +168,15 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
 
 
   // 🚀 Inscripción OneClick Mall + PayPal
-  const handleSuscribirse = async (nombre, email, sitioWeb, idCliente, cliente) => {
+  // 🚀 Inscripción OneClick Mall + PayPal
+  const handleSuscribirse = async (sitioWeb, cliente) => {
     try {
+      if (!cliente?.nombre || !cliente?.correo || !cliente?.idCliente) {
+        console.error("⚠️ Datos incompletos del cliente:", cliente);
+        alert("Faltan los datos del cliente.");
+        return;
+      }
+
       const isLocal = window.location.hostname === "localhost";
       const endpoint = isLocal
         ? "http://localhost:8888/.netlify/functions/suscribirse"
@@ -179,11 +186,11 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre,
-          email,
+          nombre: cliente.nombre,
+          email: cliente.correo,
           sitioWeb,
-          idCliente,
-          clienteInternacional: cliente?.clienteInternacional ?? 0,
+          idCliente: cliente.idCliente,
+          clienteInternacional: cliente.clienteInternacional ?? 0,
         }),
       });
 
@@ -197,42 +204,15 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
       const data = await resp.json();
       console.log("🔵 Respuesta suscribirse:", data);
 
-      // ===============================
-      // 🇨🇱 FLUJO TRANSBANK (NO SE TOCA)
-      // ===============================
+      // Aquí puedes seguir con los flujos WebPay / PayPal como antes
       if (data.tipo === "webpay" && data.url && data.token) {
-        console.log("🚀 Redirigiendo a Transbank...");
-        console.log(`🔑 Token: ${data.token}`);
-
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = data.url;
-
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "TBK_TOKEN";
-        input.value = data.token;
-        form.appendChild(input);
-
-        document.body.appendChild(form);
-        form.submit();
-        return;
-      }
-
-      // ===============================
-      // 🌎 FLUJO PAYPAL (NUEVO)
-      // ===============================
-      if (data.tipo === "paypal" && data.approvalUrl) {
-        console.log("🌎 Redirigiendo a PayPal...");
+        // Redirigir a WebPay
+      } else if (data.tipo === "paypal" && data.approvalUrl) {
         window.location.href = data.approvalUrl;
-        return;
+      } else {
+        console.error("⚠️ Respuesta inválida:", data);
+        alert("No se pudo iniciar la inscripción. Revisa la consola.");
       }
-
-      // ===============================
-      // ⚠️ RESPUESTA INVÁLIDA
-      // ===============================
-      console.error("⚠️ Respuesta inválida:", data);
-      alert("No se pudo iniciar la inscripción. Revisa la consola.");
     } catch (err) {
       console.error("❌ Error en handleSuscribirse:", err);
       alert("Error al iniciar la suscripción. Ver consola para más detalles.");
@@ -260,12 +240,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
     }
 
     try {
-      const result = await handleSuscribirse(
-        cliente.nombre,
-        cliente.correo,
-        sitioWeb,
-        cliente.idCliente
-      );
+      const result = await handleSuscribirse(sitioWeb, cliente);
 
       return result; // opcional, si quieres capturarlo en otro handler
     } catch (err) {

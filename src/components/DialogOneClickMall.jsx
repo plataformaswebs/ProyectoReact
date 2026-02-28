@@ -114,7 +114,12 @@ export default function DialogOneClickMall({
         return;
       }
 
-      const clienteInternacionalSeguro = encontrado.clienteInternacional ?? 0;
+      const clienteInternacionalSeguro =
+        encontrado.clienteInternacional === 1 ||
+          encontrado.clienteInternacional === "1" ||
+          String(encontrado.clienteInternacional).toLowerCase() === "true"
+          ? 1
+          : 0;
 
       console.log(
         `🔒 VALIDACIÓN EXITOSA → ID: ${encontrado.idCliente} | Cliente: ${encontrado.cliente} | Internacional: ${clienteInternacionalSeguro}`

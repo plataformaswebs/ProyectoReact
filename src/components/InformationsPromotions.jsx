@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Box, IconButton, Typography, Button } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AccessTimeFilledRoundedIcon from '@mui/icons-material/AccessTimeFilledRounded';
 import DialogTransbankCorreo from "./DialogTransbankCorreo";
 import 'swiper/css';
 import emailjs from "@emailjs/browser";
+
+const VISITA_PRECIOS_KEY = "visita_pago_unico_notificada";
 
 const InformationsPromotions = ({
   isMobile,
@@ -24,12 +26,11 @@ const InformationsPromotions = ({
   const [openDialog, setOpenDialog] = useState(false);
   const [showOriginalPriceId1, setShowOriginalPriceId1] = useState(true);
   const [currency, setCurrency] = useState("CLP");
-  const VISITA_PRECIOS_KEY = "visita_pago_unico_notificada";
-  const visitaPreciosEnviadaRef = React.useRef(false);
+  const visitaPreciosEnviadaRef = useRef(false);
 
-  const toggleCurrency = () => {
-    setCurrency(prev => (prev === "CLP" ? "USD" : "CLP"));
-  };
+  const toggleCurrency = useCallback(() => {
+    setCurrency((prev) => (prev === "CLP" ? "USD" : "CLP"));
+  }, []);
 
   useEffect(() => {
     if (showPopularBadge) {
@@ -40,7 +41,7 @@ const InformationsPromotions = ({
     }
   }, [showPopularBadge]);
 
-  const handleReservar = async (email) => {
+  const handleReservar = useCallback(async (email) => {
     try {
       // Detectar entorno por hostname
       const isLocal = window.location.hostname === "localhost";
@@ -83,7 +84,7 @@ const InformationsPromotions = ({
     } catch (err) {
       console.error("Error en handleReservar:", err);
     }
-  };
+  }, []);
 
 
   //Visa TEST
@@ -93,26 +94,29 @@ const InformationsPromotions = ({
   //Rut: 11.111.111-1
   //Clave: 123
 
-  const pricingBoxBase = {
-    mt: isMobile ? 1.2 : 1,
-    mb: 0,
-    borderRadius: "12px",
-    px: 2,
-    py: isMobile ? 0.5 : 0.3,
-    display: "flex",
-    alignItems: "center",
-    width: "310px",
-    minHeight: isMobile ? "78px" : "70px", // 🔥 ALTO ÚNICO COMPARTIDO
-    position: "relative",
-    overflow: "hidden",
-    zIndex: 3,
-    mx: "auto",
-    alignSelf: "center",
-    boxSizing: "border-box",
-    transition: "all 0.4s ease-in-out",
-  };
+  const pricingBoxBase = useMemo(
+    () => ({
+      mt: isMobile ? 1.2 : 1,
+      mb: 0,
+      borderRadius: "12px",
+      px: 2,
+      py: isMobile ? 0.5 : 0.3,
+      display: "flex",
+      alignItems: "center",
+      width: "310px",
+      minHeight: isMobile ? "78px" : "70px", // 🔥 ALTO ÚNICO COMPARTIDO
+      position: "relative",
+      overflow: "hidden",
+      zIndex: 3,
+      mx: "auto",
+      alignSelf: "center",
+      boxSizing: "border-box",
+      transition: "all 0.4s ease-in-out",
+    }),
+    [isMobile]
+  );
 
-  const notificarVisitaPrecios = () => {
+  const notificarVisitaPrecios = useCallback(() => {
     console.group("📩 EmailJS – Notificación Precios");
 
     const ahora = new Date();
@@ -153,9 +157,9 @@ const InformationsPromotions = ({
       .finally(() => {
         console.groupEnd();
       });
-  };
+  }, []);
 
-  const evaluarVisitaPrecios = (swiper) => {
+  const evaluarVisitaPrecios = useCallback((swiper) => {
     const promo = promotions[swiper.activeIndex];
 
     //console.log("📊 Slide:", swiper.activeIndex, "| Promo ID:", promo?.id, "| Ref:", visitaPreciosEnviadaRef.current, "| Session:", sessionStorage.getItem(VISITA_PRECIOS_KEY));
@@ -170,7 +174,7 @@ const InformationsPromotions = ({
     }
 
     setShowArrow(swiper.activeIndex !== 2);
-  };
+  }, [promotions, setShowArrow, notificarVisitaPrecios]);
 
   return (
     <Box
@@ -248,7 +252,7 @@ const InformationsPromotions = ({
               <Box
                 sx={{
                   width: isMobile ? "350px" : "430px", // Igual que el slide principal
-                  height: "400px",
+                  height: isMobile ? "420px" : "420px",
                   py: isMobile ? 0 : 0,
                   mt: 1.4,
                   display: "flex",
@@ -270,7 +274,8 @@ const InformationsPromotions = ({
 
                 <Box sx={{
                   position: "relative", zIndex: 2, p: 2, pt: 3, display: "flex",
-                  flexDirection: "column", alignItems: "center", justifyContent: "flex-start", flexGrow: 1
+                  flexDirection: "column", alignItems: "center", justifyContent: "flex-start", flexGrow: 1,
+                  gap: 1.2,
                 }}>
                   <Box
                     sx={{
@@ -371,13 +376,13 @@ const InformationsPromotions = ({
 
 
                   <Box sx={{
-                    width: isMobile ? "100%" : "80%", mt: 0,
+                    width: isMobile ? "100%" : "80%", mt: 0.4,
                     display: "flex", flexDirection: "column", alignItems: "flex-start"
                   }}>
                     {promo.descriptors.map((desc, idx) => (
                       <Typography key={idx} variant="caption" sx={{
-                        display: "flex", alignItems: "center", mb: 0.3,
-                        fontSize: "0.8rem", color: "#eee"
+                        display: "flex", alignItems: "center", mb: 0.35,
+                        fontSize: "0.8rem", lineHeight: 1.4, color: "#eee"
                       }}>
                         {desc}
                       </Typography>
@@ -734,7 +739,7 @@ const InformationsPromotions = ({
                           }}
                         >
                           {/* DOMINIO .CL */}
-                          <Box sx={{ textAlign: "center", flex: 1, mt: isMobile ? 1.2 : 0.8 }}>
+                          <Box sx={{ textAlign: "center", flex: 1, mt: isMobile ? 0.4 : 0.2 }}>
                             <Typography
                               variant="caption"
                               sx={{
@@ -805,7 +810,7 @@ const InformationsPromotions = ({
                           />
 
                           {/* HOSTING */}
-                          <Box sx={{ textAlign: "center", flex: 1, mt: isMobile ? 1.2 : 0.8 }}>
+                          <Box sx={{ textAlign: "center", flex: 1, mt: isMobile ? 0.4 : 0.2 }}>
                             <Typography
                               variant="caption"
                               sx={{

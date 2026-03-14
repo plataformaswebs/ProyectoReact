@@ -2,7 +2,13 @@ import * as XLSX from "xlsx";
 
 export const cargarTrabajos = async (urlExcel) => {
   try {
-    const response = await fetch(urlExcel);
+    const response = await fetch(urlExcel, {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-store",
+        "Pragma": "no-cache",
+      },
+    });
     if (!response.ok) throw new Error("No se pudo obtener el archivo Excel");
 
     const arrayBuffer = await response.arrayBuffer();

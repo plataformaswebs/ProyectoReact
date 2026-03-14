@@ -1,5 +1,5 @@
 import { Box, Typography, Container, Grid, ListItem, ListItemIcon, ListItemText, useMediaQuery, useTheme } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FaCode } from "react-icons/fa";
 import { useInView } from 'react-intersection-observer';
@@ -94,6 +94,153 @@ const promotions = [
   }
 ];
 
+const iconItems = [
+  {
+    icon: <Public sx={{ color: "white", fontSize: "2.2rem" }} />,
+    text: "Muestra tu negocio al mundo.",
+    desc: "Haz visible tu marca con presencia digital moderna y profesional.",
+    hideLine: false,
+  },
+  {
+    icon: <GroupAdd sx={{ color: "white", fontSize: "2.2rem" }} />,
+    text: "Atrae más clientes potenciales.",
+    desc: "Conecta con clientes ideales mediante estrategias digitales inteligentes.",
+    hideLine: false,
+  },
+  {
+    icon: <Verified sx={{ color: "white", fontSize: "2.2rem" }} />,
+    text: "Gana la confianza de tus clientes.",
+    desc: "Refleja confianza mostrando tu negocio de forma clara y profesional.",
+    hideLine: false,
+  },
+  {
+    icon: <DashboardCustomize sx={{ color: "white", fontSize: "2.2rem" }} />,
+    text: "Administra y potencia tu negocio.",
+    desc: "Toma decisiones con herramientas de monitoreo y gestión digital.",
+    hideLine: true,
+  },
+];
+
+const AnimatedIconItem = memo(function AnimatedIconItem({ item, index, isMobile }) {
+  const { ref: itemRef, inView: itemInView } = useInView({
+    threshold: 0.43,
+    triggerOnce: true,
+  });
+
+  return (
+    <motion.div
+      ref={itemRef}
+      initial={{ opacity: 0, y: 28 }}
+      animate={itemInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+      transition={{
+        delay: 0.25 * index,
+        duration: 0.6,
+        ease: "easeOut",
+      }}
+    >
+      <ListItem
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          zIndex: 2,
+          paddingLeft: isMobile ? "0" : "16px",
+          paddingRight: isMobile ? "0" : "16px",
+          py: isMobile ? 1 : 1.5,
+          gap: 1.5,
+        }}
+      >
+        <ListItemIcon sx={{ zIndex: 2 }}>
+          <Box
+            sx={{
+              position: "relative",
+              width: 100,
+              height: 85,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {!item.hideLine && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={itemInView ? { height: 40 } : { height: 0 }}
+                transition={{
+                  delay: 0.25 * index,
+                  duration: 1,
+                  ease: "easeInOut",
+                }}
+                style={{
+                  position: "absolute",
+                  top: "80%",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "2px",
+                  backgroundImage:
+                    "linear-gradient(white 40%, rgba(255,255,255,0) 0%)",
+                  backgroundPosition: "left",
+                  backgroundSize: "2px 6px",
+                  backgroundRepeat: "repeat-y",
+                  zIndex: 1,
+                }}
+              />
+            )}
+
+            <Box
+              sx={{
+                width: 70,
+                height: 70,
+                borderRadius: "50%",
+                border: "2px solid white",
+                background: "rgb(6 31 53)",
+                boxShadow: "0 0 15px rgba(255,255,255,0.25)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                overflow: "visible",
+                zIndex: 2,
+              }}
+            >
+              {item.icon}
+
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  width: 75,
+                  height: 75,
+                  borderRadius: "50%",
+                  border: "5px solid rgba(0, 191, 255, 0.7)",
+                  transform: "translate(-50%, -50%)",
+                  animation: itemInView ? "onda 2.5s ease-out infinite" : "none",
+                  zIndex: 1,
+                }}
+              />
+            </Box>
+          </Box>
+        </ListItemIcon>
+
+        <ListItemText
+          sx={{
+            fontFamily: "'Montserrat', Helvetica, Arial, sans-serif !important",
+            pr: { xs: 2, sm: 2, md: 3 },
+            "& .MuiListItemText-primary": {
+              fontSize: isMobile ? "1rem" : "1.2rem",
+            },
+            "& .MuiListItemText-secondary": {
+              color: "white",
+              lineHeight: 1.4,
+            },
+          }}
+          primary={item.text}
+          secondary={item.desc}
+        />
+      </ListItem>
+    </motion.div>
+  );
+});
+
 
 function Informations({ informationsRef, triggerInformations, setHasSeenInformations }) {
 
@@ -101,11 +248,9 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
   const [isGrabbing, setIsGrabbing] = useState(false);
   const { ref, inView } = useInView({ threshold: 0.15, triggerOnce: false, });
 
-  const [shouldAnimate, setShouldAnimate] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [showArrow, setShowArrow] = useState(true);
-  const [animationKey, setAnimationKey] = useState(0);
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [showPopularBadge, setShowPopularBadge] = useState(false);
 
@@ -114,12 +259,6 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
   //CANCELAR PRIMERA ANIMACIÓN
   const [hasAnimated, setHasAnimated] = useState(false);
   const [hasAnimated2, setHasAnimated2] = useState(false);
-
-  useEffect(() => {
-    if (inView) {
-      setShouldAnimate(true); // 🔹 Activa la animación cuando el componente es visible
-    }
-  }, [inView]);
 
   //ANIMACIÓN DESCRIPTORES
   useEffect(() => {
@@ -325,151 +464,14 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
 
           {/* Columna de los íconos */}
           <Grid item xs={12} md={6}>
-            {[
-              {
-                icon: <Public sx={{ color: "white", fontSize: "2.2rem" }} />,
-                text: "Muestra tu negocio al mundo.",
-                desc: "Haz visible tu marca con presencia digital moderna y profesional.",
-                hideLine: false,
-              },
-              {
-                icon: <GroupAdd sx={{ color: "white", fontSize: "2.2rem" }} />,
-                text: "Atrae más clientes potenciales.",
-                desc: "Conecta con clientes ideales mediante estrategias digitales inteligentes.",
-                hideLine: false,
-              },
-              {
-                icon: <Verified sx={{ color: "white", fontSize: "2.2rem" }} />,
-                text: "Gana la confianza de tus clientes.",
-                desc: "Refleja confianza mostrando tu negocio de forma clara y profesional.",
-                hideLine: false,
-              },
-              {
-                icon: <DashboardCustomize sx={{ color: "white", fontSize: "2.2rem" }} />,
-                text: "Administra y potencia tu negocio.",
-                desc: "Toma decisiones con herramientas de monitoreo y gestión digital.",
-                hideLine: true,
-              },
-            ].map((item, index) => {
-              const { ref: itemRef, inView: itemInView } = useInView({
-                threshold: 0.43,
-                triggerOnce: true,
-              });
-
-              return (
-                <motion.div
-                  key={`animated-${index}-${animationKey}`} // 👈 clave dinámica
-                  ref={itemRef}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={itemInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{
-                    delay: 0.2 * index,
-                    duration: 0.5,
-                  }}
-                >
-                  <ListItem
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      zIndex: 2,
-                      paddingLeft: isMobile ? "0" : "16px",
-                      paddingRight: isMobile ? "0" : "16px",
-                    }}
-                  >
-                    <ListItemIcon sx={{ zIndex: 2 }}>
-                      <Box
-                        sx={{
-                          position: "relative",
-                          width: 100,
-                          height: 85,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        {!item.hideLine && (
-                          <motion.div
-                            initial={{ height: 0 }}
-                            animate={itemInView ? { height: 40 } : { height: 0 }}
-                            transition={{
-                              delay: 0.2 * index,
-                              duration: 1,
-                              ease: "easeInOut",
-                            }}
-                            style={{
-                              position: "absolute",
-                              top: "80%",
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                              width: "2px",
-                              backgroundImage:
-                                "linear-gradient(white 40%, rgba(255,255,255,0) 0%)",
-                              backgroundPosition: "left",
-                              backgroundSize: "2px 6px",
-                              backgroundRepeat: "repeat-y",
-                              zIndex: 1,
-                            }}
-                          />
-                        )}
-
-                        <Box
-                          sx={{
-                            width: 70,
-                            height: 70,
-                            borderRadius: "50%",
-                            border: "2px solid white",
-                            background: "rgb(6 31 53)",
-                            boxShadow: "0 0 15px rgba(255,255,255,0.25)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            position: "relative",
-                            overflow: "visible",
-                            zIndex: 2,
-                          }}
-                        >
-                          {item.icon}
-
-                          {/* 🌊 Onda expansiva */}
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              top: "50%",
-                              left: "50%",
-                              width: 75, // 👈 ligeramente más grande que el círculo base
-                              height: 75,
-                              borderRadius: "50%",
-                              border: "5px solid rgba(0, 191, 255, 0.7)", // 👈 borde más grueso y con color base
-                              transform: "translate(-50%, -50%)",
-                              animation: itemInView ? "onda 2.5s ease-out infinite" : "none",
-                              zIndex: 1,
-                            }}
-                          />
-                        </Box>
-
-
-                      </Box>
-                    </ListItemIcon>
-
-                    <ListItemText
-                      sx={{
-                        fontFamily: "'Montserrat', Helvetica, Arial, sans-serif !important",
-                        pr: { xs: 2, sm: 2, md: 3 }, // 👈 padding responsivo
-                        "& .MuiListItemText-primary": {
-                          fontSize: isMobile ? "1rem" : "1.2rem",
-                        },
-                        "& .MuiListItemText-secondary": {
-                          color: "white",
-                        },
-                      }}
-                      primary={item.text}
-                      secondary={item.desc}
-                    />
-
-                  </ListItem>
-                </motion.div>
-              );
-            })}
+            {iconItems.map((item, index) => (
+              <AnimatedIconItem
+                key={`animated-${index}`}
+                item={item}
+                index={index}
+                isMobile={isMobile}
+              />
+            ))}
           </Grid>
 
 

@@ -1,7 +1,7 @@
 import { Container, Grid, Card, CardActionArea, CardMedia, Typography, Box, Button, useTheme, useMediaQuery, } from "@mui/material";
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { styled } from "@mui/system";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import AccessTimeFilledRoundedIcon from '@mui/icons-material/AccessTimeFilledRounded';
 import DialogTrabajos from "./DialogTrabajos";
 import { cargarTrabajos } from "../helpers/HelperTrabajos";
@@ -57,29 +57,17 @@ function Features({ videoReady }) {
   const timestampRef = useRef(Date.now());
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const prefersReducedMotion = useReducedMotion();
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+  const { ref, inView } = useInView({ triggerOnce: false, threshold: 0.1 });
   const [hasAnimated, setHasAnimated] = useState(false);
   const navigate = useNavigate();
   const [trabajos, setTrabajos] = useState([]);
   const [showMatrix, setShowMatrix] = useState(false);
-  const [mobileSwiper, setMobileSwiper] = useState(null);
-  const [didAutoSlide, setDidAutoSlide] = useState(false);
   // TRABAJOS ACTIVOS
-  const trabajosActivos = useMemo(
-    () => trabajos.filter((t) => Number(t.Estado) === 1),
-    [trabajos]
-  );
+  const trabajosActivos = trabajos.filter(t => Number(t.Estado) === 1);
 
   //TRABAJOS
-  const sitiosWebDesarrollo = useMemo(
-    () => trabajosActivos.filter((t) => Number(t.TipoApp) === 1).length,
-    [trabajosActivos]
-  );
-  const sistemasDesarrollo = useMemo(
-    () => trabajosActivos.filter((t) => Number(t.TipoApp) === 2).length,
-    [trabajosActivos]
-  );
+  const sitiosWebDesarrollo = trabajosActivos.filter(t => Number(t.TipoApp) === 1).length;
+  const sistemasDesarrollo = trabajosActivos.filter(t => Number(t.TipoApp) === 2).length;
   const [openTrabajos, setOpenTrabajos] = useState(false);
 
 
@@ -109,21 +97,14 @@ function Features({ videoReady }) {
   };
 
   //APARICIÓN
-  const cardAnimation = useMemo(
-    () => ({
-      hidden: { opacity: 0, x: 150 },
-      visible: (index) => ({
-        opacity: 1,
-        x: 0,
-        transition: {
-          duration: prefersReducedMotion ? 0 : 0.8,
-          delay: prefersReducedMotion ? 0 : 1 + index * 0.3,
-          ease: "easeOut",
-        },
-      }),
+  const cardAnimation = {
+    hidden: { opacity: 0, x: 150 },
+    visible: (index) => ({
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.8, delay: 1 + index * 0.3, ease: "easeOut" },
     }),
-    [prefersReducedMotion]
-  );
+  };
 
   // handlers
   const handleTrabajosClick = () => setOpenTrabajos(true);
@@ -131,40 +112,9 @@ function Features({ videoReady }) {
 
   //ATRASO MATRIX
   useEffect(() => {
-    if (!inView || prefersReducedMotion) {
-      setShowMatrix(false);
-      return;
-    }
-    const timer = setTimeout(() => setShowMatrix(true), 2500);
+    const timer = setTimeout(() => setShowMatrix(true), 5000);
     return () => clearTimeout(timer);
-  }, [inView, prefersReducedMotion]);
-
-  useEffect(() => {
-    if (!isMobile || !mobileSwiper || didAutoSlide) return;
-    const timer = setTimeout(() => {
-      if (!mobileSwiper.destroyed) {
-        mobileSwiper.slideTo(1);
-        setDidAutoSlide(true);
-      }
-    }, 6500);
-    return () => clearTimeout(timer);
-  }, [isMobile, mobileSwiper, didAutoSlide]);
-
-  const matrixColumns = useMemo(() => {
-    const count = isMobile ? 18 : 50;
-    const rows = isMobile ? 10 : 15;
-    return Array.from({ length: count }, (_, i) => ({
-      key: i,
-      delay: `${Math.random() * 3}s`,
-      duration: `${3 + Math.random() * 2}s`,
-      height: `${25 + Math.random() * 40}px`,
-      text: Array.from({ length: rows })
-        .map(() => (Math.random() > 0.5 ? "1" : "0"))
-        .join("\n"),
-    }));
-  }, [isMobile]);
-
-  const enableSwiperAutoplay = !isMobile && !prefersReducedMotion;
+  }, []);
 
   return (
     <Box
@@ -205,17 +155,19 @@ function Features({ videoReady }) {
                 justifyContent: "space-around",
               }}
             >
-              {matrixColumns.map((col) => (
+              {[...Array(isMobile ? 30 : 80)].map((_, i) => (
                 <span
-                  key={col.key}
+                  key={i}
                   className="matrix-stream"
                   style={{
-                    "--delay": col.delay,
-                    "--duration": col.duration,
-                    "--height": col.height,
+                    "--delay": `${Math.random() * 3}s`,
+                    "--duration": `${3 + Math.random() * 2}s`,
+                    "--height": `${25 + Math.random() * 40}px`,
                   }}
                 >
-                  {col.text}
+                  {Array.from({ length: 15 })
+                    .map(() => (Math.random() > 0.5 ? "1" : "0"))
+                    .join("\n")}
                 </span>
               ))}
             </motion.div>
@@ -236,11 +188,12 @@ function Features({ videoReady }) {
       >
         <motion.div
           initial={{ opacity: 0, y: 50 }}
-          animate={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+          animate={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }
+          }
           transition={{
-            duration: prefersReducedMotion ? 0 : 0.8,
+            duration: 0.8,
             ease: "easeOut",
-            delay: prefersReducedMotion ? 0 : (isMobile ? 0.8 : 0.3),
+            delay: isMobile ? 0.8 : 0.3,
           }}
           style={{
             minHeight: "60px",
@@ -405,7 +358,7 @@ function Features({ videoReady }) {
                       fontSize: { xs: 26, sm: 28 },
                       color: "#fff",
                       filter: "drop-shadow(0 0 8px rgba(255,167,38,.8))",
-                      animation: prefersReducedMotion ? "none" : "clock 12s steps(12) infinite",
+                      animation: "clock 12s steps(12) infinite",
                       "@keyframes clock": {
                         "0%": { transform: "rotate(0deg)" },
                         "100%": { transform: "rotate(360deg)" },
@@ -531,22 +484,17 @@ function Features({ videoReady }) {
                         spaceBetween={10}
                         slidesPerView={1}
                         modules={[Autoplay, Pagination]}
-                        autoplay={
-                          enableSwiperAutoplay
-                            ? {
-                              delay: 5000,
-                              disableOnInteraction: false,
-                              pauseOnMouseEnter: true,
-                            }
-                            : false
-                        }
+                        autoplay={{
+                          delay: 5000,
+                          disableOnInteraction: false,
+                          pauseOnMouseEnter: true,
+                        }}
                         pagination={{
                           clickable: true,
                           type: "bullets",
                         }}
-                        onSwiper={setMobileSwiper}
                         onInit={(swiper) => {
-                          if (enableSwiperAutoplay && swiper.autoplay) {
+                          if (swiper.autoplay) {
                             swiper.autoplay.stop();
                             setTimeout(() => {
                               swiper.autoplay?.start();
@@ -570,8 +518,6 @@ function Features({ videoReady }) {
                               component="img"
                               src="/trabajos-features.webp"
                               alt="Trabajos recientes"
-                              loading="lazy"
-                              decoding="async"
                               sx={{
                                 width: "100%",
                                 height: "120%",          // 🔹 Hace que la imagen se expanda un poco
@@ -657,8 +603,6 @@ function Features({ videoReady }) {
                                 component="img"
                                 src="/sitio-web.webp"
                                 alt="Preview Sitios Web"
-                                loading="lazy"
-                                decoding="async"
                                 sx={{
                                   position: "absolute",
                                   top: "5%",
@@ -675,8 +619,6 @@ function Features({ videoReady }) {
                                 component="img"
                                 src="/mano-celular.webp"
                                 alt="Mano con celular"
-                                loading="lazy"
-                                decoding="async"
                                 sx={{
                                   width: "100%",
                                   height: "auto",

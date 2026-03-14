@@ -23,6 +23,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import Chat from "./components/PWBot/Chat";
 
 function App() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
   const [showContacto, setShowContacto] = useState(false);
   const [showArrow, setShowArrow] = useState(false);
   const [openBubble, setOpenBubble] = useState(false);
@@ -58,6 +59,43 @@ function App() {
   useEffect(() => {
     trackPageView(location.pathname + location.search); // en cada cambio de ruta
   }, [location]);
+
+  // Warm-up Chat API + preconnect para reducir latencia inicial
+  useEffect(() => {
+    let apiOrigin = null;
+    try {
+      apiOrigin = new URL(API_URL, window.location.href).origin;
+    } catch (_) {
+      apiOrigin = null;
+    }
+
+    if (apiOrigin) {
+      const existing = document.querySelector(
+        `link[rel="preconnect"][href="${apiOrigin}"]`
+      );
+      if (!existing) {
+        const link = document.createElement("link");
+        link.rel = "preconnect";
+        link.href = apiOrigin;
+        link.crossOrigin = "";
+        document.head.appendChild(link);
+      }
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const warmupUrl = apiOrigin || API_URL;
+    fetch(warmupUrl, {
+      method: "GET",
+      mode: "no-cors",
+      cache: "no-store",
+      keepalive: true,
+      signal: controller.signal,
+    }).catch(() => { });
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -436,9 +474,7 @@ function App() {
               style={{
                 position: "fixed",
                 inset: 0,
-                backgroundColor: "rgba(0, 0, 0, 0.88)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
+                backgroundColor: "rgba(0, 0, 0, 0.94)",
                 zIndex: 1500,
               }}
               onClick={() => setOpenChat(false)}

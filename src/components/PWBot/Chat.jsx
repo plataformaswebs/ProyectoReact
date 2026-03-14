@@ -103,7 +103,10 @@ export default function Chat({ onClose }) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ messages: updatedMessages }),
+                body: JSON.stringify({
+                    messages: updatedMessages,
+                    desdeSitioWeb: true,
+                }),
             });
 
             const data = await res.json();

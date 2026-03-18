@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import ChatMessage from "./ChatMessage";
 import TypingIndicator from "./TypingIndicator";
 
-export default function ChatContainer({ messages, isTyping }) {
+export default function ChatContainer({ messages, isTyping, onQuickReply }) {
     const bottomRef = useRef(null);
 
     useEffect(() => {
@@ -83,6 +83,9 @@ export default function ChatContainer({ messages, isTyping }) {
                             video={msg.video}
                             status={msg.status}
                             timestamp={msg.timestamp}
+                            quickReplies={msg.quickReplies}
+                            quickRepliesDisabled={msg.quickRepliesDisabled}
+                            onQuickReply={onQuickReply}
                         />
                     ))}
 

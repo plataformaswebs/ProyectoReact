@@ -10,11 +10,40 @@ function formatTime(date) {
     });
 }
 
-export default function ChatMessage({ from, text, image, video, status, timestamp }) {
+export default function ChatMessage({ from, text, image, video, status, timestamp, quickReplies, quickRepliesDisabled, onQuickReply }) {
 
     const isUser = from === "user";
     const safeText = text ?? "";
     const { cleanText, links } = extractLinks(safeText);
+    const hasQuickReplies = !isUser && Array.isArray(quickReplies) && quickReplies.length > 0;
+    const quickReplyDesign = "design3"; // "design1", "design2" o "design3"
+    const quickReplyStyles = {
+        design1: {
+            border: "1px solid rgba(255,255,255,0.6)",
+            background: "linear-gradient(135deg, #12c2e9 0%, #0075ff 50%, #1c64f2 100%)",
+            color: "#ffffff",
+            hoverShadow: "0 6px 16px rgba(0,117,255,0.35)",
+        },
+        design2: {
+            border: "1px solid rgba(255,255,255,0.35)",
+            background: "linear-gradient(135deg, #ffb347 0%, #ff7e5f 50%, #ff5f6d 100%)",
+            color: "#1b0b0b",
+            hoverShadow: "0 6px 16px rgba(255,126,95,0.35)",
+        },
+        design3: {
+            border: "1px solid rgba(255,255,255,0.45)",
+            background: "linear-gradient(135deg, #00c9a7 0%, #00b4d8 50%, #3a86ff 100%)",
+            color: "#ffffff",
+            hoverShadow: "0 6px 16px rgba(0,180,216,0.35)",
+        },
+    };
+    const qrStyle = quickReplyStyles[quickReplyDesign] || quickReplyStyles.design1;
+    const goldStyle = {
+        border: "2px solid rgba(255, 213, 79, 0.9)",
+        background: "linear-gradient(135deg, #ffd54f, #ff9800 45%, #f57c00 85%)",
+        color: "#ffffff",
+        hoverShadow: "0 0 6px rgba(255,167,38,.6), inset 0 0 6px rgba(255,255,255,0.25)",
+    };
 
     if (!cleanText && links.length === 0 && !image && !video) return null;
 
@@ -75,27 +104,36 @@ export default function ChatMessage({ from, text, image, video, status, timestam
             <Box
                 sx={{
                     maxWidth: {
-                        xs: "90%",   // móvil
-                        sm: "85%",   // tablet
-                        md: "80%",   // laptop
-                        lg: "70%",   // desktop grande
+                        xs: "90%",
+                        sm: "85%",
+                        md: "80%",
+                        lg: "70%",
                     },
                     minWidth: 120,
-                    px: 1.5,
-                    pt: 1,
-                    pb: image || video
-                        ? 2.8
-                        : (cleanText || links.length > 0)
-                            ? 2.6
-                            : 1.2,
-                    pr: isUser ? 7.6 : 6,
-                    borderRadius: 2,
-                    backgroundColor: image && !cleanText ? "transparent" : isUser ? "#E0FBFF" : "#fff",
-                    boxShadow: image && !cleanText ? "none" : "0 1px 1px rgba(0,0,0,0.1)",
-                    position: "relative",
-                    minHeight: 32
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "stretch",
+                    gap: 1,
                 }}
             >
+                <Box
+                    sx={{
+                        px: 1.5,
+                        pt: 1,
+                        pb: image || video
+                            ? 2.8
+                            : (cleanText || links.length > 0)
+                                ? 2.6
+                                : 1.2,
+                        pr: isUser ? 7.6 : 6,
+                        borderRadius: 2,
+                        backgroundColor: image && !cleanText ? "transparent" : isUser ? "#E0FBFF" : "#fff",
+                        boxShadow: image && !cleanText ? "none" : "0 1px 1px rgba(0,0,0,0.1)",
+                        position: "relative",
+                        minHeight: 32
+                    }}
+                >
 
 
 
@@ -180,25 +218,126 @@ export default function ChatMessage({ from, text, image, video, status, timestam
                 )}
 
                 {/* Hora + checks */}
-                <Box
-                    sx={{
-                        position: "absolute",
-                        bottom: 4,
-                        right: 6,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.45
-                    }}
-                >
-
-                    <Typography
-                        variant="caption"
-                        sx={{ color: "#667781", fontSize: "0.65rem", lineHeight: 1 }}
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            bottom: 4,
+                            right: 6,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.45
+                        }}
                     >
-                        {formatTime(timestamp)}
-                    </Typography>
-                    {renderStatusIcon()}
+
+                        <Typography
+                            variant="caption"
+                            sx={{ color: "#667781", fontSize: "0.65rem", lineHeight: 1 }}
+                        >
+                            {formatTime(timestamp)}
+                        </Typography>
+                        {renderStatusIcon()}
+                    </Box>
                 </Box>
+
+                {hasQuickReplies && (
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                        {quickReplies.map((qr, idx) => {
+                            const style = qr.variant === "gold" ? goldStyle : qrStyle;
+                            return (
+                            <Box
+                                key={`${qr.value}-${idx}`}
+                                component="button"
+                                onClick={() => onQuickReply?.(qr.value)}
+                                disabled={!!quickRepliesDisabled}
+                                sx={{
+                                    width: "100%",
+                                    borderRadius: "10px",
+                                    border: style.border,
+                                    background: style.background,
+                                    color: style.color,
+                                    py: 0.9,
+                                    fontWeight: 600,
+                                    fontSize: "0.9rem",
+                                    cursor: quickRepliesDisabled ? "default" : "pointer",
+                                    opacity: quickRepliesDisabled ? 0.6 : 1,
+                                    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                                    "&:hover": {
+                                        transform: quickRepliesDisabled ? "none" : "translateY(-1px)",
+                                        boxShadow: quickRepliesDisabled ? "none" : style.hoverShadow,
+                                    },
+                                    ...(qr.variant === "gold"
+                                        ? {
+                                            height: "46px",
+                                            textTransform: "none",
+                                            fontFamily: "Albert Sans, sans-serif",
+                                            fontWeight: 600,
+                                            position: "relative",
+                                            overflow: "hidden",
+                                            backgroundSize: "200% 200%",
+                                            animation: "gradientShift 8s ease infinite",
+                                            boxShadow: "0 6px 16px rgba(255,152,0,.4)",
+                                            "&::before": {
+                                                content: '""',
+                                                position: "absolute",
+                                                inset: "-2px",
+                                                borderRadius: "inherit",
+                                                background:
+                                                    "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.9) 10%, #fff59d 20%, rgba(255,255,255,0.9) 30%, transparent 40%)",
+                                                backgroundRepeat: "no-repeat",
+                                                backgroundSize: "300% 300%",
+                                                animation:
+                                                    "shineBorderSweep 3s linear infinite, pulseGlow 4s ease-in-out infinite",
+                                                pointerEvents: "none",
+                                                zIndex: 2,
+                                                mask:
+                                                    "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                                                maskComposite: "exclude",
+                                                WebkitMask:
+                                                    "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                                                WebkitMaskComposite: "xor",
+                                            },
+                                            "&::after": {
+                                                content: '""',
+                                                position: "absolute",
+                                                inset: 0,
+                                                background:
+                                                    "linear-gradient(130deg, transparent 40%, rgba(255,255,255,0.8) 50%, transparent 60%)",
+                                                transform: "translateX(-100%)",
+                                                animation: "shineDiagonal 4s ease-in-out infinite",
+                                                borderRadius: "inherit",
+                                                pointerEvents: "none",
+                                                zIndex: 1,
+                                            },
+                                            "&:hover::after": {
+                                                animation: "shineDiagonal 1.2s ease-in-out",
+                                            },
+                                            "@keyframes shineBorderSweep": {
+                                                "0%": { backgroundPosition: "-300% 0" },
+                                                "100%": { backgroundPosition: "300% 0" },
+                                            },
+                                            "@keyframes pulseGlow": {
+                                                "0%, 100%": { filter: "drop-shadow(0 0 6px rgba(255,223,0,.35))" },
+                                                "50%": { filter: "drop-shadow(0 0 14px rgba(255,223,0,.75))" },
+                                            },
+                                            "@keyframes shineDiagonal": {
+                                                "0%": { transform: "translateX(-120%) rotate(0deg)" },
+                                                "100%": { transform: "translateX(120%) rotate(0deg)" },
+                                            },
+                                            "@keyframes gradientShift": {
+                                                "0%": { backgroundPosition: "0% 50%" },
+                                                "50%": { backgroundPosition: "100% 50%" },
+                                                "100%": { backgroundPosition: "0% 50%" },
+                                            },
+                                        }
+                                        : {}),
+                                }}
+                            >
+                                {qr.label}
+                            </Box>
+                        );
+                        })}
+                    </Box>
+                )}
             </Box>
 
         </Box>

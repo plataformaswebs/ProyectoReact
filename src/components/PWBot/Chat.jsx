@@ -18,9 +18,34 @@ export default function Chat({ onClose }) {
         business: null,
         sent: false,
     });
+    const [phase, setPhase] = useState("OFFER_SELECTION");
     const [messages, setMessages] = useState([
         { from: "bot", text: tenant.welcomeMessage },
     ]);
+    const offerQuickReplies = [
+        { label: "Oferta 1", value: "Oferta 1" },
+        { label: "Oferta 2", value: "Oferta 2" },
+    ];
+    const confirmQuickReplies = [
+        { label: "Confirmo!", value: "Confirmo" },
+    ];
+    const trackingQuickReplies = [
+        { label: "Ver Seguimiento", value: "Ver Seguimiento", variant: "gold" },
+    ];
+    const [sessionId] = useState(() => {
+        const key = "pwbot_session_id";
+        try {
+            const existing = localStorage.getItem(key);
+            if (existing) return existing;
+            const newId =
+                (crypto?.randomUUID && crypto.randomUUID()) ||
+                `pwbot_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+            localStorage.setItem(key, newId);
+            return newId;
+        } catch {
+            return `pwbot_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        }
+    });
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -42,6 +67,8 @@ export default function Chat({ onClose }) {
 ⚡ Tiempo de desarrollo: 72 hrs
 
 ¿Cuál oferta te interesa más? 😊`
+                    ,
+                    quickReplies: offerQuickReplies,
                 }
             ]);
         }, 800); // 0.8 segundos después
@@ -49,6 +76,27 @@ export default function Chat({ onClose }) {
         return () => clearTimeout(timer);
     }, []);
     const handleSend = async (text) => {
+        const textRaw = (text || "").trim();
+        const textLower = textRaw.toLowerCase();
+        const textClean = textLower.replace(/[^\w\sáéíóúñ]/gi, "").trim();
+        const normalized = textClean.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        const isAffirmative = /\b(si|ok|dale|claro|perfecto|bueno|de acuerdo|vamos|por supuesto|obvio|vale|listo)\b/.test(normalized);
+        const isNegative = /\b(no|no gracias|prefiero no|mejor no|ninguna|ninguno|ninguna de las dos|paso|nop|no quiero|no me interesa|no me gusto|no me gustó)\b/.test(normalized);
+        const isOffer1 = /\b1\b/.test(normalized) || /oferta\s*1/.test(normalized);
+        const isOffer2 = /\b2\b/.test(normalized) || /oferta\s*2/.test(normalized);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isValidEmail = emailRegex.test(textRaw);
+
+        let nextPhase = phase;
+        if (phase === "OFFER_INTRO" && isAffirmative) nextPhase = "OFFER_SELECTION";
+        if (phase === "OFFER_SELECTION" && (isOffer1 || isOffer2)) nextPhase = "OFFER_CONFIRMATION";
+        if (phase === "OFFER_CONFIRMATION" && isAffirmative) nextPhase = "LEAD_EMAIL_CAPTURE";
+        if (phase === "LEAD_EMAIL_CAPTURE" && isValidEmail) nextPhase = "LEAD_BUSINESS_CAPTURE";
+        if (phase === "LEAD_BUSINESS_CAPTURE" && textRaw.length >= 2) nextPhase = "LEAD_COMPLETED";
+        if (isNegative && phase === "OFFER_CONFIRMATION") nextPhase = "OFFER_SELECTION";
+        setPhase(nextPhase);
+
         const userMessage = {
             from: "user",
             text,
@@ -90,8 +138,13 @@ export default function Chat({ onClose }) {
             }));
         }
 
-        // 🔑 Construir historial
-        const updatedMessages = [...messages, userMessage];
+        // 🔑 Construir historial (ocultar quick replies anteriores)
+        const clearedMessages = messages.map((m) =>
+            Array.isArray(m.quickReplies) && m.quickReplies.length
+                ? { ...m, quickReplies: [], quickRepliesDisabled: true }
+                : m
+        );
+        const updatedMessages = [...clearedMessages, userMessage];
 
         // UI inmediata
         setMessages(updatedMessages);
@@ -104,8 +157,10 @@ export default function Chat({ onClose }) {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
+                    sessionId,
                     messages: updatedMessages,
                     desdeSitioWeb: true,
+                    phase: nextPhase,
                 }),
             });
 
@@ -113,15 +168,26 @@ export default function Chat({ onClose }) {
             const replies = Array.isArray(data.replies)
                 ? data.replies
                 : [];
+            const phaseFromApi = data?.phase;
+            if (phaseFromApi) {
+                console.log("PHASE (API):", phaseFromApi);
+                setPhase(phaseFromApi);
+            }
 
             setIsTyping(false);
 
             setMessages((prev) => {
                 const newMessages = [...prev];
 
-                replies.forEach((r) => {
+                replies.forEach((r, idx) => {
                     const botText = r.text || "";
                     const lowerText = botText.toLowerCase();
+                    const shouldAttachConfirm =
+                        phaseFromApi === "OFFER_CONFIRMATION" && idx === replies.length - 1;
+                    const shouldAttachOffers =
+                        phaseFromApi === "OFFER_SELECTION" && idx === replies.length - 1;
+                    const shouldAttachTracking =
+                        phaseFromApi === "LEAD_COMPLETED" && idx === replies.length - 1;
 
                     // 1️⃣ Mensaje normal del bot
                     newMessages.push({
@@ -130,6 +196,13 @@ export default function Chat({ onClose }) {
                         image: r.image,
                         video: r.video,
                         timestamp: new Date(),
+                        ...(shouldAttachTracking
+                            ? { quickReplies: trackingQuickReplies }
+                            : shouldAttachOffers
+                                ? { quickReplies: offerQuickReplies }
+                            : shouldAttachConfirm
+                                ? { quickReplies: confirmQuickReplies }
+                                : {}),
                     });
 
                     // 2️⃣ Trigger James (video)
@@ -165,6 +238,39 @@ export default function Chat({ onClose }) {
                 },
             ]);
         }
+    };
+
+    const handleQuickReply = (value) => {
+        if (value === "Ver Seguimiento") {
+            const lastBotWithLink = [...messages]
+                .reverse()
+                .find((m) => m.from === "bot" && typeof m.text === "string" && m.text.includes("http"));
+            const urlMatch = lastBotWithLink?.text?.match(/https?:\/\/[^\s]+/i);
+            const url = urlMatch?.[0] || "https://www.plataformas-web.cl/";
+            window.open(url, "_blank", "noopener,noreferrer");
+            setMessages((prev) => {
+                const next = [...prev];
+                for (let i = next.length - 1; i >= 0; i--) {
+                    if (next[i].from === "bot" && Array.isArray(next[i].quickReplies) && next[i].quickReplies.length) {
+                        next[i] = { ...next[i], quickReplies: [], quickRepliesDisabled: true };
+                        break;
+                    }
+                }
+                return next;
+            });
+            return;
+        }
+        setMessages((prev) => {
+            const next = [...prev];
+            for (let i = next.length - 1; i >= 0; i--) {
+                if (next[i].from === "bot" && Array.isArray(next[i].quickReplies) && next[i].quickReplies.length) {
+                    next[i] = { ...next[i], quickReplies: [], quickRepliesDisabled: true };
+                    break;
+                }
+            }
+            return next;
+        });
+        handleSend(value);
     };
 
     useEffect(() => {
@@ -325,13 +431,8 @@ export default function Chat({ onClose }) {
                         <CloseIcon />
                     </IconButton>
                 </Box>
+                <ChatContainer messages={messages} isTyping={isTyping} onQuickReply={handleQuickReply} />
 
-
-
-                {/* 👇 Este debe ocupar el espacio sobrante */}
-                <ChatContainer messages={messages} isTyping={isTyping} />
-
-                {/* 👇 Este debe quedar pegado abajo */}
                 <ChatInput onSend={handleSend} />
             </Paper>
         </Box>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
-import { CssBaseline, Box, IconButton, useMediaQuery, Snackbar, Alert, Dialog } from "@mui/material";
+import { CssBaseline, Box, IconButton, useMediaQuery, Snackbar, Alert, Dialog, DialogContent, DialogActions, Button, Typography } from "@mui/material";
 import Slide from "@mui/material/Slide";
 import theme from "./theme";
 import { ThemeProvider } from "@mui/material/styles";
@@ -43,6 +43,7 @@ function App() {
   const [openRevision, setOpenRevision] = useState(false);
   const [revisionId, setRevisionId] = useState(null);
   const [openChat, setOpenChat] = useState(false);
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
 
   //EFECTO CAMBIAR DE RUTA
   useEffect(() => {
@@ -256,6 +257,13 @@ function App() {
     setOpenRevision(false);
     navigate(location.pathname, { replace: true });
   };
+
+  const requestCloseChat = () => setConfirmCloseOpen(true);
+  const handleConfirmCloseChat = () => {
+    setConfirmCloseOpen(false);
+    setOpenChat(false);
+  };
+  const handleCancelCloseChat = () => setConfirmCloseOpen(false);
 
   return (
     <ThemeProvider theme={theme}>
@@ -477,7 +485,7 @@ function App() {
                 backgroundColor: "rgba(0, 0, 0, 0.94)",
                 zIndex: 1500,
               }}
-              onClick={() => setOpenChat(false)}
+              onClick={requestCloseChat}
             />
 
             {/* Chat */}
@@ -495,11 +503,223 @@ function App() {
                 zIndex: 2000,
               }}
             >
-              <Chat onClose={() => setOpenChat(false)} />
+              <Chat onClose={requestCloseChat} />
             </motion.div>
           </>
         )}
       </AnimatePresence>
+
+      <Dialog
+        open={confirmCloseOpen}
+        maxWidth="xs"
+        fullWidth
+        onClose={(e, reason) => {
+          if (reason === "escapeKeyDown") return;
+          handleCancelCloseChat();
+        }}
+        disableEscapeKeyDown
+        sx={{ zIndex: 3000 }}
+        PaperProps={{
+          sx: {
+            animation: "dialogEnter .35s ease-out",
+            "@keyframes dialogEnter": {
+              "0%": { opacity: 0, transform: "scale(0.92) translateY(10px)" },
+              "100%": { opacity: 1, transform: "scale(1) translateY(0)" },
+            },
+            background: "linear-gradient(180deg, #111827, #0b1220)",
+            borderRadius: 4,
+            color: "#e5e7eb",
+            boxShadow: "0 30px 60px rgba(0,0,0,0.55)",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            pt: 4,
+            pb: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1.5,
+            background:
+              "radial-gradient(circle at top, rgba(59,130,246,0.18), transparent 70%)",
+          }}
+        >
+          <Box
+            sx={{
+              position: "relative",
+              width: 96,
+              height: 96,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #1f2937, #020617)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "2px solid rgba(255,255,255,0.15)",
+              boxShadow:
+                "0 0 0 6px rgba(37,99,235,0.15), 0 0 25px rgba(59,130,246,0.45)",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                inset: "-2px",
+                borderRadius: "50%",
+                padding: "2px",
+                background:
+                  "linear-gradient(120deg, transparent 20%, #60a5fa 35%, #2563eb 50%, #60a5fa 65%, transparent 80%)",
+                backgroundSize: "300% 300%",
+                animation: "borderFlow 4s linear infinite",
+                mask:
+                  "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                maskComposite: "exclude",
+                WebkitMask:
+                  "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                WebkitMaskComposite: "xor",
+              },
+              "@keyframes borderFlow": {
+                "0%": { backgroundPosition: "0% 50%" },
+                "100%": { backgroundPosition: "300% 50%" },
+              },
+            }}
+          >
+            <Box
+              component="img"
+              src="/PWBot.png"
+              alt="PWBot"
+              sx={{
+                width: 90,
+                height: 90,
+                objectFit: "contain",
+                filter: "drop-shadow(0 0 6px rgba(147,197,253,0.85))",
+              }}
+            />
+          </Box>
+
+          <Box sx={{ height: 8 }} />
+        </Box>
+
+        <DialogContent
+          sx={{
+            textAlign: "center",
+            px: 3,
+            pt: 1,
+            pb: 3,
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "#e5e7eb",
+              lineHeight: 1.4,
+            }}
+          >
+            ¿Salir ahora? La conversación se perderá.
+          </Typography>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            px: 2,
+            pb: 3,
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 1,
+          }}
+        >
+          <Button
+            onClick={handleConfirmCloseChat}
+            sx={{
+              px: 3,
+              py: 1.4,
+              fontSize: 16,
+              textTransform: "none",
+              color: "#9ca3af",
+              minWidth: 110,
+              "&:hover": {
+                color: "#e5e7eb",
+              },
+            }}
+          >
+            Salir
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={handleCancelCloseChat}
+            sx={{
+              px: 6,
+              py: 1.2,
+              position: "relative",
+              overflow: "hidden",
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: 15,
+              color: "#ffffff",
+              background:
+                "linear-gradient(135deg, #2563eb, #3b82f6 45%, #60a5fa 85%)",
+              backgroundSize: "200% 200%",
+              animation: "gradientShift 8s ease infinite",
+              boxShadow: "0 4px 14px rgba(59,130,246,.45)",
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg,#1d4ed8,#2563eb,#3b82f6)",
+                boxShadow:
+                  "0 0 8px rgba(59,130,246,.7), inset 0 0 6px rgba(255,255,255,0.25)",
+              },
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                inset: "-1px",
+                borderRadius: "inherit",
+                background:
+                  "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.9) 12%, #93c5fd 22%, rgba(255,255,255,0.9) 32%, transparent 44%)",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: "300% 300%",
+                animation: "shineBorderSweep 3.2s linear infinite",
+                pointerEvents: "none",
+                zIndex: 2,
+                mask:
+                  "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                maskComposite: "exclude",
+                WebkitMask:
+                  "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                WebkitMaskComposite: "xor",
+              },
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(130deg, transparent 42%, rgba(255,255,255,0.85) 50%, transparent 58%)",
+                transform: "translateX(-120%)",
+                animation: "shineDiagonal 4s ease-in-out infinite",
+                borderRadius: "inherit",
+                pointerEvents: "none",
+                zIndex: 1,
+              },
+              "&:hover::after": {
+                animation: "shineDiagonal 1.2s ease-in-out",
+              },
+              "@keyframes shineBorderSweep": {
+                "0%": { backgroundPosition: "-300% 0" },
+                "100%": { backgroundPosition: "300% 0" },
+              },
+              "@keyframes shineDiagonal": {
+                "0%": { transform: "translateX(-120%)" },
+                "100%": { transform: "translateX(120%)" },
+              },
+              "@keyframes gradientShift": {
+                "0%": { backgroundPosition: "0% 50%" },
+                "50%": { backgroundPosition: "100% 50%" },
+                "100%": { backgroundPosition: "0% 50%" },
+              },
+            }}
+          >
+            Seguir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ThemeProvider >
   );
 }

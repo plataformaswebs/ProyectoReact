@@ -267,6 +267,18 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Abrir suscripción desde otros componentes (ej: chat)
+  useEffect(() => {
+    const handleOpenFromEvent = (e) => {
+      const detail = e?.detail || {};
+      const nombre = detail.nombre || "Ignacio Aguilera";
+      const correo = detail.correo || "plataformas.web.cl@gmail.com";
+      handleOpenOneClick(nombre, correo);
+    };
+    window.addEventListener("openOneClickMall", handleOpenFromEvent);
+    return () => window.removeEventListener("openOneClickMall", handleOpenFromEvent);
+  }, []);
+
 
 
   return (

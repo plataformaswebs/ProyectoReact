@@ -5,7 +5,7 @@ import ChatContainer from "./ChatContainer";
 import ChatInput from "./ChatInput";
 import { useState, useEffect } from "react";
 
-export default function Chat({ onClose }) {
+export default function Chat({ onClose, onForceClose }) {
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
     const tenant = useTenant();
     const [welcomeOpen, setWelcomeOpen] = useState(true);
@@ -20,11 +20,48 @@ export default function Chat({ onClose }) {
     });
     const [phase, setPhase] = useState("OFFER_SELECTION");
     const [messages, setMessages] = useState([
-        { from: "bot", text: tenant.welcomeMessage },
+        { from: "bot", text: tenant.welcomeMessage, timestamp: new Date() },
     ]);
     const offerQuickReplies = [
         { label: "Oferta 1", value: "Oferta 1" },
         { label: "Oferta 2", value: "Oferta 2" },
+        {
+            label: "Soy cliente",
+            value: "Soy cliente",
+            variant: "orange",
+            icon: "💎",
+        },
+    ];
+    const executiveQuickReplies = [
+        {
+            label: "Chat con ejecutivo",
+            value: "Chat con ejecutivo",
+            variant: "whatsapp",
+            icon: "/whatsapp-logo-icon.webp",
+        },
+        {
+            label: "Suscribirse",
+            value: "Suscribirse",
+            variant: "gold",
+            icon: "💎",
+        },
+        {
+            label: "🚀 Solicitar nuevo proyecto",
+            value: "Solicitar nuevo proyecto",
+            variant: "purple",
+        },
+        {
+            label: "🐞 Reportar Bug",
+            value: "Reportar Bug",
+            variant: "gray",
+            disabled: true,
+        },
+        {
+            label: "🧾 Tickets",
+            value: "Tickets",
+            variant: "gray",
+            disabled: true,
+        },
     ];
     const confirmQuickReplies = [
         { label: "Confirmo!", value: "Confirmo" },
@@ -69,6 +106,7 @@ export default function Chat({ onClose }) {
 ¿Cuál oferta te interesa más? 😊`
                     ,
                     quickReplies: offerQuickReplies,
+                    timestamp: new Date(),
                 }
             ]);
         }, 800); // 0.8 segundos después
@@ -241,6 +279,31 @@ export default function Chat({ onClose }) {
     };
 
     const handleQuickReply = (value) => {
+        if (value === "Chat con ejecutivo") {
+            const mensaje = "¡Hola! Me gustaría hablar con un ejecutivo 😊";
+            const url = `https://api.whatsapp.com/send?phone=56946873014&text=${encodeURIComponent(mensaje)}`;
+            window.open(url, "_blank", "noopener,noreferrer");
+            setMessages((prev) => {
+                const next = [...prev];
+                for (let i = next.length - 1; i >= 0; i--) {
+                    if (next[i].from === "bot" && Array.isArray(next[i].quickReplies) && next[i].quickReplies.length) {
+                        next[i] = { ...next[i], quickReplies: [], quickRepliesDisabled: true };
+                        break;
+                    }
+                }
+                return next;
+            });
+            onForceClose?.();
+            return;
+        }
+        if (value === "Soy cliente") {
+            const clientGreeting = "Bienvenid@! siempre a tu servicio 24/7👨‍💻";
+            setMessages([
+                { from: "bot", text: clientGreeting, timestamp: new Date(), quickReplies: executiveQuickReplies, animateText: true, quickRepliesCascade: true },
+            ]);
+            setPhase("EXISTING_CLIENT");
+            return;
+        }
         if (value === "Ver Seguimiento") {
             const lastBotWithLink = [...messages]
                 .reverse()
@@ -258,6 +321,35 @@ export default function Chat({ onClose }) {
                 }
                 return next;
             });
+            return;
+        }
+        if (value === "Solicitar nuevo proyecto") {
+            const mensaje = "¡Hola! Quiero solicitar un nuevo proyecto con Plataformas Web 🚀";
+            const url = `https://api.whatsapp.com/send?phone=56946873014&text=${encodeURIComponent(mensaje)}`;
+            window.open(url, "_blank", "noopener,noreferrer");
+            setMessages((prev) => {
+                const next = [...prev];
+                for (let i = next.length - 1; i >= 0; i--) {
+                    if (next[i].from === "bot" && Array.isArray(next[i].quickReplies) && next[i].quickReplies.length) {
+                        next[i] = { ...next[i], quickReplies: [], quickRepliesDisabled: true };
+                        break;
+                    }
+                }
+                return next;
+            });
+            onForceClose?.();
+            return;
+        }
+        if (value === "Suscribirse") {
+            window.dispatchEvent(
+                new CustomEvent("openOneClickMall", {
+                    detail: {
+                        nombre: "Ignacio Aguilera",
+                        correo: "plataformas.web.cl@gmail.com",
+                    },
+                })
+            );
+            onForceClose?.();
             return;
         }
         setMessages((prev) => {

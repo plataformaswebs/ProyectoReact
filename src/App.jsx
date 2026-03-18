@@ -259,6 +259,10 @@ function App() {
   };
 
   const requestCloseChat = () => setConfirmCloseOpen(true);
+  const forceCloseChat = () => {
+    setConfirmCloseOpen(false);
+    setOpenChat(false);
+  };
   const handleConfirmCloseChat = () => {
     setConfirmCloseOpen(false);
     setOpenChat(false);
@@ -503,7 +507,7 @@ function App() {
                 zIndex: 2000,
               }}
             >
-              <Chat onClose={requestCloseChat} />
+              <Chat onClose={requestCloseChat} onForceClose={forceCloseChat} />
             </motion.div>
           </>
         )}

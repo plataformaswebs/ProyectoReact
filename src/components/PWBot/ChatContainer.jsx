@@ -64,7 +64,7 @@ export default function ChatContainer({ messages, isTyping, onQuickReply }) {
                 sx={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: 0.5, // separación entre cards
+                    gap: 0.3, // separación entre cards
                 }}
             >
                 {messages
@@ -86,6 +86,8 @@ export default function ChatContainer({ messages, isTyping, onQuickReply }) {
                             quickReplies={msg.quickReplies}
                             quickRepliesDisabled={msg.quickRepliesDisabled}
                             onQuickReply={onQuickReply}
+                            animateText={msg.animateText}
+                            quickRepliesCascade={msg.quickRepliesCascade}
                         />
                     ))}
 

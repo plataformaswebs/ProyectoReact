@@ -115,6 +115,7 @@ exports.handler = async (event) => {
 
             const accessToken = tokenResponse.data.access_token;
             if (!accessToken) throw new Error("No se obtuvo access token de PayPal");
+            console.log("[suscribirse] PayPal token app_id:", tokenResponse.data.app_id);
 
             console.log(
                 "[suscribirse] PayPal plan_id:",
@@ -124,6 +125,31 @@ exports.handler = async (event) => {
                 "mode:",
                 usarPlanPaypalTest ? "TEST" : "STANDARD"
             );
+
+            try {
+                const planCheck = await axios.get(
+                    `${PAYPAL_API_URL}/v1/billing/plans/${PAYPAL_PLAN_ID}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+                console.log("[suscribirse] PayPal plan verification:", {
+                    id: planCheck.data?.id,
+                    status: planCheck.data?.status,
+                    product_id: planCheck.data?.product_id,
+                });
+            } catch (planErr) {
+                console.error("[suscribirse] PayPal plan verification failed:", {
+                    status: planErr.response?.status,
+                    data: planErr.response?.data,
+                    selectedPlanId: PAYPAL_PLAN_ID,
+                    selectedPlanMode: usarPlanPaypalTest ? "test" : "standard",
+                });
+                throw planErr;
+            }
 
             let subscriptionResponse;
             try {

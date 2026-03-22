@@ -392,13 +392,13 @@ const SuscripcionPayPal = () => {
                       gap: 0.5,
                     }}
                   >
-                    <strong>{info.sitioWeb || "Sitio no disponible"}</strong>
+                    🌐<strong>{info.sitioWeb || "Sitio no disponible"}</strong>
                   </Typography>
                 </Box>
 
                 <Box
                   component="img"
-                  src="/logo-pagar.png"
+                  src="/logo-pay-pal.avif"
                   alt="PayPal"
                   sx={{
                     display: "block",
@@ -548,7 +548,7 @@ const SuscripcionPayPal = () => {
 
                 <Box
                   component="img"
-                  src="/logo-pay-pal.png"
+                  src="/logo-pay-pal.avif"
                   alt="PayPal"
                   sx={{
                     width: { xs: 120, sm: 150 },

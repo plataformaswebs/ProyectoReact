@@ -75,6 +75,16 @@ exports.handler = async (event) => {
                 : PAYPAL_PLAN_ID_STANDARD;
         const PAYPAL_API_URL = isLocal ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";
 
+        console.log("[suscribirse] PayPal env summary:", {
+            isLocal,
+            hasClientId: Boolean(PAYPAL_CLIENT_ID),
+            hasSecret: Boolean(PAYPAL_SECRET),
+            hasStandardPlan: Boolean(PAYPAL_PLAN_ID_STANDARD),
+            hasTestPlan: Boolean(PAYPAL_PLAN_ID_TEST),
+            selectedPlanMode: usarPlanPaypalTest ? "test" : "standard",
+            selectedPlanId: PAYPAL_PLAN_ID,
+        });
+
         const hasCredentials =
             (process.env.AWS_ACCESS_KEY_ID || process.env.MY_AWS_ACCESS_KEY_ID) &&
             (process.env.AWS_SECRET_ACCESS_KEY || process.env.MY_AWS_SECRET_ACCESS_KEY);
@@ -115,21 +125,34 @@ exports.handler = async (event) => {
                 usarPlanPaypalTest ? "TEST" : "STANDARD"
             );
 
-            const subscriptionResponse = await axios.post(
-                `${PAYPAL_API_URL}/v1/billing/subscriptions`,
-                {
-                    plan_id: PAYPAL_PLAN_ID,
-                    subscriber: { name: { given_name: nombre }, email_address: email },
-                    application_context: {
-                        brand_name: "Plataformas Web",
-                        locale: "es-CL",
-                        user_action: "SUBSCRIBE_NOW",
-                        return_url: "https://plataformas-web.cl/paypal-exito",
-                        cancel_url: "https://plataformas-web.cl/paypal-cancelado",
+            let subscriptionResponse;
+            try {
+                subscriptionResponse = await axios.post(
+                    `${PAYPAL_API_URL}/v1/billing/subscriptions`,
+                    {
+                        plan_id: PAYPAL_PLAN_ID,
+                        subscriber: { name: { given_name: nombre }, email_address: email },
+                        application_context: {
+                            brand_name: "Plataformas Web",
+                            locale: "es-CL",
+                            user_action: "SUBSCRIBE_NOW",
+                            return_url: "https://plataformas-web.cl/paypal-exito",
+                            cancel_url: "https://plataformas-web.cl/paypal-cancelado",
+                        },
                     },
-                },
-                { headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" } }
-            );
+                    { headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" } }
+                );
+            } catch (paypalErr) {
+                console.error("[suscribirse] PayPal subscription creation failed:", {
+                    status: paypalErr.response?.status,
+                    data: paypalErr.response?.data,
+                    selectedPlanId: PAYPAL_PLAN_ID,
+                    selectedPlanMode: usarPlanPaypalTest ? "test" : "standard",
+                    apiUrl: PAYPAL_API_URL,
+                    idCliente,
+                });
+                throw paypalErr;
+            }
 
             console.log("[suscribirse] PayPal subscription status/id:", subscriptionResponse.data.status, subscriptionResponse.data.id);
             console.log("[suscribirse] PayPal links rels:", (subscriptionResponse.data.links || []).map(l => l.rel));

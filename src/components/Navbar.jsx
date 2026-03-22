@@ -97,6 +97,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
   const pdfSrc = `/plataformasweb-pdf.pdf#zoom=${isMobile ? 100 : 60}`;
   const location = useLocation();
   const mostrarAnimacion = videoReady || (location.pathname !== '/' && location.pathname !== '');
+  const showTopBanner = location.pathname === "/";
   const [animacionMostrada, setAnimacionMostrada] = useState(false);
   const mostrarLogo = mostrarAnimacion || animacionMostrada;
   const [scrollY, setScrollY] = useState(0);
@@ -283,7 +284,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
 
   return (
     <>
-      {location.pathname === "/" && (
+      {showTopBanner && (
         <motion.div
           style={{
             transform: `translateY(-${translateY}px)`,
@@ -409,7 +410,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
           zIndex: 1100,
           borderRadius: "50px",
           overflow: "hidden",
-          marginTop: `${Math.max(40 - translateY, 15)}px`,
+          marginTop: showTopBanner ? `${Math.max(40 - translateY, 15)}px` : "12px",
         }}
       >
         <AppBar

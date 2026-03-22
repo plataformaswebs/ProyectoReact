@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+﻿import React, { useEffect, useState, useRef } from "react";
 import { IconButton, Snackbar, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Paper, Typography, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
 import { styled, keyframes } from "@mui/system";
 import { cargarClientesDesdeExcel } from "../../helpers/HelperClientes";
@@ -17,9 +17,10 @@ import DialogClientePagos from "./DialogClientePagos";
 import DialogClientesPaseMensual from "./DialogClientesPaseMensual";
 import DialogAgregarCliente from "./DialogAgregarCliente";
 import AddIcon from "@mui/icons-material/Add";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import * as XLSX from "xlsx";
 
-const baseDelay = 1.5; // segundos antes de comenzar la animación
+const baseDelay = 1.5; // segundos antes de comenzar la animaciÃ³n
 const letterDelay = 0.04;
 
 const letterVariants = {
@@ -36,7 +37,7 @@ const letterVariants = {
   }),
 };
 
-const totalChars = "Gestión Mensual de Clientes".length;
+const totalChars = "Gestión Clientes".length;
 const iconDelay = baseDelay + totalChars * letterDelay + 0.2;
 
 // 🔴 Pulsación animada
@@ -105,13 +106,16 @@ const Clientes = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
   const [paginaActual, setPaginaActual] = useState(1);
-  const clientesPorPagina = 7;
+  const clientesPorPagina = 9;
   const [actualizando, setActualizando] = useState(false);
   const indiceInicio = (paginaActual - 1) * clientesPorPagina;
   const indiceFin = indiceInicio + clientesPorPagina;
   const clientesPaginados = clientes.slice(indiceInicio, indiceFin);
   const totalPaginas = Math.ceil(clientes.length / clientesPorPagina);
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [mostrarMenuInferior, setMostrarMenuInferior] = useState(false);
+  const menuInferiorTimeoutRef = useRef(null);
+  const touchStartYRef = useRef(null);
   const [esReversion, setEsReversion] = useState(false);
   const [mostrarDialogoUltimoDia, setMostrarDialogoUltimoDia] = useState(false);
   const [tipoCambioVisual, setTipoCambioVisual] = useState(null);
@@ -129,6 +133,7 @@ const Clientes = () => {
   const [loadingDialogAction, setLoadingDialogAction] = useState(null);
   const [cobrando, setCobrando] = useState(false);
   const [botonesDeshabilitados, setBotonesDeshabilitados] = useState(false);
+  const [mostrarTextoAgregar, setMostrarTextoAgregar] = useState(true);
 
   const datosCliente = (cliente) => { setClienteSeleccionado(cliente); setOpenDialogCliente(true); };
   const MotionBox = motion.create(Box);
@@ -225,6 +230,46 @@ const Clientes = () => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMostrarTextoAgregar(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleAbrirMenuInferior = () => {
+    if (mostrarMenuInferior) {
+      setMostrarMenuInferior(false);
+      if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
+      return;
+    }
+    setMostrarMenuInferior(true);
+    if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
+    menuInferiorTimeoutRef.current = setTimeout(() => {
+      setMostrarMenuInferior(false);
+    }, 4000);
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartYRef.current = e.touches?.[0]?.clientY ?? null;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartYRef.current == null) return;
+    const endY = e.changedTouches?.[0]?.clientY ?? touchStartYRef.current;
+    const delta = touchStartYRef.current - endY;
+    touchStartYRef.current = null;
+    if (delta > 30) {
+      handleAbrirMenuInferior();
+    }
+  };
 
 
   const abrirDialogoConfirmacion = (cliente, revertir = false) => {
@@ -324,7 +369,7 @@ const Clientes = () => {
 
       const resultadoCorreo = await emailjs.send(
         "service_ocjgtpc",
-        "template_ligrzq3", // ✅ plantilla pago realizado
+        "template_ligrzq3",
         templateParams,
         "byR6suwAx2-x6ddVp"
       );
@@ -432,7 +477,7 @@ const Clientes = () => {
             open: true,
             message: `Cobro automático aprobado para ${cliente.sitioWeb}`,
             severity: "success",
-            type: "success-cobro", // 👈 nuevo tipo
+            type: "success-cobro",
           });
         } else {
           console.warn("❌ Cobro rechazado o error en Transbank:", detalle);
@@ -493,7 +538,7 @@ const Clientes = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idCliente,
-          cobroExitoso: true, // 👈 activa pagado=1 y fechaPago=hoy
+          cobroExitoso: true,
         }),
       });
 
@@ -542,7 +587,7 @@ const Clientes = () => {
 
     setTimeout(() => {
       setBotonesBloqueados((prev) => prev.filter((i) => i !== index));
-    }, 10000); // ← 10 segundos
+    }, 10000);
   };
 
   useEffect(() => {
@@ -577,7 +622,7 @@ const Clientes = () => {
         onComplete: () => {
           setMostrarEfecto(true);
 
-          // Después de 2s, apaga el zoom y el efecto
+          // Despues de 2s, apaga el zoom y el efecto
           setTimeout(() => {
             setMostrarEfecto(false);
           }, 2000);
@@ -624,14 +669,14 @@ const Clientes = () => {
     );
   };
 
-  // Para diálogo de cobro
+  // Para dialogo de cobro
   useEffect(() => {
     if (openDialogCobro) {
       setMesManual(mesCapitalizado);
     }
   }, [openDialogCobro, mesCapitalizado]);
 
-  // Para diálogo de pago
+  // Para dialogo  de pago
   useEffect(() => {
     if (openDialog && !esReversion) {
       setMesManual(mesCapitalizado);
@@ -704,7 +749,7 @@ const Clientes = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Error al eliminar");
 
-      // ✅ Actualiza la lista en pantalla
+      // âœ… Actualiza la lista en pantalla
       setClientes((prev) => prev.filter((c) => c.sitioWeb !== dialog.sitioWeb));
       setSnackbar({
         open: true,
@@ -712,7 +757,7 @@ const Clientes = () => {
         message: `Cliente "${dialog.sitioWeb}" eliminado correctamente`,
       });
     } catch (error) {
-      console.error("❌ Error al eliminar cliente:", error);
+      console.error("âŒ Error al eliminar cliente:", error);
       setSnackbar({
         open: true,
         type: "error",
@@ -737,19 +782,19 @@ const Clientes = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idCliente: cliente.idCliente,
-          suscripcion: nuevoEstado, // 👈 true = activar, false = anular
+          suscripcion: nuevoEstado, // ðŸ‘ˆ true = activar, false = anular
         }),
       });
 
       const data = await res.json();
-      console.log("🔄 Suscripción actualizada:", data);
+      console.log("ðŸ”„ SuscripciÃ³n actualizada:", data);
 
       if (res.ok) {
         const nuevosClientes = await cargarClientesDesdeExcel();
         setClientes(nuevosClientes);
       }
     } catch (err) {
-      console.error("❌ Error al actualizar suscripción:", err);
+      console.error("âŒ Error al actualizar suscripciÃ³n:", err);
     }
   };
 
@@ -767,7 +812,7 @@ const Clientes = () => {
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         overflow: "hidden",
-        paddingTop: isMobile ? 14 : 15,
+        paddingTop: isMobile ? 11 : 12,
       }}
     >
 
@@ -776,7 +821,7 @@ const Clientes = () => {
           display: "flex",
           flexDirection: "row",
           flexWrap: "nowrap",
-          justifyContent: "center", // 👈 asegura que se centre en el medio
+          justifyContent: "center", // ðŸ‘ˆ asegura que se centre en el medio
           alignItems: "stretch",
           gap: 1.5,
           mb: 2,
@@ -909,7 +954,7 @@ const Clientes = () => {
           display="flex"
           alignItems="center"
           justifyContent="space-between"
-          flexDirection="row" // ✅ invierte el orden visual
+          flexDirection="row"
           pb={2}
           sx={{ width: isMobile ? "100%" : "70%", }}
         >
@@ -932,7 +977,7 @@ const Clientes = () => {
                 whiteSpace: "nowrap",
               }}
             >
-              {"Gestión Mensual de Clientes".split("").map((char, i) => (
+              {"Gestión Clientes".split("").map((char, i) => (
                 <motion.span
                   key={i}
                   custom={i}
@@ -953,25 +998,27 @@ const Clientes = () => {
               onClick={() => agregarCliente()}
               variant="outlined"
               color="inherit"
-              startIcon={<AddIcon sx={{ mr: -0.5 }} />} // 👈 reduce el espacio entre ícono y texto
+              startIcon={<AddIcon sx={{ mr: mostrarTextoAgregar ? -0.5 : 0 }} />} // ðŸ‘ˆ reduce el espacio entre Ã­cono y texto
               sx={{
                 color: "white",
                 borderColor: "white",
                 fontSize: { xs: "0.7rem", sm: "0.85rem" },
-                px: { xs: 1, sm: 1.5 },
+                px: { xs: mostrarTextoAgregar ? 1 : 0.9, sm: mostrarTextoAgregar ? 1.5 : 1 },
                 py: { xs: 0.25, sm: 0.5 },
-                minWidth: "auto",
+                minWidth: mostrarTextoAgregar ? "auto" : 36,
+                transition: "all 0.2s ease",
                 "& .MuiButton-startIcon": {
-                  marginRight: "2px", // 👈 aún más fino que el default (8px)
-                  marginLeft: "-2px",
+                  marginRight: mostrarTextoAgregar ? "2px" : 0, // ðŸ‘ˆ aÃºn mÃ¡s fino que el default (8px)
+                  marginLeft: mostrarTextoAgregar ? "-2px" : 0,
                 },
                 "&:hover": {
                   backgroundColor: "#ffffff22",
                   borderColor: "#ffffffcc",
                 },
               }}
+              aria-label="Agregar cliente"
             >
-              Agregar Cliente
+              {mostrarTextoAgregar ? "Agregar Cliente" : ""}
             </Button>
           </motion.div>
         </Box>
@@ -982,7 +1029,7 @@ const Clientes = () => {
             width: isMobile ? "100%" : "70%",
             maxHeight: "80vh",
             borderRadius: "12px",
-            overflowX: isMobile ? "auto" : "hidden", // 👈 scroll horizontal solo en mobile
+            overflowX: isMobile ? "auto" : "hidden", // ðŸ‘ˆ scroll horizontal solo en mobile
             overflowY: "auto",
             boxShadow: "0 8px 25px rgba(0,0,0,0.4)",
             backgroundColor: "#fdfdfd",
@@ -995,7 +1042,7 @@ const Clientes = () => {
               minWidth: isMobile ? 400 : "auto",
               "& .MuiTableCell-root": {
                 fontFamily: "Poppins, sans-serif",
-                borderColor: "rgba(0,0,0,0.1)", // 👈 bordes suaves
+                borderColor: "rgba(0,0,0,0.1)", // ðŸ‘ˆ bordes suaves
               },
             }}
           >
@@ -1026,15 +1073,15 @@ const Clientes = () => {
                     width: isMobile ? 35 : 60,  // igual que el body
                     minWidth: isMobile ? 35 : 60,
                     py: 0.5,
-                    pr: 0,                     // espacio pequeño a la derecha
-                    pl: 0,                     // 👈 eliminamos padding a la izquierda
+                    pr: 0,                     // espacio pequeÃ±o a la derecha
+                    pl: 0,                     // ðŸ‘ˆ eliminamos padding a la izquierda
                   }}
                 >
                   Estado
                 </TableCell>
 
 
-                {/* Botón 1 */}
+                {/* Boton 1 */}
                 <TableCell
                   align="center"
                   sx={{
@@ -1044,13 +1091,13 @@ const Clientes = () => {
                   }}
                 />
 
-                {/* Botón 2 */}
+                {/* Boton 2 */}
                 <TableCell
                   align="center"
                   sx={{
                     backgroundColor: "#ffffff",
-                    width: isMobile ? 35 : 170, // 🔹 solo se achica en mobile
-                    px: isMobile ? 0 : 1,       // 🔹 sin padding solo mobile
+                    width: isMobile ? 35 : 170,
+                    px: isMobile ? 0 : 1,
                     pr: isMobile ? 0.5 : 0,
                   }}
                 />
@@ -1061,7 +1108,7 @@ const Clientes = () => {
             <TableBody>
               {clientesPaginados.map((cliente, index) => {
                 const estaAlDia = cliente.pagado;
-                const estaSuscrito = cliente.suscripcion === true; // 👈 nuevo campo
+                const estaSuscrito = cliente.suscripcion === true;
 
                 return (
                   <TableRow
@@ -1084,11 +1131,11 @@ const Clientes = () => {
                             : "rgba(0,0,0,0.03)",
                       },
 
-                      // ✨ Efecto de brillo diagonal solo si está suscrito
+                      // Efecto de brillo diagonal solo si esta suscrito
                       ...(estaSuscrito && {
                         boxShadow: "inset 0 0 0.5px rgba(255, 215, 0, 0.3), 0 0 10px rgba(255, 215, 0, 0.25)",
                         position: "relative",
-                        isolation: "isolate", // 👈 asegura que el brillo no afecte layout exterior
+                        isolation: "isolate", // asegura que el brillo no afecte layout exterior
                         "&::after": {
                           content: '""',
                           position: "absolute",
@@ -1120,8 +1167,8 @@ const Clientes = () => {
                     {/* Cliente */}
                     <TableCell
                       sx={{
-                        minWidth: isMobile ? 240 : 240, // aumentamos mínimo
-                        maxWidth: isMobile ? 300 : 400, // aumentamos máximo
+                        minWidth: isMobile ? 240 : 240, // aumentamos mÃ­nimo
+                        maxWidth: isMobile ? 300 : 400, // aumentamos mÃ¡ximo
                         whiteSpace: "normal",
                         wordBreak: "break-word",
                         overflow: "hidden",
@@ -1132,7 +1179,7 @@ const Clientes = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: 0.5,
-                          flexWrap: "wrap", // permite que los íconos bajen a la siguiente línea si falta espacio
+                          flexWrap: "wrap", // permite que los Ã­conos bajen a la siguiente lÃ­nea si falta espacio
                         }}
                       >
                         <Typography
@@ -1145,7 +1192,7 @@ const Clientes = () => {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap", // evita que se rompa el texto, mantiene el ellipsis
-                            flex: 1, // ocupa todo el espacio disponible antes de los íconos
+                            flex: 1, // ocupa todo el espacio disponible antes de los Ã­conos
                             "&:hover": { color: "#0b0080" },
                           }}
                           onClick={() =>
@@ -1159,7 +1206,7 @@ const Clientes = () => {
 
                         {/* Iconos */}
                         <Box sx={{ display: "flex", gap: 0.5 }}>
-                          {/* Botón acciones */}
+                          {/* BotÃ³n acciones */}
                           <Tooltip title="Acciones Cliente" arrow>
                             <IconButton
                               onClick={() => datosCliente(cliente)}
@@ -1187,7 +1234,7 @@ const Clientes = () => {
                             </IconButton>
                           </Tooltip>
 
-                          {/* Botón eliminar */}
+                          {/* BotÃ³n eliminar */}
                           <Tooltip title="Eliminar Cliente" arrow>
                             <IconButton
                               onClick={() => abrirDialog(cliente.sitioWeb)}
@@ -1212,24 +1259,24 @@ const Clientes = () => {
                             </IconButton>
                           </Tooltip>
 
-                          {/* 🟢 Botón suscribir manualmente */}
+                          {/* ðŸŸ¢ BotÃ³n suscribir manualmente */}
                           <Tooltip
                             title={
                               cliente.suscripcion
-                                ? "Anular suscripción" // 👈 cambia tooltip
-                                : "Activar suscripción manual"
+                                ? "Anular suscripciÃ³n" // ðŸ‘ˆ cambia tooltip
+                                : "Activar suscripciÃ³n manual"
                             }
                             arrow
                           >
                             <IconButton
                               onClick={() =>
-                                actualizarASuscrito(cliente, !cliente.suscripcion) // 👈 enviamos nuevo estado
+                                actualizarASuscrito(cliente, !cliente.suscripcion) // ðŸ‘ˆ enviamos nuevo estado
                               }
                               size="small"
                               sx={{
                                 background: cliente.suscripcion
-                                  ? "linear-gradient(135deg, #f44336, #d32f2f)" // 🔴 rojo si está suscrito
-                                  : "linear-gradient(135deg, #43a047, #2e7d32)", // 🟢 verde si no
+                                  ? "linear-gradient(135deg, #f44336, #d32f2f)" // ðŸ”´ rojo si estÃ¡ suscrito
+                                  : "linear-gradient(135deg, #43a047, #2e7d32)", // ðŸŸ¢ verde si no
                                 width: 22,
                                 height: 22,
                                 p: 0.3,
@@ -1257,7 +1304,7 @@ const Clientes = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: isMobile ? 35 : 60,  // hacemos la celda más ajustada
+                        width: isMobile ? 35 : 60,  // hacemos la celda mÃ¡s ajustada
                         paddingLeft: 0,             // eliminamos espacio extra a la izquierda
                         paddingRight: 0,             // un poco de espacio a la derecha para no pegarlo al borde
                       }}
@@ -1270,7 +1317,7 @@ const Clientes = () => {
                           alignItems: "center",
                           height: "100%",
                           minHeight: "50px",
-                          gap: 0.5,                    // espacio pequeño si agregas más elementos
+                          gap: 0.5,                    // espacio pequeÃ±o si agregas mÃ¡s elementos
                         }}
                       >
                         {estaSuscrito ? (
@@ -1298,7 +1345,7 @@ const Clientes = () => {
                     </TableCell>
 
 
-                    {/* === CELDA 1: Botón COBRAR (siempre visible) === */}
+                    {/* === CELDA 1: BotÃ³n COBRAR (siempre visible) === */}
                     <TableCell align="center">
                       <Box
                         sx={{
@@ -1354,17 +1401,17 @@ const Clientes = () => {
                       align="center"
                       sx={{
                         width: isMobile ? 55 : 170,
-                        pl: 0,        // 🔹 eliminar padding izquierdo
-                        pr: 1,        // 🔹 mantener un poquito de espacio a la derecha
+                        pl: 0,        // ðŸ”¹ eliminar padding izquierdo
+                        pr: 1,        // ðŸ”¹ mantener un poquito de espacio a la derecha
                       }}
                     >
                       <Box
                         sx={{
                           display: "flex",
-                          justifyContent: "flex-start", // 🔹 pegado a la izquierda
+                          justifyContent: "flex-start", // ðŸ”¹ pegado a la izquierda
                           alignItems: "center",
                           minHeight: "50px",
-                          gap: 0.5, // espacio entre iconos y/o botón
+                          gap: 0.5, // espacio entre iconos y/o botÃ³n
                         }}
                       >
                         <AnimatePresence mode="wait">
@@ -1389,9 +1436,9 @@ const Clientes = () => {
                                     transition: "all 0.3s ease",
                                     "& .emoji": { fontSize: "1rem" },
 
-                                    // 🔹 Fondo más visible
+                                    // ðŸ”¹ Fondo mÃ¡s visible
                                     background: "linear-gradient(90deg, rgba(255,215,0,0.35), rgba(255,195,0,0.2))",
-                                    // 🔹 Borde más oscuro
+                                    // ðŸ”¹ Borde mÃ¡s oscuro
                                     border: "1px solid rgba(184,134,11,0.8)",
                                     color: "#b8860b",
                                     boxShadow: "0 0 8px rgba(184,134,11,0.5)",
@@ -1544,7 +1591,7 @@ const Clientes = () => {
               Anterior
             </Button>
             <Typography variant="body2" sx={{ color: "white" }}>
-              Página {paginaActual} de {totalPaginas}
+              PÃ¡gina {paginaActual} de {totalPaginas}
             </Typography>
             <Button
               variant="outlined"
@@ -1569,7 +1616,47 @@ const Clientes = () => {
 
 
 
-      <MenuInferior cardSize={cardSize} modo="clientes" />
+      {/* MenuInferior: se abre manualmente y se minimiza solo */}
+      <AnimatePresence>
+        {mostrarMenuInferior && (
+          <MenuInferior cardSize={cardSize} modo="clientes" enterDuration={1} exitDuration={1} />
+        )}
+      </AnimatePresence>
+
+      {/* Flecha inferior para abrir menu */}
+      <Box
+        onClick={handleAbrirMenuInferior}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        sx={{
+          position: "fixed",
+          left: "50%",
+          transform: "translateX(-50%)",
+          bottom: 10,
+          zIndex: 1200,
+          width: 56,
+          height: 30,
+          borderRadius: "999px",
+          background: "rgba(0,0,0,0.55)",
+          border: "1px solid rgba(255,255,255,0.25)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          backdropFilter: "blur(6px)",
+          boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
+          "&:active": { transform: "translateX(-50%) scale(0.98)" },
+        }}
+      >
+        <KeyboardArrowUpIcon
+          sx={{
+            color: "#fff",
+            fontSize: 22,
+            transform: mostrarMenuInferior ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.25s ease",
+          }}
+        />
+      </Box>
 
       {/* DIALOG: REVERTIR && PAGOS */}
       <DialogClientePagos
@@ -1665,7 +1752,7 @@ const Clientes = () => {
               color: "#FFF",
               zIndex: 6,
               "&:hover": { backgroundColor: "rgba(255,255,255,.15)" },
-              animation: openDialogCobro ? "spinTwice 0.6s ease-in-out" : "none", // 👈 depende del estado del dialog
+              animation: openDialogCobro ? "spinTwice 0.6s ease-in-out" : "none", // ðŸ‘ˆ depende del estado del dialog
               animationFillMode: "forwards",
               "@keyframes spinTwice": {
                 "0%": { transform: "rotate(0deg)" },
@@ -1683,24 +1770,24 @@ const Clientes = () => {
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: { xs: 0.6, sm: 1 }, // 👈 menos separación
-              px: { xs: 1, sm: 1.5 },  // 👈 padding horizontal reducido
-              py: { xs: 0.3, sm: 0.6 }, // 👈 padding vertical reducido
+              gap: { xs: 0.6, sm: 1 }, // ðŸ‘ˆ menos separaciÃ³n
+              px: { xs: 1, sm: 1.5 },  // ðŸ‘ˆ padding horizontal reducido
+              py: { xs: 0.3, sm: 0.6 }, // ðŸ‘ˆ padding vertical reducido
               borderRadius: "999px",
               bgcolor: "rgba(0,0,0,0.55)",
               backdropFilter: "blur(4px)",
-              boxShadow: "0 3px 10px rgba(0,0,0,.3)", // 👈 sombra más sutil
+              boxShadow: "0 3px 10px rgba(0,0,0,.3)", // ðŸ‘ˆ sombra mÃ¡s sutil
             }}
           >
             <Typography
               variant="h6"
               component="span"
               sx={{
-                fontWeight: 700, // 👈 un poco menos bold
+                fontWeight: 700,
                 letterSpacing: { xs: "0.2px", sm: "0.8px" },
                 fontFamily: "'Poppins', sans-serif",
                 color: "#fff",
-                fontSize: { xs: "0.83rem", sm: "1.1rem" }, // 👈 texto más chico
+                fontSize: { xs: "0.83rem", sm: "1.1rem" },
               }}
             >
               Cobro del mes de {mesManual || mesCapitalizado} {new Date().getFullYear()}
@@ -1918,13 +2005,13 @@ const Clientes = () => {
                 PaperProps: {
                   sx: {
                     "& .MuiList-root": {
-                      paddingTop: 0, // 👈 elimina el padding superior
+                      paddingTop: 0,
                     },
                     "&::before": {
-                      display: "none", // 👈 elimina la línea superior fantasma
+                      display: "none",
                     },
                     "&::after": {
-                      display: "none", // por si hay sombra inferior también
+                      display: "none",
                     },
                   },
                 },
@@ -2017,9 +2104,9 @@ const Clientes = () => {
                 : "error"
             }
             variant="contained"
-            disabled={cobrando} // ⛔ no permitir doble clic
+            disabled={cobrando}
             onClick={async () => {
-              setCobrando(true); // ▶️ activar loading
+              setCobrando(true);
 
               const mesFinal = mesManual || mesCapitalizado;
               const mesFinalCapitalizado =
@@ -2035,11 +2122,9 @@ const Clientes = () => {
               const tieneToken = (cliente.tbk_user || "").trim() !== "";
 
               try {
-                // 🔹 Si está suscrito con tbk_user válido → cobro automático
                 if (suscrito && tieneToken) {
                   await enviarCorreoCobro(cliente, mesFinalCapitalizado);
                 } else {
-                  // 🔹 Cobro manual + WhatsApp
                   const mensaje = `Buenas! recordar el pago del HOSTING de ${cliente.sitioWeb} de *${cliente.valor}* del mes de ${mesFinalCapitalizado}.`;
                   const numero = cliente.telefono || "56946873014";
                   const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
@@ -2053,8 +2138,8 @@ const Clientes = () => {
                 }
 
               } finally {
-                setCobrando(false); // 🟢 liberar botón
-                setOpenDialogCobro(false); // ❗Cerrar popup SOLO al terminar
+                setCobrando(false);
+                setOpenDialogCobro(false);
               }
             }}
           >

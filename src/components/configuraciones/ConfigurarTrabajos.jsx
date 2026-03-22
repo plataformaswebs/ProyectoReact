@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Table, TableHead, TableRow, TableCell, TableBody, IconButton, TextField, Snackbar, Alert, Container, Paper, LinearProgress, Tooltip, useTheme, useMediaQuery } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
 import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import MenuInferior from './MenuInferior';
 import AddIcon from "@mui/icons-material/Add";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DialogAgregarTrabajo from "./DialogAgregarTrabajo";
 import DialogTrabajoTerminado from "./DialogTrabajoTerminado";
 import { CircularProgress } from "@mui/material";
@@ -40,6 +41,10 @@ const ConfigurarTrabajos = () => {
   const [loadingDialog, setLoadingDialog] = useState(false);
   const [loadingSaveAll, setLoadingSaveAll] = useState(false);
   const [loadingDialogAction, setLoadingDialogAction] = useState(null);
+  const [mostrarMenuInferior, setMostrarMenuInferior] = useState(false);
+  const menuInferiorTimeoutRef = useRef(null);
+  const touchStartYRef = useRef(null);
+  const [mostrarTextoAgregarTrabajo, setMostrarTextoAgregarTrabajo] = useState(true);
   const [dialogFinalizar, setDialogFinalizar] = useState({
     open: false,
     trabajo: null,
@@ -136,6 +141,46 @@ const ConfigurarTrabajos = () => {
   useEffect(() => {
     fetchTrabajos();
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMostrarTextoAgregarTrabajo(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
+    };
+  }, []);
+
+  const handleAbrirMenuInferior = () => {
+    if (mostrarMenuInferior) {
+      setMostrarMenuInferior(false);
+      if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
+      return;
+    }
+    setMostrarMenuInferior(true);
+    if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
+    menuInferiorTimeoutRef.current = setTimeout(() => {
+      setMostrarMenuInferior(false);
+    }, 4000);
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartYRef.current = e.touches?.[0]?.clientY ?? null;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartYRef.current == null) return;
+    const endY = e.changedTouches?.[0]?.clientY ?? touchStartYRef.current;
+    const delta = touchStartYRef.current - endY;
+    touchStartYRef.current = null;
+    if (delta > 30) {
+      handleAbrirMenuInferior();
+    }
+  };
 
   const handleSaveTrabajo = async (nuevoTrabajo) => {
     console.log("Nuevo trabajo agregado:", nuevoTrabajo);
@@ -335,21 +380,26 @@ const ConfigurarTrabajos = () => {
               onClick={() => agregarTrabajo()}
               variant="outlined"
               color="inherit"
-              startIcon={<AddIcon />}
+              startIcon={<AddIcon sx={{ mr: mostrarTextoAgregarTrabajo ? -0.5 : 0 }} />}
               sx={{
                 color: "white",
                 borderColor: "white",
                 fontSize: { xs: "0.7rem", sm: "0.85rem" }, // 👈 más chico
-                px: { xs: 1, sm: 1.5 }, // padding horizontal reducido
+                px: { xs: mostrarTextoAgregarTrabajo ? 1 : 0.9, sm: mostrarTextoAgregarTrabajo ? 1.5 : 1 }, // padding horizontal reducido
                 py: { xs: 0.25, sm: 0.5 }, // padding vertical reducido
-                minWidth: "auto",
+                minWidth: mostrarTextoAgregarTrabajo ? "auto" : 36,
+                transition: "all 0.2s ease",
+                "& .MuiButton-startIcon": {
+                  marginRight: mostrarTextoAgregarTrabajo ? "2px" : 0,
+                  marginLeft: mostrarTextoAgregarTrabajo ? "-2px" : 0,
+                },
                 "&:hover": {
                   backgroundColor: "#ffffff22",
                   borderColor: "#ffffffcc",
                 },
               }}
             >
-              Agregar Trabajo
+              {mostrarTextoAgregarTrabajo ? "Agregar Trabajo" : ""}
             </Button>
           </motion.div>
         </Box>
@@ -709,7 +759,47 @@ const ConfigurarTrabajos = () => {
         />
 
 
-        <MenuInferior cardSize={cardSize} modo="trabajos" />
+        {/* MenuInferior: se abre manualmente y se minimiza solo */}
+        <AnimatePresence>
+          {mostrarMenuInferior && (
+            <MenuInferior cardSize={cardSize} modo="trabajos" enterDuration={1} exitDuration={1} />
+          )}
+        </AnimatePresence>
+
+        {/* Flecha inferior para abrir menu */}
+        <Box
+          onClick={handleAbrirMenuInferior}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          sx={{
+            position: "fixed",
+            left: "50%",
+            transform: "translateX(-50%)",
+            bottom: 10,
+            zIndex: 1200,
+            width: 56,
+            height: 30,
+            borderRadius: "999px",
+            background: "rgba(0,0,0,0.55)",
+            border: "1px solid rgba(255,255,255,0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            backdropFilter: "blur(6px)",
+            boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
+            "&:active": { transform: "translateX(-50%) scale(0.98)" },
+          }}
+        >
+          <KeyboardArrowUpIcon
+            sx={{
+              color: "#fff",
+              fontSize: 22,
+              transform: mostrarMenuInferior ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.25s ease",
+            }}
+          />
+        </Box>
       </Box>
     </Container >
   );

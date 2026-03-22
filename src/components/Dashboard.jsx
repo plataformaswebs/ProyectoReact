@@ -175,14 +175,62 @@ const Dashboard = () => {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                backgroundImage: 'url(fondo-blizz.avif)',
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
                 overflow: "hidden",
             }}
         >
-            <Grid item sx={{ pt: isMobile ? 12 : 12 }}>
+            {/* Mitad superior: video de fondo */}
+            <Box
+                sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: "50%",
+                    zIndex: 0,
+                    overflow: "hidden",
+                }}
+            >
+                <Box
+                    component="video"
+                    src="/video-inicio-oficial.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        opacity: 0.9,
+                    }}
+                />
+                {/* Overlay suave para legibilidad */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.55))",
+                    }}
+                />
+            </Box>
+
+            {/* Mitad inferior: fondo actual */}
+            <Box
+                sx={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: "50%",
+                    backgroundImage: "url(/fondo-blizz.avif)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    zIndex: 0,
+                }}
+            />
+
+            <Grid item sx={{ pt: isMobile ? 11 : 11 }}>
                 <Box
                     sx={{
                         display: "flex",
@@ -192,6 +240,8 @@ const Dashboard = () => {
                         gap: 1,
                         mb: 1,
                         flexWrap: "wrap",
+                        position: "relative",
+                        zIndex: 1,
                     }}
                 >
                     <Typography
@@ -201,6 +251,7 @@ const Dashboard = () => {
                             display: "inline-flex",
                             flexWrap: "wrap",
                             justifyContent: "center",
+                            fontSize: isMobile ? "0.95rem" : "1.05rem",
                         }}
                     >
                         {"Bienvenido ".split("").map((char, index) => (
@@ -251,7 +302,7 @@ const Dashboard = () => {
                 justifyContent="top"
                 alignItems="center"
                 direction="column"
-                sx={{ width: "100%", flexGrow: 1 }}
+                sx={{ width: "100%", flexGrow: 1, position: "relative", zIndex: 1 }}
             >
                 {/* Cuadro principal con animación */}
                 <Grid item>
@@ -479,7 +530,7 @@ const Dashboard = () => {
 
 
                 {/* Dos cuadros pequeños */}
-                <Grid item>
+                <Grid item sx={{ mt: 0.5 }}>
                     <Box sx={{ display: "flex", gap: 2 }}>
                         {/* Paper pequeño 1 */}
                         <motion.div

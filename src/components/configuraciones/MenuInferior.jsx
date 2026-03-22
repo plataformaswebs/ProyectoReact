@@ -8,7 +8,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable'; // 👈 nue
 import { useLocation } from 'react-router-dom';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 
-const MenuInferior = ({ cardSize }) => {
+const MenuInferior = ({ cardSize, enterDuration = 1, exitDuration = 1 }) => {
     const location = useLocation();
     const pathname = location.pathname;
 
@@ -145,7 +145,8 @@ const MenuInferior = ({ cardSize }) => {
         <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1, ease: "easeOut" }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ duration: enterDuration, ease: "easeOut" }}
             style={{
                 position: "fixed",
                 bottom: 0,

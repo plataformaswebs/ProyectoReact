@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   Box, Link, TextField, Button, Typography, Paper, InputAdornment,
   IconButton, useMediaQuery, Alert, useTheme, Checkbox, FormControlLabel
@@ -33,7 +33,7 @@ const Administracion = () => {
   const logoTimeoutRef = useRef(null);
   const [estadoMensaje, setEstadoMensaje] = useState("idle");
   const [logoBase, setLogoBase] = useState("/logo-james.webp");
-  const modoDesarrollo = false;
+  const modoDesarrollo = typeof window !== "undefined" && window.location.hostname === "localhost";
 
   const showSnackbar = (type, message) => {
     setSnackbar({ open: true, type, message });
@@ -72,7 +72,7 @@ const Administracion = () => {
       }));
       sessionStorage.setItem("usuario", JSON.stringify(usuarioValido));
 
-      // ⚠️ Importante: usar useRef para guardar el timeout y poder limpiarlo en unmount
+      // Importante: usar useRef para guardar el timeout y poder limpiarlo en unmount
       logoTimeoutRef.current = setTimeout(() => {
         navigate("/dashboard", { replace: true });
       }, 800);
@@ -130,7 +130,7 @@ const Administracion = () => {
 
     const typeNext = () => {
       if (i < text.length) {
-        setTypedText(text.slice(0, i + 1)); // 👈 escribe hasta la posición actual
+        setTypedText(text.slice(0, i + 1)); // escribe hasta la posiciÃ³n actual
         i++;
         setTimeout(typeNext, 100);
       } else {
@@ -159,7 +159,7 @@ const Administracion = () => {
     if (creds?.email?.toLowerCase() === "iaguilera") {
       sessionStorage.setItem("mostrarAdmin", "1");
     }
-  }, []); // 👈 se ejecuta solo al montar
+  }, []); // se ejecuta solo al montar
 
 
 
@@ -455,7 +455,7 @@ const Administracion = () => {
           <Box sx={{ mt: 2 }}>
             <Link
               component="button"
-              type="button"   // 👈 esto evita que dispare el onSubmit
+              type="button"   // esto evita que dispare el onSubmit
               onClick={() => {
                 sessionStorage.removeItem("credenciales");
                 localStorage.removeItem("credenciales");
@@ -517,3 +517,4 @@ const DotsAnimation = () => {
 };
 
 export default Administracion;
+

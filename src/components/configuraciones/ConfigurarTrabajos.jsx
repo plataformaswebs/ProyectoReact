@@ -45,6 +45,7 @@ const ConfigurarTrabajos = () => {
   const menuInferiorTimeoutRef = useRef(null);
   const touchStartYRef = useRef(null);
   const [mostrarTextoAgregarTrabajo, setMostrarTextoAgregarTrabajo] = useState(true);
+  const [paginaActual, setPaginaActual] = useState(1);
   const [dialogFinalizar, setDialogFinalizar] = useState({
     open: false,
     trabajo: null,
@@ -141,6 +142,72 @@ const ConfigurarTrabajos = () => {
   useEffect(() => {
     fetchTrabajos();
   }, []);
+
+  const trabajosOrdenados = [...trabajos].sort((a, b) => {
+    const aListo = Number(a.Porcentaje) === 100 ? 1 : 0;
+    const bListo = Number(b.Porcentaje) === 100 ? 1 : 0;
+    return aListo - bListo; // los listos al final
+  });
+
+  const trabajosPorPagina = 9;
+  const indiceInicio = (paginaActual - 1) * trabajosPorPagina;
+  const indiceFin = indiceInicio + trabajosPorPagina;
+  const trabajosPaginados = trabajosOrdenados.slice(indiceInicio, indiceFin);
+  const totalPaginas = Math.ceil(trabajosOrdenados.length / trabajosPorPagina);
+  const mostrarPaginacion = totalPaginas > 1;
+
+  const renderPaginacion = () => (
+    <Box
+      sx={{
+        mt: 2,
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        width: "100%",
+        gap: 1,
+      }}
+    >
+      <Button
+        variant="outlined"
+        disabled={paginaActual === 1}
+        onClick={() => setPaginaActual((p) => p - 1)}
+        sx={{
+          color: "white",
+          borderColor: "white",
+          "&:hover": {
+            borderColor: "#E95420",
+            backgroundColor: "#E95420",
+          },
+        }}
+      >
+        Anterior
+      </Button>
+      <Typography variant="body2" sx={{ color: "white" }}>
+        PÃ¡gina {paginaActual} de {totalPaginas}
+      </Typography>
+      <Button
+        variant="outlined"
+        disabled={paginaActual === totalPaginas}
+        onClick={() => setPaginaActual((p) => p + 1)}
+        sx={{
+          color: "white",
+          borderColor: "white",
+          "&:hover": {
+            borderColor: "#E95420",
+            backgroundColor: "#E95420",
+          },
+        }}
+      >
+        Siguiente
+      </Button>
+    </Box>
+  );
+
+  useEffect(() => {
+    if (totalPaginas > 0 && paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [totalPaginas, paginaActual]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -348,7 +415,7 @@ const ConfigurarTrabajos = () => {
         backgroundPosition: "center",
       }}
     >
-      <Box sx={{ pt: 12, pb: 4, px: { xs: 1, md: 4 } }}>
+      <Box sx={{ pt: 10, pb: 4, px: { xs: 1, md: 4 } }}>
         {/* Título */}
         <Box display="flex" alignItems="center" justifyContent="space-between" pb={2}>
           {/* Título */}
@@ -417,6 +484,7 @@ const ConfigurarTrabajos = () => {
               pointerEvents: loadingSaveAll ? "none" : "auto",
             }}
           >
+            {mostrarPaginacion && renderPaginacion()}
             <Table
               stickyHeader
               size="small"
@@ -485,7 +553,7 @@ const ConfigurarTrabajos = () => {
 
 
               <TableBody>
-                {trabajos.map((trabajo, index) => (
+                {trabajosPaginados.map((trabajo, index) => (
                   <TableRow
                     key={trabajo.SitioWeb}
                     component={motion.tr}
@@ -502,7 +570,7 @@ const ConfigurarTrabajos = () => {
                           trabajo.Porcentaje === 100 ? "#c8e6c9" : "#f1f7ff",
                       },
                       "& td, & th": {
-                        py: { xs: 0.5, sm: 0.75 },
+                        py: { xs: 0.2, sm: 0.35 },
                         px: { xs: 1, sm: 2 },
                         fontSize: { xs: "0.75rem", sm: "0.85rem" },
                         color: "#1b263b",
@@ -626,19 +694,29 @@ const ConfigurarTrabajos = () => {
                     </TableCell>
 
 
-                    {/* Botones de acción */}
+                                        {/* Botones de acción */}
                     <TableCell align="center">
                       <Box sx={{ display: "inline-flex", gap: 0.3 }}>
                         <ActionButton
-                          title="Guardar cambios"
-                          color="primary"
-                          disabled={loadingSave === trabajo.SitioWeb}
-                          onClick={() => handleGuardarClick(trabajo)}   // 👈 usamos el nuevo handler
+                          title={trabajo.Estado === 1 ? "Guardar cambios" : "Eliminar"}
+                          color={trabajo.Estado === 1 ? "primary" : "error"}
+                          disabled={trabajo.Estado === 1 ? loadingSave === trabajo.SitioWeb : loadingDialogAction === "eliminar"}
+                          onClick={() => {
+                            if (trabajo.Estado === 1) {
+                              handleGuardarClick(trabajo);   // 👈 usamos el nuevo handler
+                            } else {
+                              abrirDialog(trabajo); // eliminar con confirmación
+                            }
+                          }}
                           icon={
-                            loadingSave === trabajo.SitioWeb ? (
-                              <CircularProgress size={20} color="inherit" />
+                            trabajo.Estado === 1 ? (
+                              loadingSave === trabajo.SitioWeb ? (
+                                <CircularProgress size={20} color="inherit" />
+                              ) : (
+                                <SaveIcon />
+                              )
                             ) : (
-                              <SaveIcon />
+                              <DeleteIcon />
                             )
                           }
                         />
@@ -681,6 +759,8 @@ const ConfigurarTrabajos = () => {
             </Box>
           )}
         </Box>
+
+        {mostrarPaginacion && renderPaginacion()}
 
         {/* Snackbar */}
         <Snackbar
@@ -806,3 +886,5 @@ const ConfigurarTrabajos = () => {
 };
 
 export default ConfigurarTrabajos;
+
+

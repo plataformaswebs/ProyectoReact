@@ -355,7 +355,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
                     }}
                   >
                     <span>
-                      {mostrarTexto ? "¡QUEDAN 20 CUPOS!" : "¡SOLICITA TU WEB!"}
+                      {mostrarTexto ? "¡QUEDAN 5 CUPOS!" : "¡SOLICITA TU WEB!"}
                     </span>
                   </span>
 

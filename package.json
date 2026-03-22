@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
+    "netlify": "netlify dev --no-open",
+    "dev:all": "concurrently -k \"npm run dev\" \"npm run netlify\" & start http://localhost:5173",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -58,6 +60,7 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
     "connect-history-api-fallback": "^2.0.0",
     "eslint": "^9.19.0",
     "eslint-plugin-react": "^7.37.4",

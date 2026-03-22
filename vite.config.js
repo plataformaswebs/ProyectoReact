@@ -45,6 +45,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    open: true, // 👈 AGREGA ESTA LÍNEA
     mimeTypes: { '.jsx': 'application/javascript' },
     allowedHosts: ['c4d2e41af764.ngrok-free.app'],
   },

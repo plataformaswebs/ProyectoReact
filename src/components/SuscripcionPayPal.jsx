@@ -14,6 +14,11 @@ const SuscripcionPayPal = () => {
   const ejecutadoRef = useRef(false);
   const [animar, setAnimar] = useState(false);
 
+  const handleReintentarSuscripcion = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent("openOneClickMall"));
+  };
+
   //INICIO
   useEffect(() => {
     if (ejecutadoRef.current) return;
@@ -88,9 +93,9 @@ const SuscripcionPayPal = () => {
           email: datos.email,
         }
       );
-      console.log("ðŸ“§ Correo enviado:", response.status, response.text);
+      console.log("📧 Correo enviado:", response.status, response.text);
     } catch (error) {
-      console.error("âŒ Error al enviar correo:", error);
+      console.error("Error al enviar correo:", error);
     }
   };
 
@@ -102,7 +107,8 @@ const SuscripcionPayPal = () => {
         : ""
         }/.netlify/functions/actualizarCliente`;
 
-      // datos = { suscripcion: true, subscriptionId }
+      // datos = { suscripcion: true, subscriptionId }
+
       const body = {
         idCliente,
         suscripcion: datos.suscripcion ? 1 : 0,
@@ -118,10 +124,10 @@ const SuscripcionPayPal = () => {
       });
 
       if (!res.ok) {
-        throw new Error("Error al actualizar la suscripciÃ³n en Excel");
+        throw new Error("Error al actualizar la suscripción en Excel");
       }
     } catch (err) {
-      console.error("âŒ Error al actualizar suscripciÃ³n:", err);
+      console.error("Error al actualizar suscripcion:", err);
     }
   };
 
@@ -166,7 +172,7 @@ const SuscripcionPayPal = () => {
               },
             }}
           >
-            {"Suscripcion PayPal".split("").map((c, i) => (
+            {"Suscripción Plataformas Web".split("").map((c, i) => (
               <motion.span
                 key={i}
                 initial={{ opacity: 0, x: -10 }}
@@ -180,7 +186,6 @@ const SuscripcionPayPal = () => {
           </Box>
         </Typography>
       </Box>
-
 
       <Box display="flex" justifyContent="center" mt={2}>
         <Card
@@ -235,7 +240,7 @@ const SuscripcionPayPal = () => {
               >
                 <CircularProgress size={55} thickness={4} color="primary" />
                 <Typography sx={{ mt: 2, fontWeight: 500 }}>
-                  Validando tu suscripcion segura con PayPal...
+                  Validando tu suscripción segura con PayPal...
                 </Typography>
               </motion.div>
             )}
@@ -243,7 +248,7 @@ const SuscripcionPayPal = () => {
 
             {status === "success" && (
               <>
-                {/* âœ… Ãcono check */}
+                {/* ✅ Ícono check */}
                 {animar && (
                   <Box
                     component={motion.div}
@@ -302,7 +307,7 @@ const SuscripcionPayPal = () => {
                           textShadow: "0 1px 2px rgba(0,0,0,0.3)",
                         }}
                       >
-                        âœ“
+                        ✓
                       </Typography>
                     </Box>
                   </Box>
@@ -317,7 +322,7 @@ const SuscripcionPayPal = () => {
                     textShadow: "0 1px 3px rgba(0,0,0,0.2)",
                   }}
                 >
-                  Â¡SuscripciÃ³n activada!
+                  ¡Suscripción activada!
                 </Typography>
 
 
@@ -387,11 +392,10 @@ const SuscripcionPayPal = () => {
                       gap: 0.5,
                     }}
                   >
-                    ðŸŒ <strong>{info.sitioWeb || "Sitio no disponible"}</strong>
+                    <strong>{info.sitioWeb || "Sitio no disponible"}</strong>
                   </Typography>
                 </Box>
 
-                {/* ðŸ’³ Logo PayPal */}
                 <Box
                   component="img"
                   src="/logo-pagar.png"
@@ -401,13 +405,13 @@ const SuscripcionPayPal = () => {
                     mx: "auto",
                     mt: 0,
                     mb: 0,
-                    width: { xs: 190, sm: 200 },
+                    width: { xs: 140, sm: 150 },
                     filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))",
                     userSelect: "none",
                   }}
                 />
 
-                                {/* Suscripcion PayPal */}
+                {/* ðŸ’³ Logo PayPal */}{/* Suscripcion PayPal */}
                 <Typography
                   sx={{
                     mt: 1,
@@ -424,8 +428,8 @@ const SuscripcionPayPal = () => {
                 </Typography>
 
                 <Typography sx={{ mt: 2, color: "text.secondary", lineHeight: 1.5 }}>
-                  ðŸš€ Incluye <strong>hosting</strong> y{" "}
-                  <strong>soporte tÃ©cnico 24/7</strong> para mantener tu sitio siempre activo.
+                  🚀 Incluye <strong>hosting</strong> y{" "}
+                  <strong>soporte técnico 24/7</strong> para mantener tu sitio siempre activo.
                 </Typography>
 
                 {/* ðŸ”¹ Contenedor centrador */}
@@ -444,8 +448,8 @@ const SuscripcionPayPal = () => {
                       overflow: "hidden",
                       mt: 2,
                       borderRadius: "30px",
-                      px: 2.6, // ðŸ‘ˆ padding lateral mÃ­nimo
-                      py: 1, // ðŸ‘ˆ mÃ¡s bajo y angosto
+                      px: 2.8, // ðŸ‘ˆ padding lateral mÃ­nimo
+                      py: 1.1, // ðŸ‘ˆ mÃ¡s bajo y angosto
                       fontWeight: 600,
                       fontSize: "0.74rem",
                       textTransform: "none",
@@ -512,8 +516,7 @@ const SuscripcionPayPal = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
                 style={{ width: "100%", textAlign: "center" }}
-              >
-                {/* Header visual del error */}
+              >{/* Header visual del error */}
                 <Box
                   sx={{
                     display: "flex",
@@ -539,9 +542,23 @@ const SuscripcionPayPal = () => {
                       fontSize: { xs: "0.90rem", sm: "1.05rem" },
                     }}
                   >
-                    âš ï¸ TransacciÃ³n de suscripciÃ³n fallida
+                    ⚠️ Pago PayPal cancelado
                   </Typography>
                 </Box>
+
+                <Box
+                  component="img"
+                  src="/logo-pay-pal.png"
+                  alt="PayPal"
+                  sx={{
+                    width: { xs: 120, sm: 150 },
+                    mt: -0.2,
+                    mb: 1.4,
+                    mx: "auto",
+                    display: "block",
+                    filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.2))",
+                  }}
+                />
 
 
                 <Typography
@@ -553,10 +570,54 @@ const SuscripcionPayPal = () => {
                     lineHeight: 1.45,
                   }}
                 >
-                  Tuvimos un problema al intentar completar tu suscripciÃ³n.
-                  Puedes intentarlo nuevamente o comunicarte con soporte para recibir ayuda.
+                  Cancelaste el pago en PayPal.<br />
+                  Si quieres continuar, intenta nuevamente o contactanos para ayudarte.
                 </Typography>
 
+
+                <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                  <Button
+                    component={motion.button}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15, duration: 0.6 }}
+                    variant="contained"
+                    onClick={handleReintentarSuscripcion}
+                    sx={{
+                      position: "relative",
+                      overflow: "hidden",
+                      mt: 0.5,
+                      borderRadius: "999px",
+                      px: 2.8,
+                      py: 1.1,
+                      fontWeight: 700,
+                      fontSize: { xs: "0.78rem", sm: "0.85rem" },
+                      textTransform: "none",
+                      letterSpacing: 0.1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 0.4,
+                      minWidth: 240,
+                      maxWidth: 240,
+                      width: "100%",
+                      color: "#1F2937",
+                      background: "linear-gradient(90deg, #E5E7EB 0%, #D1D5DB 100%)",
+                      boxShadow: "0 3px 10px rgba(0,0,0,0.12)",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        background: "linear-gradient(90deg, #E0E7FF 0%, #C7D2FE 100%)",
+                        boxShadow: "0 5px 14px rgba(0,0,0,0.18)",
+                      },
+                      "&:active": {
+                        transform: "scale(0.97)",
+                      },
+                    }}
+                  >
+                    Reintentar Suscribirse
+                  </Button>
+                </Box>
 
                 {/* BotÃ³n WhatsApp */}
                 <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
@@ -584,8 +645,9 @@ const SuscripcionPayPal = () => {
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 0.4,
-                      minWidth: "auto",
+                      minWidth: 240,
                       maxWidth: 240,
+                      width: "100%",
                       background: "linear-gradient(90deg, #25D366 0%, #128C7E 100%)",
                       boxShadow: "0 4px 12px rgba(18,140,126,0.35)",
                       transition: "all 0.3s ease",
@@ -624,7 +686,7 @@ const SuscripcionPayPal = () => {
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
                       <WhatsAppIcon sx={{ fontSize: 17, mb: "1px" }} />
                       <Box component="span" sx={{ fontWeight: 700 }}>
-                        Â¡AvÃ­sanos para ayudarte!
+                        ¡Avísanos para ayudarte!
                       </Box>
                     </Box>
                   </Button>
@@ -640,6 +702,31 @@ const SuscripcionPayPal = () => {
 };
 
 export default SuscripcionPayPal;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

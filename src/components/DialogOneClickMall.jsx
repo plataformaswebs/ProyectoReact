@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+﻿import React, { useEffect, useState, useRef } from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   IconButton, Slide, Button, Typography, TextField, InputAdornment,
@@ -32,7 +32,8 @@ export default function DialogOneClickMall({
   const [loadingCheck, setLoadingCheck] = useState(false);
   const [sitioValido, setSitioValido] = useState(false);
   const [cliente, setCliente] = useState(null);
-  const [isRedirecting, setIsRedirecting] = useState(false);  // Estado para controlar la redirección
+  const [isRedirecting, setIsRedirecting] = useState(false);  // Estado para controlar la redirecciÃ³n
+  const esInternacional = Number(cliente?.clienteInternacional) === 1;
 
   useEffect(() => {
     let timer;
@@ -60,7 +61,7 @@ export default function DialogOneClickMall({
 
 
 
-  // 🔍 Validar sitio web y buscar en Excel (LOCK REAL)
+  // ðŸ” Validar sitio web y buscar en Excel (LOCK REAL)
   const handleValidateWebsite = async () => {
     if (sitioWeb.trim()) setTouched(true);
 
@@ -75,7 +76,7 @@ export default function DialogOneClickMall({
 
     const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/i;
     if (!urlPattern.test(sitioWeb)) {
-      setError("Ingresa una URL válida (ej: tusitio.cl)");
+      setError("Ingresa una URL vÃ¡lida (ej: tusitio.cl)");
       return;
     }
 
@@ -109,8 +110,8 @@ export default function DialogOneClickMall({
       });
 
       if (!encontrado) {
-        console.warn("⛔ Cliente NO encontrado para dominio:", dominioIngresado);
-        setError("No se encontró el Cliente en la base de datos.");
+        console.warn("â›” Cliente NO encontrado para dominio:", dominioIngresado);
+        setError("No se encontrÃ³ el Cliente en la base de datos.");
         return;
       }
 
@@ -122,7 +123,7 @@ export default function DialogOneClickMall({
           : 0;
 
       console.log(
-        `🔒 VALIDACIÓN EXITOSA → ID: ${encontrado.idCliente} | Cliente: ${encontrado.cliente} | Internacional: ${clienteInternacionalSeguro}`
+        `ðŸ”’ VALIDACIÃ“N EXITOSA â†’ ID: ${encontrado.idCliente} | Cliente: ${encontrado.cliente} | Internacional: ${clienteInternacionalSeguro}`
       );
 
       setCliente({
@@ -136,23 +137,22 @@ export default function DialogOneClickMall({
       setSitioValido(true);
 
     } catch (err) {
-      console.error("❌ Error validando cliente:", err);
+      console.error("âŒ Error validando cliente:", err);
       setError("Error interno validando cliente. Contactar soporte.");
     } finally {
       setLoadingCheck(false);
     }
   };
-  // 🔸 Confirmar suscripción
   const handleConfirm = async () => {
     if (!sitioValido || !cliente) {
-      setError("Debes ingresar un sitio válido y con cliente asociado");
+      setError("Debes ingresar un sitio vÃ¡lido y con cliente asociado");
       return;
     }
 
-    // Mantiene el diálogo abierto, solo cambia al modo “cargando”
+    // Mantiene el diÃ¡logo abierto, solo cambia al modo â€œcargandoâ€
     setLoading(true);
     setShowContent(false); // Oculta el contenido del dialogo
-    setIsRedirecting(true); // Activa la redirección
+    setIsRedirecting(true); // Activa la redirecciÃ³n
 
     try {
       sessionStorage.setItem("sitioWebReserva", sitioWeb);
@@ -160,27 +160,42 @@ export default function DialogOneClickMall({
       sessionStorage.setItem("clienteCorreo", cliente.correo);
       sessionStorage.setItem("clienteId", cliente.idCliente);
       sessionStorage.setItem("logoCliente", cliente.logoCliente);
-
       // Llamar al backend (Netlify function suscribirse)
       const result = await onConfirm?.(sitioWeb, cliente);
 
-      if (result?.url_webpay && result?.token) {
-        console.log("🚀 Redirigiendo a Transbank...");
-
-        // Muestra pantalla de carga 1 segundo antes de redirigir
+      if (result?.tipo === "paypal" && result?.approvalUrl) {
+        console.log("Redirigiendo a PayPal...");
         setTimeout(() => {
-          // Redirige a Transbank manteniendo el diálogo visible hasta el cambio de página
+          window.location.href = result.approvalUrl;
+        }, 1000);
+        return;
+      }
+
+      if (result?.tipo === "webpay" && result?.url && result?.token) {
+        console.log("Redirigiendo a Transbank...");
+        setTimeout(() => {
+          window.location.href = `${result.url}?TBK_TOKEN=${result.token}`;
+        }, 1000);
+        return;
+      }
+
+      // Compatibilidad con respuesta antigua
+      if (result?.url_webpay && result?.token) {
+        console.log("Redirigiendo a Transbank...");
+        setTimeout(() => {
           window.location.href = `${result.url_webpay}?TBK_TOKEN=${result.token}`;
         }, 1000);
-      } else {
-        throw new Error("No se recibió una respuesta válida desde WebPay");
+        return;
       }
-    } catch (error) {
-      console.error("❌ Error en onConfirm:", error);
+
+      throw new Error("No se recibiï¿½ una respuesta vï¿½lida desde el backend");
+    }
+    catch (error) {
+      console.error("âŒ Error en onConfirm:", error);
       setError("");
       setShowContent(true);
       setLoading(false);
-      setIsRedirecting(false); // Desactiva el estado de redirección
+      setIsRedirecting(false); // Desactiva el estado de redirecciÃ³n
     }
   };
 
@@ -206,7 +221,7 @@ export default function DialogOneClickMall({
       TransitionComponent={Transition}
       sx={{
         "& .MuiDialog-container": {
-          alignItems: { xs: "flex-start", sm: "center" }, // 📱 arriba, 🖥️ centrado
+          alignItems: { xs: "flex-start", sm: "center" }, // ðŸ“± arriba, ðŸ–¥ï¸ centrado
         },
       }}
       PaperProps={{
@@ -256,7 +271,7 @@ export default function DialogOneClickMall({
           },
         }}
       >
-        {/* Botón cerrar */}
+        {/* BotÃ³n cerrar */}
         <IconButton
           aria-label="Cerrar"
           onClick={onClose}
@@ -282,7 +297,7 @@ export default function DialogOneClickMall({
           <CloseRoundedIcon sx={{ fontSize: 28 }} />
         </IconButton>
 
-        {/* Título */}
+        {/* TÃ­tulo */}
         <Typography
           variant="h6"
           component="div"
@@ -313,10 +328,10 @@ export default function DialogOneClickMall({
             exit={{ scale: 0.8, opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {loading ? "💳" : "🔔"}
+            {loading ? (esInternacional ? "\uD83D\uDCB8" : "\uD83D\uDCB3") : "\uD83D\uDD14"}
           </motion.span>
 
-          {loading ? "Redirigiendo a WebPay..." : "Suscripción WebPay"}
+          {loading ? (esInternacional ? "Redirigiendo a PayPal..." : "Redirigiendo a WebPay...") : ("Suscripción Mensual")}
         </Typography>
       </DialogTitle>
 
@@ -358,14 +373,14 @@ export default function DialogOneClickMall({
                   lineHeight: 1.3,
                 }}
               >
-                ✨ Ingresa tu Sitio web de producción.
+                {"\u2728"} Ingresa tu Sitio web de producción.
                 <Box
                   component="span"
                   sx={{
                     display: "block",
                     fontSize: { xs: "0.75rem", sm: "0.9rem" },
                     color: "#6A1B9A",
-                    mt: 0.1, // 👈 más junto al texto superior
+                    mt: 0.1, // ðŸ‘ˆ mÃ¡s junto al texto superior
                     fontWeight: 400,
                   }}
                 >
@@ -393,9 +408,9 @@ export default function DialogOneClickMall({
                       {loadingCheck ? (
                         <CircularProgress size={22} />
                       ) : sitioValido ? (
-                        <Box sx={{ color: "#2e7d32", mr: 1.5 }}>✔</Box>
+                        <Box sx={{ color: "#2e7d32", mr: 1.5 }}>{"\u2714"}</Box>
                       ) : (
-                        <Box sx={{ color: "#6A1B9A", mr: 1.5 }}>🌐</Box>
+                        <Box sx={{ color: "#6A1B9A", mr: 1.5 }}>{"\uD83C\uDF10"}</Box>
                       )}
                     </InputAdornment>
                   ),
@@ -417,7 +432,7 @@ export default function DialogOneClickMall({
                   exit={{ opacity: 0, y: -10, transition: { duration: 0.4 } }}
                   style={{ width: "100%" }}
                 >
-                  {/* 📋 Título centrado */}
+                  {/* ðŸ“‹ TÃ­tulo centrado */}
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -433,7 +448,7 @@ export default function DialogOneClickMall({
                     Cliente - Plataformas web
                   </Typography>
 
-                  {/* 🔲 Contenedor del cliente */}
+                  {/* ðŸ”² Contenedor del cliente */}
                   <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{
@@ -454,7 +469,7 @@ export default function DialogOneClickMall({
                         overflow: "hidden",
                       }}
                     >
-                      {/* 🔹 Borde superior animado */}
+                      {/* ðŸ”¹ Borde superior animado */}
                       <Box
                         sx={{
                           position: "absolute",
@@ -473,7 +488,7 @@ export default function DialogOneClickMall({
                         }}
                       />
 
-                      {/* ✅ Franja de estado animada */}
+                      {/* âœ… Franja de estado animada */}
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{
@@ -497,11 +512,11 @@ export default function DialogOneClickMall({
                             borderBottom: "1px solid rgba(46,125,50,0.15)",
                           }}
                         >
-                          ✅ Identidad verificada con éxito
+                          {"\u2705"} Identidad verificada con éxito
                         </Box>
                       </motion.div>
 
-                      {/* 👤 Datos principales */}
+                      {/* ðŸ‘¤ Datos principales */}
                       <Box sx={{ mt: 2 }}>
                         <Typography
                           sx={{
@@ -514,7 +529,7 @@ export default function DialogOneClickMall({
                             mb: 0.4,
                           }}
                         >
-                          👤 <Box component="span">{cliente.nombre}</Box>
+                          {"\uD83D\uDC64"} <Box component="span">{cliente.nombre}</Box>
                         </Typography>
 
                         <Typography
@@ -528,13 +543,13 @@ export default function DialogOneClickMall({
                             wordBreak: "break-all",
                           }}
                         >
-                          ✉️ <Box component="span">{cliente.correo}</Box>
+                          {"\u2709\uFE0F"} <Box component="span">{cliente.correo}</Box>
                         </Typography>
                       </Box>
                     </Box>
                   </motion.div>
 
-                  {/* 🔒 Mensaje de confianza WebPay (sin cambios, solo animado al aparecer) */}
+                  {/* ðŸ”’ Mensaje de confianza WebPay (sin cambios, solo animado al aparecer) */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{
@@ -543,7 +558,7 @@ export default function DialogOneClickMall({
                       transition: { delay: 0.3, duration: 0.5 },
                     }}
                   >
-                    {/* 🔒 Mensaje de confianza WebPay */}
+                    {/* ðŸ”’ Mensaje de confianza WebPay */}
                     <Box
                       sx={{
                         width: "100%",
@@ -561,7 +576,7 @@ export default function DialogOneClickMall({
                         flexWrap: "wrap",
                       }}
                     >
-                      {/* 📝 Texto informativo */}
+                      {/* ðŸ“ Texto informativo */}
                       <Box
                         sx={{
                           flex: "1 1 65%",
@@ -580,7 +595,7 @@ export default function DialogOneClickMall({
                             gap: 0.4,
                           }}
                         >
-                          💳 Pago seguro con <strong>WebPay.</strong>
+                          {esInternacional ? <>{"\uD83D\uDCB8"} Pago seguro con <strong>PayPal.</strong></> : <>{"\uD83D\uDCB3"} Pago seguro con <strong>WebPay.</strong></>}
                         </Typography>
 
                         <Typography
@@ -593,7 +608,7 @@ export default function DialogOneClickMall({
                             gap: 0.4,
                           }}
                         >
-                          🔐 Datos protegidos por <strong>Transbank.</strong>
+                          {esInternacional ? <>{"\uD83D\uDD10"} Datos protegidos por <strong>PayPal.</strong></> : <>{"\uD83D\uDD10"} Datos protegidos por <strong>Transbank.</strong></>}
                         </Typography>
                         <Typography
                           sx={{
@@ -605,11 +620,11 @@ export default function DialogOneClickMall({
                             gap: 0.4,
                           }}
                         >
-                          🔁 Suscripción Mensual: <strong>$9.990 CLP.</strong>
+                          {esInternacional ? <>{"\uD83D\uDD01"} {"Suscripción Mensual: "}<strong>$10 USD.</strong></> : <>{"\uD83D\uDD01"} {"Suscripci\u00F3n Mensual: "}<strong>$9.990 CLP.</strong></>}
                         </Typography>
                       </Box>
 
-                      {/* 🛡️ Escudo protector animado con pulso */}
+                      {/* ðŸ›¡ï¸ Escudo protector animado con pulso */}
                       <Box
                         sx={{
                           flex: "0 0 auto",
@@ -623,7 +638,7 @@ export default function DialogOneClickMall({
                           justifyContent: "center",
                         }}
                       >
-                        {/* 🔰 Capa del escudo principal */}
+                        {/* ðŸ”° Capa del escudo principal */}
                         <Box
                           sx={{
                             position: "absolute",
@@ -642,7 +657,7 @@ export default function DialogOneClickMall({
                           }}
                         />
 
-                        {/* ✨ Capa interna más clara (profundidad visual) */}
+                        {/* âœ¨ Capa interna mÃ¡s clara (profundidad visual) */}
                         <Box
                           sx={{
                             position: "absolute",
@@ -656,7 +671,7 @@ export default function DialogOneClickMall({
                           }}
                         />
 
-                        {/* 🔒 Candado central */}
+                        {/* ðŸ”’ Candado central */}
                         <Typography
                           sx={{
                             position: "relative",
@@ -672,7 +687,7 @@ export default function DialogOneClickMall({
                             },
                           }}
                         >
-                          🔒
+                          {"\uD83D\uDD12"}
                         </Typography>
                       </Box>
 
@@ -694,12 +709,12 @@ export default function DialogOneClickMall({
           background: "linear-gradient(90deg,#E1BEE7,#CE93D8)",
           borderTop: "1px solid rgba(106,27,154,.35)",
           display: "flex",
-          justifyContent: "center", // 👈 centra horizontalmente
+          justifyContent: "center", // ðŸ‘ˆ centra horizontalmente
           alignItems: "center",
-          gap: 1.5, // 👈 separación equilibrada
+          gap: 1.5, // ðŸ‘ˆ separaciÃ³n equilibrada
         }}
       >
-        {/* Botón Cancelar */}
+        {/* BotÃ³n Cancelar */}
         <Button
           onClick={onClose}
           disabled={loading}
@@ -714,7 +729,7 @@ export default function DialogOneClickMall({
           Cancelar
         </Button>
 
-        {/* Botón dinámico: Validar / Suscribirse */}
+        {/* BotÃ³n dinÃ¡mico: Validar / "Suscribirse" */}
         <Button
           variant="contained"
           onClick={sitioValido && cliente ? handleConfirm : handleValidateWebsite}
@@ -760,7 +775,7 @@ export default function DialogOneClickMall({
             },
           }}
         >
-          {/* ✨ Brillo diagonal animado */}
+          {/* âœ¨ Brillo diagonal animado */}
           {sitioValido && cliente && (
             <Box
               sx={{
@@ -802,3 +817,40 @@ export default function DialogOneClickMall({
     </Dialog >
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

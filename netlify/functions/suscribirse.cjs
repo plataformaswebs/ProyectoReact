@@ -1,4 +1,4 @@
-const axios = require("axios");
+﻿const axios = require("axios");
 const AWS = require("aws-sdk");
 
 // 🧩 Inicializa S3
@@ -29,12 +29,17 @@ exports.handler = async (event) => {
     try {
         const { nombre, email, sitioWeb, idCliente, clienteInternacional } = JSON.parse(event.body || "{}");
 
+        console.log("[suscribirse] clienteInternacional raw:", clienteInternacional);
+
         if (!nombre || !email || !idCliente) {
             throw new Error("Faltan parámetros requeridos (nombre, email, idCliente)");
         }
 
         const esInternacional =
-            clienteInternacional === 1 ||
+
+            console.log("[suscribirse] esInternacional:", esInternacional);
+        console.log("[suscribirse] nombre/email/idCliente:", nombre, email, idCliente);
+        clienteInternacional === 1 ||
             clienteInternacional === "1" ||
             clienteInternacional === true ||
             String(clienteInternacional).toLowerCase() === "true";
@@ -52,7 +57,7 @@ exports.handler = async (event) => {
             (process.env.AWS_SECRET_ACCESS_KEY || process.env.MY_AWS_SECRET_ACCESS_KEY);
 
         if (esInternacional) {
-            console.log(`🌎 Cliente internacional → flujo PayPal (${isLocal ? "sandbox" : "producción"})`);
+            console.log(`🌎 Cliente internacional -> flujo PayPal (${isLocal ? "sandbox" : "producciÃ³n"})`);
 
             if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET || !PAYPAL_PLAN_ID) {
                 const dummyLink = "https://www.paypal.com/dummy-link-para-dev";
@@ -78,6 +83,8 @@ exports.handler = async (event) => {
             const accessToken = tokenResponse.data.access_token;
             if (!accessToken) throw new Error("No se obtuvo access token de PayPal");
 
+            console.log("[suscribirse] PayPal plan_id:", PAYPAL_PLAN_ID, "env:", isLocal ? "SANDBOX" : "PROD");
+
             const subscriptionResponse = await axios.post(
                 `${PAYPAL_API_URL}/v1/billing/subscriptions`,
                 {
@@ -94,8 +101,10 @@ exports.handler = async (event) => {
                 { headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" } }
             );
 
+            console.log("[suscribirse] PayPal subscription status/id:", subscriptionResponse.data.status, subscriptionResponse.data.id);
+            console.log("[suscribirse] PayPal links rels:", (subscriptionResponse.data.links || []).map(l => l.rel));
             const approvalLink = subscriptionResponse.data.links?.find(l => l.rel === "approve")?.href;
-            if (!approvalLink) throw new Error("No se pudo obtener el link de aprobación de PayPal");
+            if (!approvalLink) throw new Error("No se pudo obtener el link de aprobaciÃ³n de PayPal");
 
             // 💾 Guardar suscripción PayPal en S3
             if (hasCredentials) {
@@ -172,7 +181,7 @@ exports.handler = async (event) => {
         const url_webpay = response.data.url_webpay || response.data.url;
         if (!token || !url_webpay) throw new Error("Respuesta incompleta desde Transbank");
 
-        // 💾 Guardar token Webpay en S3
+        // ðŸ’¾ Guardar token Webpay en S3
         if (hasCredentials) {
             try {
                 await s3.putObject({
@@ -182,7 +191,7 @@ exports.handler = async (event) => {
                     ContentType: "application/json",
                 }).promise();
             } catch (s3Err) {
-                console.warn("⚠️ No se pudo guardar en S3:", s3Err.message);
+                console.warn("âš ï¸ No se pudo guardar en S3:", s3Err.message);
             }
         }
 
@@ -197,7 +206,7 @@ exports.handler = async (event) => {
             }),
         };
     } catch (err) {
-        console.error("❌ [suscribirse] Error:", err.response?.data || err.message || err);
+        console.error("âŒ [suscribirse] Error:", err.response?.data || err.message || err);
         return {
             statusCode: 500,
             headers: corsHeaders,
@@ -205,3 +214,5 @@ exports.handler = async (event) => {
         };
     }
 };
+
+

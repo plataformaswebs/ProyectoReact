@@ -36,13 +36,13 @@ exports.handler = async (event) => {
         }
 
         const esInternacional =
-
-            console.log("[suscribirse] esInternacional:", esInternacional);
-        console.log("[suscribirse] nombre/email/idCliente:", nombre, email, idCliente);
-        clienteInternacional === 1 ||
+            clienteInternacional === 1 ||
             clienteInternacional === "1" ||
             clienteInternacional === true ||
             String(clienteInternacional).toLowerCase() === "true";
+
+        console.log("[suscribirse] esInternacional:", esInternacional);
+        console.log("[suscribirse] nombre/email/idCliente:", nombre, email, idCliente);
 
         const isLocal = origin.startsWith("http://localhost");
 
@@ -57,7 +57,7 @@ exports.handler = async (event) => {
             (process.env.AWS_SECRET_ACCESS_KEY || process.env.MY_AWS_SECRET_ACCESS_KEY);
 
         if (esInternacional) {
-            console.log(`🌎 Cliente internacional -> flujo PayPal (${isLocal ? "sandbox" : "producciÃ³n"})`);
+            console.log(`Cliente internacional -> flujo PayPal (${isLocal ? "sandbox" : "produccion"})`);
 
             if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET || !PAYPAL_PLAN_ID) {
                 const dummyLink = "https://www.paypal.com/dummy-link-para-dev";
@@ -206,7 +206,7 @@ exports.handler = async (event) => {
             }),
         };
     } catch (err) {
-        console.error("âŒ [suscribirse] Error:", err.response?.data || err.message || err);
+        console.error("[suscribirse] Error:", err.response?.data || err.message || err);
         return {
             statusCode: 500,
             headers: corsHeaders,
@@ -214,5 +214,3 @@ exports.handler = async (event) => {
         };
     }
 };
-
-

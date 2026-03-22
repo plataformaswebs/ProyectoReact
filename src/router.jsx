@@ -17,6 +17,7 @@ const Clientes = lazy(() => import("./components/configuraciones/Clientes"));
 const Reserva = lazy(() => import("./components/Reserva"));
 const Reservas = lazy(() => import("./components/configuraciones/Reservas"));
 const Suscripcion = lazy(() => import("./components/Suscripcion"));
+const SuscripcionPayPal = lazy(() => import("./components/SuscripcionPayPal"));
 //LEGAL
 const Privacy = lazy(() => import("./components/legal/Privacy"));
 const Terms = lazy(() => import("./components/legal/Terms"));
@@ -66,6 +67,8 @@ const router = createBrowserRouter(
                 { path: "dashboard", element: withSuspense(Dashboard) },
                 { path: "reserva", element: withSuspense(Reserva) },
                 { path: "suscripcion", element: withSuspense(Suscripcion) },
+                { path: "paypal-exito", element: withSuspense(SuscripcionPayPal) },
+                { path: "paypal-cancelado", element: withSuspense(SuscripcionPayPal) },
                 { path: "privacy", element: withSuspense(Privacy) },
                 { path: "terms", element: withSuspense(Terms) },
                 { path: "data-deletion", element: withSuspense(DataDeletion) },

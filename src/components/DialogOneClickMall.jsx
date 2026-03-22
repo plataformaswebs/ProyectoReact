@@ -76,7 +76,7 @@ export default function DialogOneClickMall({
 
     const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/i;
     if (!urlPattern.test(sitioWeb)) {
-      setError("Ingresa una URL vÃ¡lida (ej: tusitio.cl)");
+      setError("Ingresa una URL válida (ej: tusitio.cl)");
       return;
     }
 
@@ -110,8 +110,8 @@ export default function DialogOneClickMall({
       });
 
       if (!encontrado) {
-        console.warn("â›” Cliente NO encontrado para dominio:", dominioIngresado);
-        setError("No se encontrÃ³ el Cliente en la base de datos.");
+        console.warn("Cliente NO encontrado para dominio:", dominioIngresado);
+        setError("No se encontrado el Cliente en la base de datos.");
         return;
       }
 
@@ -123,7 +123,7 @@ export default function DialogOneClickMall({
           : 0;
 
       console.log(
-        `ðŸ”’ VALIDACIÃ“N EXITOSA â†’ ID: ${encontrado.idCliente} | Cliente: ${encontrado.cliente} | Internacional: ${clienteInternacionalSeguro}`
+        `VALIDACIÓN EXITOSA ID: ${encontrado.idCliente} | Cliente: ${encontrado.cliente} | Internacional: ${clienteInternacionalSeguro}`
       );
 
       setCliente({
@@ -137,7 +137,7 @@ export default function DialogOneClickMall({
       setSitioValido(true);
 
     } catch (err) {
-      console.error("âŒ Error validando cliente:", err);
+      console.error("Error validando cliente:", err);
       setError("Error interno validando cliente. Contactar soporte.");
     } finally {
       setLoadingCheck(false);
@@ -188,10 +188,10 @@ export default function DialogOneClickMall({
         return;
       }
 
-      throw new Error("No se recibiï¿½ una respuesta vï¿½lida desde el backend");
+      throw new Error("No se recibio una respuesta válida desde el backend");
     }
     catch (error) {
-      console.error("âŒ Error en onConfirm:", error);
+      console.error("Error en onConfirm:", error);
       setError("");
       setShowContent(true);
       setLoading(false);

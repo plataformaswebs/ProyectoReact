@@ -192,6 +192,8 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
           sitioWeb,
           idCliente: cliente.idCliente,
           clienteInternacional: cliente.clienteInternacional ?? 0,
+          paypalPlanMode: cliente.paypalPlanMode ?? "standard",
+          esClientePaypalPrueba: cliente.paypalPlanMode === "test",
         }),
       });
 

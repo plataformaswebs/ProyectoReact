@@ -27,7 +27,15 @@ exports.handler = async (event) => {
     if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers: corsHeaders, body: "" };
 
     try {
-        const { nombre, email, sitioWeb, idCliente, clienteInternacional } = JSON.parse(event.body || "{}");
+        const {
+            nombre,
+            email,
+            sitioWeb,
+            idCliente,
+            clienteInternacional,
+            paypalPlanMode,
+            esClientePaypalPrueba,
+        } = JSON.parse(event.body || "{}");
 
         console.log("[suscribirse] clienteInternacional raw:", clienteInternacional);
 
@@ -41,15 +49,30 @@ exports.handler = async (event) => {
             clienteInternacional === true ||
             String(clienteInternacional).toLowerCase() === "true";
 
+        const usarPlanPaypalTest =
+            paypalPlanMode === "test" ||
+            esClientePaypalPrueba === true ||
+            esClientePaypalPrueba === 1 ||
+            esClientePaypalPrueba === "1" ||
+            String(esClientePaypalPrueba).toLowerCase() === "true";
+
         console.log("[suscribirse] esInternacional:", esInternacional);
         console.log("[suscribirse] nombre/email/idCliente:", nombre, email, idCliente);
+        console.log("[suscribirse] paypalPlanMode:", paypalPlanMode, "| usarPlanPaypalTest:", usarPlanPaypalTest);
 
         const isLocal = origin.startsWith("http://localhost");
 
         // 🔑 PayPal: selecciona sandbox o prod
         const PAYPAL_CLIENT_ID = isLocal ? process.env.PAYPAL_CLIENT_ID_SANDBOX : process.env.PAYPAL_CLIENT_ID;
         const PAYPAL_SECRET = isLocal ? process.env.PAYPAL_SECRET_SANDBOX : process.env.PAYPAL_SECRET;
-        const PAYPAL_PLAN_ID = isLocal ? process.env.PAYPAL_PLAN_ID_SANDBOX : process.env.PAYPAL_PLAN_ID;
+        const PAYPAL_PLAN_ID_STANDARD = isLocal ? process.env.PAYPAL_PLAN_ID_SANDBOX : process.env.PAYPAL_PLAN_ID;
+        const PAYPAL_PLAN_ID_TEST = isLocal
+            ? (process.env.PAYPAL_PLAN_ID_TEST_SANDBOX || process.env.PAYPAL_PLAN_ID_TEST)
+            : process.env.PAYPAL_PLAN_ID_TEST;
+        const PAYPAL_PLAN_ID =
+            usarPlanPaypalTest && PAYPAL_PLAN_ID_TEST
+                ? PAYPAL_PLAN_ID_TEST
+                : PAYPAL_PLAN_ID_STANDARD;
         const PAYPAL_API_URL = isLocal ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";
 
         const hasCredentials =
@@ -83,7 +106,14 @@ exports.handler = async (event) => {
             const accessToken = tokenResponse.data.access_token;
             if (!accessToken) throw new Error("No se obtuvo access token de PayPal");
 
-            console.log("[suscribirse] PayPal plan_id:", PAYPAL_PLAN_ID, "env:", isLocal ? "SANDBOX" : "PROD");
+            console.log(
+                "[suscribirse] PayPal plan_id:",
+                PAYPAL_PLAN_ID,
+                "env:",
+                isLocal ? "SANDBOX" : "PROD",
+                "mode:",
+                usarPlanPaypalTest ? "TEST" : "STANDARD"
+            );
 
             const subscriptionResponse = await axios.post(
                 `${PAYPAL_API_URL}/v1/billing/subscriptions`,
@@ -120,6 +150,7 @@ exports.handler = async (event) => {
                             sitioWeb,
                             entorno: isLocal ? "SANDBOX" : "PRODUCCION",
                             planId: PAYPAL_PLAN_ID,
+                            paypalPlanMode: usarPlanPaypalTest ? "test" : "standard",
                             subscriptionId,
                             approvalUrl: approvalLink,
                             creado: new Date().toISOString(),

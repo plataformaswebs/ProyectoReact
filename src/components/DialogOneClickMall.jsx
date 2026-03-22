@@ -9,6 +9,8 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { cargarClientesDesdeExcel } from "../helpers/HelperClientes";
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 
+const PAYPAL_TEST_CLIENT_IDS = new Set([1, 8, 9]);
+
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
 });
@@ -34,6 +36,7 @@ export default function DialogOneClickMall({
   const [cliente, setCliente] = useState(null);
   const [isRedirecting, setIsRedirecting] = useState(false);  // Estado para controlar la redirecciÃ³n
   const esInternacional = Number(cliente?.clienteInternacional) === 1;
+  const esClientePaypalPrueba = PAYPAL_TEST_CLIENT_IDS.has(Number(cliente?.idCliente));
 
   useEffect(() => {
     let timer;
@@ -132,6 +135,10 @@ export default function DialogOneClickMall({
         idCliente: encontrado.idCliente,
         logoCliente: encontrado.logoCliente,
         clienteInternacional: clienteInternacionalSeguro,
+        paypalPlanMode:
+          clienteInternacionalSeguro === 1 && PAYPAL_TEST_CLIENT_IDS.has(Number(encontrado.idCliente))
+            ? "test"
+            : "standard",
       });
 
       setSitioValido(true);
@@ -160,6 +167,8 @@ export default function DialogOneClickMall({
       sessionStorage.setItem("clienteCorreo", cliente.correo);
       sessionStorage.setItem("clienteId", cliente.idCliente);
       sessionStorage.setItem("logoCliente", cliente.logoCliente);
+      sessionStorage.setItem("paypalPlanMode", cliente.paypalPlanMode || "standard");
+      sessionStorage.setItem("esClientePaypalPrueba", esClientePaypalPrueba ? "1" : "0");
       // Llamar al backend (Netlify function suscribirse)
       const result = await onConfirm?.(sitioWeb, cliente);
 
@@ -620,7 +629,7 @@ export default function DialogOneClickMall({
                             gap: 0.4,
                           }}
                         >
-                          {esInternacional ? <>{"\uD83D\uDD01"} {"Suscripción Mensual: "}<strong>$10 USD.</strong></> : <>{"\uD83D\uDD01"} {"Suscripci\u00F3n Mensual: "}<strong>$9.990 CLP.</strong></>}
+                          {esInternacional ? <>{"\uD83D\uDD01"} {"Suscripción Mensual: "}<strong>{esClientePaypalPrueba ? "$0.01 USD." : "$10 USD."}</strong></> : <>{"\uD83D\uDD01"} {"Suscripci\u00F3n Mensual: "}<strong>$9.990 CLP.</strong></>}
                         </Typography>
                       </Box>
 

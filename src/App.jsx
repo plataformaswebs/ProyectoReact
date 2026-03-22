@@ -85,11 +85,20 @@ function App() {
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const warmupSessionId =
+      (globalThis.crypto?.randomUUID && globalThis.crypto.randomUUID()) ||
+      `pwbot_warmup_${Date.now()}`;
 
-    const warmupUrl = apiOrigin || API_URL;
-    fetch(warmupUrl, {
-      method: "GET",
-      mode: "no-cors",
+    fetch(`${API_URL}/api/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sessionId: warmupSessionId,
+        messages: [],
+        desdeSitioWeb: true,
+      }),
       cache: "no-store",
       keepalive: true,
       signal: controller.signal,

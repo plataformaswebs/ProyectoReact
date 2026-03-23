@@ -175,7 +175,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
       if (!cliente?.nombre || !cliente?.correo || !cliente?.idCliente) {
         console.error("⚠️ Datos incompletos del cliente:", cliente);
         alert("Faltan los datos del cliente.");
-        return;
+        return null;
       }
 
       const isLocal = window.location.hostname === "localhost";
@@ -201,24 +201,16 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
         const errorText = await resp.text();
         console.error("❌ Error HTTP suscribirse:", errorText);
         alert("Ocurrió un error al comunicarse con el servidor.");
-        return;
+        return null;
       }
 
       const data = await resp.json();
       console.log("🔵 Respuesta suscribirse:", data);
-
-      // Aquí puedes seguir con los flujos WebPay / PayPal como antes
-      if (data.tipo === "webpay" && data.url && data.token) {
-        // Redirigir a WebPay
-      } else if (data.tipo === "paypal" && data.approvalUrl) {
-        window.location.href = data.approvalUrl;
-      } else {
-        console.error("⚠️ Respuesta inválida:", data);
-        alert("No se pudo iniciar la inscripción. Revisa la consola.");
-      }
+      return data;
     } catch (err) {
       console.error("❌ Error en handleSuscribirse:", err);
       alert("Error al iniciar la suscripción. Ver consola para más detalles.");
+      return null;
     }
   };
   // 🟢 Abre el diálogo para suscribirse
@@ -930,3 +922,4 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
 }
 
 export default Navbar;
+

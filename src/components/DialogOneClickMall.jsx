@@ -174,6 +174,7 @@ export default function DialogOneClickMall({
 
       if (result?.tipo === "paypal" && result?.approvalUrl) {
         console.log("Redirigiendo a PayPal...");
+        onClose?.();
         setTimeout(() => {
           window.location.href = result.approvalUrl;
         }, 1000);
@@ -182,6 +183,7 @@ export default function DialogOneClickMall({
 
       if (result?.tipo === "webpay" && result?.url && result?.token) {
         console.log("Redirigiendo a Transbank...");
+        onClose?.();
         setTimeout(() => {
           window.location.href = `${result.url}?TBK_TOKEN=${result.token}`;
         }, 1000);
@@ -191,6 +193,7 @@ export default function DialogOneClickMall({
       // Compatibilidad con respuesta antigua
       if (result?.url_webpay && result?.token) {
         console.log("Redirigiendo a Transbank...");
+        onClose?.();
         setTimeout(() => {
           window.location.href = `${result.url_webpay}?TBK_TOKEN=${result.token}`;
         }, 1000);

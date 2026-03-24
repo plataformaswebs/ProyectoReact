@@ -1,9 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { Container, Typography, Box, Snackbar, Alert, useMediaQuery, useTheme } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import "./css/Hero.css";
 import CircularProgress from "@mui/material/CircularProgress";
-import emailjs from "@emailjs/browser";
+
+const texts = [
+  { title: "Si no estás en la web no existes.", palabraClave: "no existes." },
+  { title: "Tu web es la primera impresión.", palabraClave: "primera impresión." },
+  { title: "Un Sitio web trabaja para ti.", palabraClave: "trabaja" }
+];
 
 function Hero({ informationsRef, setVideoReady }) {
 
@@ -14,16 +19,18 @@ function Hero({ informationsRef, setVideoReady }) {
   const [loadingVideo, setLoadingVideo] = useState(true);
   const videoRef = useRef(null);
   const [mostrarContenido, setMostrarContenido] = useState(false);
+  const isVideoInViewportRef = useRef(true);
+  const isDocumentVisibleRef = useRef(true);
 
-  const texts = [
-    { title: "Si no estás en la web no existes.", palabraClave: "no existes." },
-    { title: "Tu web es la primera impresión.", palabraClave: "primera impresión." },
-    { title: "Un Sitio web trabaja para ti.", palabraClave: "trabaja" }
-  ];
+
+
+
+
+
 
   //MOSTRAR CONTENIDO
   useEffect(() => {
-    const timer = setTimeout(() => setMostrarContenido(true), 3400); //⏱️
+    const timer = setTimeout(() => setMostrarContenido(true), 3400); //â±ï¸
     return () => clearTimeout(timer);
   }, []);
 
@@ -34,14 +41,14 @@ function Hero({ informationsRef, setVideoReady }) {
       setCurrentText(prev => (prev + 1) % texts.length);
     }, 6000);
     return () => clearInterval(id);
-  }, [texts.length]);
+  }, []);
 
   // 🎬 CONTROL ÚNICO DEL VIDEO
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    let hasStarted = false; // 👈 evita reinicios
+    let hasStarted = false; // evita reinicios
 
     const startTimer = setTimeout(() => {
       if (!hasStarted) {
@@ -54,26 +61,40 @@ function Hero({ informationsRef, setVideoReady }) {
       }
     }, 3300);
 
-    // 🔁 Reanudar si se pausa o cambia visibilidad
+    const shouldKeepPlaying = () =>
+      hasStarted &&
+      isDocumentVisibleRef.current &&
+      isVideoInViewportRef.current &&
+      !video.ended &&
+      !video.seeking;
+
     const handlePause = () => {
-      if (hasStarted && !video.ended && !video.seeking) {
+      if (shouldKeepPlaying()) {
         video.play().catch(() => { });
       }
     };
     const handleVisibility = () => {
-      if (hasStarted && document.visibilityState === "visible") {
+      isDocumentVisibleRef.current = document.visibilityState === "visible";
+      if (shouldKeepPlaying()) {
         video.play().catch(() => { });
+      } else if (hasStarted && !isDocumentVisibleRef.current) {
+        video.pause();
       }
     };
 
     video.addEventListener("pause", handlePause);
     document.addEventListener("visibilitychange", handleVisibility);
 
-    // ⏸️ Pausar si no está visible en pantalla
+    // Pausar si no esta visible en pantalla
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!hasStarted) return;
-        entry.isIntersecting ? video.play() : video.pause();
+        isVideoInViewportRef.current = entry.isIntersecting;
+        if (entry.isIntersecting && isDocumentVisibleRef.current) {
+          video.play().catch(() => { });
+        } else {
+          video.pause();
+        }
       },
       { threshold: 0.25 }
     );
@@ -88,7 +109,7 @@ function Hero({ informationsRef, setVideoReady }) {
   }, []);
 
   const notificarVisitaPrecios = () => {
-    console.group("📩 EmailJS – Notificación Precios");
+    console.group("📩 EmailJS - Notificacion Precios");
 
     const ahora = new Date();
 
@@ -101,8 +122,8 @@ function Hero({ informationsRef, setVideoReady }) {
         minute: "2-digit",
         hour12: false,
       })
-      .replace(/^./, (c) => c.toUpperCase()) // Capitaliza el día
-      .replace(",", " ·") + " hrs";
+      .replace(/^./, (c) => c.toUpperCase()) // Capitaliza el di­a
+      .replace(",", " Â·") + " hrs";
 
     const templateParams = {
       evento: "Nuestros Precios",
@@ -110,20 +131,20 @@ function Hero({ informationsRef, setVideoReady }) {
       dispositivo: window.innerWidth < 768 ? "MOBILE 📱" : "DESKTOP 🖥️",
     };
 
-    console.log("📦 Template params:", templateParams);
+    console.log("Template params:", templateParams);
 
-    emailjs
-      .send(
+    import("@emailjs/browser")
+      .then(({ default: emailjs }) => emailjs.send(
         "service_73azdl9",   // Service ID
         "template_txa3qoq",  // Template ID
         templateParams,
         "TfLG1wfibewzR9Xpf"  // Public Key
-      )
+      ))
       .then((response) => {
-        console.log("✅ EmailJS enviado correctamente", response);
+        console.log("âœ… EmailJS enviado correctamente", response);
       })
       .catch((error) => {
-        console.error("❌ Error EmailJS", error);
+        console.error("âŒ Error EmailJS", error);
       })
       .finally(() => {
         console.groupEnd();
@@ -151,7 +172,7 @@ function Hero({ informationsRef, setVideoReady }) {
             left: 0,
             width: "100%",
             height: "100%",
-            backgroundColor: "#000", // 👈 fondo sólido
+            backgroundColor: "#000", // ðŸ‘ˆ fondo sÃ³lido
             overflow: "hidden",
           }}
         >
@@ -178,7 +199,7 @@ function Hero({ informationsRef, setVideoReady }) {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             ref={videoRef}
             onPlaying={() => {
               if (loadingVideo) {
@@ -255,7 +276,7 @@ function Hero({ informationsRef, setVideoReady }) {
                       transformStyle: "preserve-3d",
                       transformOrigin: "center center",
                       backfaceVisibility: "hidden",
-                      willChange: "transform, opacity", // 👈 optimización para GPU
+                      willChange: "transform, opacity", // optimizacion para GPU
                     }}
                   >
                     <Typography
@@ -268,7 +289,7 @@ function Hero({ informationsRef, setVideoReady }) {
                         textAlign: "center",
                         fontFamily: "'Poppins', sans-serif",
                         lineHeight: 1.2,
-                        minHeight: isMobile ? "3.2rem" : "5rem", // 👈 altura fija según viewport
+                        minHeight: isMobile ? "3.2rem" : "5rem", // altura fija segÃºn viewport
                         display: "inline-block",
                       }}
                     >
@@ -295,7 +316,7 @@ function Hero({ informationsRef, setVideoReady }) {
                                 padding: "2px 8px",
                                 borderRadius: "10px",
                                 background:
-                                  "linear-gradient(135deg, rgba(93,188,255,0.95) 0%, rgba(120,75,209,0.95) 100%)", // 💎 azul a violeta moderno
+                                  "linear-gradient(135deg, rgba(93,188,255,0.95) 0%, rgba(120,75,209,0.95) 100%)", // ðŸ’Ž azul a violeta moderno
                                 color: "#ffffff",
                                 boxShadow: "0 0 10px rgba(93,188,255,0.4)", // brillo sutil azulado
                                 textShadow: "0 1px 4px rgba(0,0,0,0.25)",   // mejora el contraste
@@ -315,7 +336,7 @@ function Hero({ informationsRef, setVideoReady }) {
 
               </Box>
 
-              {/* Botón debajo */}
+              {/* Boton debajo */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -340,7 +361,7 @@ function Hero({ informationsRef, setVideoReady }) {
                         window.scrollTo({ top: y, behavior: "smooth" });
                       }
 
-                      // 🔔 Notificación interna
+                      // Notificacion interna
                       notificarVisitaPrecios();
                     }}
                   >

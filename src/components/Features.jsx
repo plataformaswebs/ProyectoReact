@@ -93,6 +93,65 @@ const Overlay = styled(Box)(({ theme }) => ({
 
 const AdditionalContent = styled(Box)({ opacity: 0, transition: "opacity 0.3s ease" });
 
+function FeaturePreviewVideo({
+  src,
+  height,
+  objectPosition,
+  shouldPlay,
+  background,
+}) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (shouldPlay) {
+      const playPromise = video.play();
+      if (playPromise?.catch) playPromise.catch(() => { });
+      return;
+    }
+
+    video.pause();
+    if (video.readyState >= 2) {
+      try {
+        video.currentTime = 0.05;
+      } catch (_) {
+        // no-op
+      }
+    }
+  }, [shouldPlay]);
+
+  return (
+    <Box
+      ref={videoRef}
+      component="video"
+      src={src}
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      onLoadedData={(e) => {
+        if (!shouldPlay) {
+          try {
+            e.currentTarget.currentTime = 0.05;
+          } catch (_) {
+            // no-op
+          }
+        }
+      }}
+      sx={{
+        width: "100%",
+        height,
+        objectFit: "cover",
+        objectPosition: objectPosition || "center center",
+        display: "block",
+        background,
+      }}
+    />
+  );
+}
+
 function Features({ videoReady }) {
   const timestampRef = useRef(Date.now());
   const theme = useTheme();
@@ -107,6 +166,7 @@ function Features({ videoReady }) {
   const [didAutoSlide, setDidAutoSlide] = useState(false);
   const [selectedFeatureVideo, setSelectedFeatureVideo] = useState(null);
   const [selectedFeatureAspectRatio, setSelectedFeatureAspectRatio] = useState(9 / 16);
+  const [activePreviewId, setActivePreviewId] = useState(null);
   // TRABAJOS ACTIVOS
   const trabajosActivos = useMemo(
     () => trabajos.filter((t) => Number(t.Estado) === 1),
@@ -199,6 +259,31 @@ function Features({ videoReady }) {
     }, 6500);
     return () => clearTimeout(timer);
   }, [isMobile, mobileSwiper, didAutoSlide]);
+
+  useEffect(() => {
+    if (!inView || prefersReducedMotion) {
+      setActivePreviewId(null);
+      return;
+    }
+    setActivePreviewId(featureHighlights[0]?.id ?? null);
+  }, [inView, prefersReducedMotion, isMobile]);
+
+  useEffect(() => {
+    if (!inView || prefersReducedMotion) return;
+
+    if (!isMobile) {
+      setActivePreviewId((current) => current || (featureHighlights[0]?.id ?? null));
+      return;
+    }
+
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % featureHighlights.length;
+      setActivePreviewId(featureHighlights[currentIndex].id);
+    }, 2200);
+
+    return () => clearInterval(interval);
+  }, [inView, prefersReducedMotion, isMobile]);
 
   const matrixColumns = useMemo(() => {
     const count = isMobile ? 18 : 50;
@@ -754,6 +839,8 @@ function Features({ videoReady }) {
                               tabIndex={0}
                               aria-label={`Seleccionar ${option.label}`}
                               onClick={() => handleOpenFeatureVideo(option)}
+                              onMouseEnter={() => !isMobile && setActivePreviewId(option.id)}
+                              onMouseLeave={() => !isMobile && setActivePreviewId(featureHighlights[0]?.id ?? null)}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" || e.key === " ") {
                                   e.preventDefault();
@@ -774,22 +861,12 @@ function Features({ videoReady }) {
                                 },
                               }}
                             >
-                              <Box
-                                component="video"
+                              <FeaturePreviewVideo
                                 src={option.video}
-                                autoPlay
-                                muted
-                                loop
-                                playsInline
-                                preload="metadata"
-                                sx={{
-                                  width: "100%",
-                                  height: 118,
-                                  objectFit: "cover",
-                                  objectPosition: option.objectPosition || "center center",
-                                  display: "block",
-                                  background: `linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`,
-                                }}
+                                height={118}
+                                objectPosition={option.objectPosition}
+                                shouldPlay={isMobile ? activePreviewId === option.id : true}
+                                background={`linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`}
                               />
                               <Box
                                 sx={{
@@ -882,6 +959,8 @@ function Features({ videoReady }) {
                           tabIndex={0}
                           aria-label={`Seleccionar ${option.label}`}
                           onClick={() => handleOpenFeatureVideo(option)}
+                          onMouseEnter={() => setActivePreviewId(option.id)}
+                          onMouseLeave={() => setActivePreviewId(featureHighlights[0]?.id ?? null)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
@@ -902,22 +981,12 @@ function Features({ videoReady }) {
                                 },
                               }}
                             >
-                          <Box
-                            component="video"
+                          <FeaturePreviewVideo
                             src={option.video}
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            preload="metadata"
-                            sx={{
-                              width: "100%",
-                              height: 138,
-                              objectFit: "cover",
-                              objectPosition: option.objectPosition || "center center",
-                              display: "block",
-                              background: `linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`,
-                            }}
+                            height={138}
+                            objectPosition={option.objectPosition}
+                            shouldPlay={isMobile ? activePreviewId === option.id : true}
+                            background={`linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`}
                           />
                           <Box
                             sx={{

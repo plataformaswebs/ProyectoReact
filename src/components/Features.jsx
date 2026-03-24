@@ -1,8 +1,9 @@
-import { Container, Grid, Card, CardActionArea, CardMedia, Typography, Box, Button, useTheme, useMediaQuery, } from "@mui/material";
+import { Container, Grid, Card, CardActionArea, CardMedia, Typography, Box, Button, useTheme, useMediaQuery, Dialog, IconButton } from "@mui/material";
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { styled } from "@mui/system";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import AccessTimeFilledRoundedIcon from '@mui/icons-material/AccessTimeFilledRounded';
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DialogTrabajos from "./DialogTrabajos";
 import { cargarTrabajos } from "../helpers/HelperTrabajos";
 import { useInView } from "react-intersection-observer";
@@ -36,6 +37,45 @@ const features = [
   }
 ];
 
+const featureHighlights = [
+  {
+    id: "mini-1",
+    label: "Sitios Web",
+    title: "Administración",
+    video: "/feature-1.mp4",
+    objectPosition: "center 20%",
+    toneA: "#2c95e3",
+    toneB: "#0f6fb8",
+  },
+  {
+    id: "mini-2",
+    label: "Sistemas",
+    title: "Pagos Online",
+    video: "/feature-2.mp4",
+    objectPosition: "center 35%",
+    toneA: "#1aa97a",
+    toneB: "#0b7f59",
+  },
+  {
+    id: "mini-3",
+    label: "A Medida",
+    title: "Chat Bot IA",
+    video: "/feature-3.mp4",
+    objectPosition: "center 30%",
+    toneA: "#f08b32",
+    toneB: "#cf6710",
+  },
+  {
+    id: "mini-4",
+    label: "Tiendas",
+    title: "Suscripciones",
+    video: "/feature-4.mp4",
+    objectPosition: "center 25%",
+    toneA: "#ffcf4d",
+    toneB: "#e69a00",
+  },
+];
+
 // EFECTOS
 const StyledCardActionArea = styled(CardActionArea)({
   position: "relative",
@@ -65,6 +105,8 @@ function Features({ videoReady }) {
   const [showMatrix, setShowMatrix] = useState(false);
   const [mobileSwiper, setMobileSwiper] = useState(null);
   const [didAutoSlide, setDidAutoSlide] = useState(false);
+  const [selectedFeatureVideo, setSelectedFeatureVideo] = useState(null);
+  const [selectedFeatureAspectRatio, setSelectedFeatureAspectRatio] = useState(9 / 16);
   // TRABAJOS ACTIVOS
   const trabajosActivos = useMemo(
     () => trabajos.filter((t) => Number(t.Estado) === 1),
@@ -128,6 +170,14 @@ function Features({ videoReady }) {
   // handlers
   const handleTrabajosClick = () => setOpenTrabajos(true);
   const handleCloseTrabajos = () => setOpenTrabajos(false);
+  const handleOpenFeatureVideo = (feature) => {
+    setSelectedFeatureVideo(feature);
+    setSelectedFeatureAspectRatio(9 / 16);
+  };
+  const handleCloseFeatureVideo = () => {
+    setSelectedFeatureVideo(null);
+    setSelectedFeatureAspectRatio(9 / 16);
+  };
 
   //ATRASO MATRIX
   useEffect(() => {
@@ -165,6 +215,7 @@ function Features({ videoReady }) {
   }, [isMobile]);
 
   const enableSwiperAutoplay = !isMobile && !prefersReducedMotion;
+  const desktopFeature = features[0];
 
   return (
     <Box
@@ -257,7 +308,7 @@ function Features({ videoReady }) {
             fullWidth
             sx={{
               minWidth: { xs: "320px", sm: "360px" },
-              height: "58px",
+              height: "54px",
               borderRadius: "14px",
               textTransform: "none",
               fontFamily: "Albert Sans, sans-serif",
@@ -514,262 +565,433 @@ function Features({ videoReady }) {
 
 
         <Box ref={ref}>
-          <Grid container spacing={isMobile ? 1.5 : 4}>
-
-            {features.map((feature, index) => {
-              // ✅ Caso especial: id=1 en mobile → slider con 2 secciones
-              if (isMobile && feature.id === 1) {
-                return (
-                  <Grid item xs={12} key={feature.id}>
-                    <motion.div
-                      initial="hidden"
-                      animate={hasAnimated ? "visible" : "hidden"}
-                      variants={cardAnimation}
-                      custom={index}
-                    >
-                      <Swiper
-                        spaceBetween={10}
-                        slidesPerView={1}
-                        modules={[Autoplay, Pagination]}
-                        autoplay={
-                          enableSwiperAutoplay
-                            ? {
-                              delay: 5000,
-                              disableOnInteraction: false,
-                              pauseOnMouseEnter: true,
-                            }
-                            : false
+          {isMobile ? (
+            <Grid container spacing={1.5}>
+              <Grid item xs={12} sx={{ mt: "-10px" }}>
+                <motion.div
+                  initial="hidden"
+                  animate={hasAnimated ? "visible" : "hidden"}
+                  variants={cardAnimation}
+                  custom={0}
+                >
+                  <Swiper
+                    spaceBetween={10}
+                    slidesPerView={1}
+                    modules={[Autoplay, Pagination]}
+                    autoplay={
+                      enableSwiperAutoplay
+                        ? {
+                          delay: 5000,
+                          disableOnInteraction: false,
+                          pauseOnMouseEnter: true,
                         }
-                        pagination={{
-                          clickable: true,
-                          type: "bullets",
+                        : false
+                    }
+                    pagination={{
+                      clickable: true,
+                      type: "bullets",
+                    }}
+                    onSwiper={setMobileSwiper}
+                    onInit={(swiper) => {
+                      if (enableSwiperAutoplay && swiper.autoplay) {
+                        swiper.autoplay.stop();
+                        setTimeout(() => {
+                          swiper.autoplay?.start();
+                        }, 2000);
+                      }
+                    }}
+                    className="custom-swiper"
+                  >
+                    <SwiperSlide>
+                      <Box
+                        sx={{
+                          position: "relative",
+                          width: "100%",
+                          height: 200,
+                          borderRadius: "40px",
+                          overflow: "hidden",
                         }}
-                        onSwiper={setMobileSwiper}
-                        onInit={(swiper) => {
-                          if (enableSwiperAutoplay && swiper.autoplay) {
-                            swiper.autoplay.stop();
-                            setTimeout(() => {
-                              swiper.autoplay?.start();
-                            }, 2000);
-                          }
-                        }}
-                        className="custom-swiper"
                       >
-                        {/* ✅ Slide 1: Imagen fija */}
-                        <SwiperSlide>
-                          <Box
-                            sx={{
-                              position: "relative",
-                              width: "100%",
-                              height: 200,
-                              borderRadius: "40px",
-                              overflow: "hidden",
-                            }}
-                          >
-                            <Box
-                              component="img"
-                              src="/trabajos-features.webp"
-                              alt="Trabajos recientes"
-                              loading="lazy"
-                              decoding="async"
+                        <Box
+                          component="img"
+                          src="/trabajos-features.webp"
+                          alt="Trabajos recientes"
+                          loading="lazy"
+                          decoding="async"
+                          sx={{
+                            width: "100%",
+                            height: "120%",
+                            objectFit: "cover",
+                            objectPosition: "center top",
+                            transform: "translateY(0%)",
+                          }}
+                        />
+                      </Box>
+                    </SwiperSlide>
+
+                    <SwiperSlide>
+                      <Card
+                        sx={{
+                          position: "relative",
+                          overflow: "visible",
+                          borderRadius: "50px",
+                          height: 200,
+                          display: "flex",
+                          alignItems: "flex-end",
+                          backgroundColor: "transparent",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            flex: 1,
+                            background: "linear-gradient(135deg, hsl(210, 80%, 55%), hsl(220, 70%, 35%))",
+                            borderRadius: "30px",
+                            p: 3,
+                            height: "65%",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            width: "100%",
+                            cursor: "pointer",
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleContactClick("Sitios Web");
+                          }}
+                        >
+                          <Box sx={{ maxWidth: "60%" }}>
+                            <Typography
+                              variant="h4"
                               sx={{
-                                width: "100%",
-                                height: "120%",          // 🔹 Hace que la imagen se expanda un poco
-                                objectFit: "cover",
-                                objectPosition: "center top", // 🔹 Muestra más la parte superior
-                                transform: "translateY(0%)", // 🔹 Baja visualmente la imagen
+                                fontWeight: "bold",
+                                mb: 0.5,
+                                textAlign: "left",
+                                color: "#fff",
+                                fontSize: "1.1rem",
                               }}
-                            />
+                            >
+                              Contrata tu Sitio web
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#fff",
+                                textAlign: "left",
+                                fontSize: "0.65rem",
+                              }}
+                            >
+                              Agendamiento, Cartas, Planes y más!
+                            </Typography>
                           </Box>
-                        </SwiperSlide>
+                        </Box>
 
-                        {/* ✅ Slide 2: Sitios Web (fondo verde) */}
-                        <SwiperSlide>
-                          <Card
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            right: 0,
+                            bottom: 0,
+                            height: "100%",
+                            aspectRatio: "572 / 788",
+                            zIndex: 2,
+                          }}
+                        >
+                          <Box
+                            component="img"
+                            src="/sitio-web.webp"
+                            alt="Preview Sitios Web"
+                            loading="lazy"
+                            decoding="async"
                             sx={{
-                              position: "relative",
-                              overflow: "visible",
-                              borderRadius: "50px",
-                              height: 200,
-                              display: "flex",
-                              alignItems: "flex-end",
-                              backgroundColor: "transparent",
+                              position: "absolute",
+                              top: "5%",
+                              left: "12%",
+                              width: "54.4%",
+                              height: "81.7%",
+                              objectFit: "cover",
+                              borderRadius: "10px",
+                              zIndex: 0,
+                              backgroundColor: "black",
                             }}
-                          >
-                            {/* Box verde degradado */}
-                            <Box
-                              sx={{
-                                flex: 1,
-                                background: "linear-gradient(135deg, hsl(210, 80%, 55%), hsl(220, 70%, 35%))",
-                                borderRadius: "30px",
-                                p: 3,
-                                height: "65%",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "center",
-                                width: "100%",
-                                cursor: "pointer",
-                              }}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleContactClick("Sitios Web");
-                              }}
-                            >
-                              <Box sx={{ maxWidth: "60%" }}>
-                                <Typography
-                                  variant="h4"
-                                  sx={{
-                                    fontWeight: "bold",
-                                    mb: 0.5,
-                                    textAlign: "left",
-                                    color: "#fff",
-                                    fontSize: "1.1rem",
-                                  }}
-                                >
-                                  Contrata tu Sitio web
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    color: "#fff",
-                                    textAlign: "left",
-                                    fontSize: "0.65rem",
-                                  }}
-                                >
-                                  Agendamiento, Cartas, Planes y más!
-                                </Typography>
-                              </Box>
-                            </Box>
+                          />
+                          <Box
+                            component="img"
+                            src="/mano-celular.webp"
+                            alt="Mano con celular"
+                            loading="lazy"
+                            decoding="async"
+                            sx={{
+                              width: "100%",
+                              height: "auto",
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              zIndex: 1,
+                              pointerEvents: "none",
+                            }}
+                          />
+                        </Box>
+                      </Card>
+                    </SwiperSlide>
+                  </Swiper>
+                </motion.div>
+              </Grid>
 
-                            {/* Imagen mockup derecha */}
+              <Grid item xs={12}>
+                <Grid container spacing={1.4}>
+                  {featureHighlights.map((option, index) => (
+                    <Grid item xs={6} key={option.id}>
+                      <motion.div
+                        initial="hidden"
+                        animate={hasAnimated ? "visible" : "hidden"}
+                        variants={cardAnimation}
+                        custom={index + 1}
+                      >
+                        <Box>
+                          <motion.div whileTap={{ scale: 0.985 }} whileHover={{ scale: 1.01 }}>
                             <Box
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`Seleccionar ${option.label}`}
+                              onClick={() => handleOpenFeatureVideo(option)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  handleOpenFeatureVideo(option);
+                                }
+                              }}
                               sx={{
-                                position: "absolute",
-                                right: 0,
-                                bottom: 0,
-                                height: "100%",
-                                aspectRatio: "572 / 788",
-                                zIndex: 2,
+                                borderRadius: "24px",
+                                backgroundColor: "#ffffff",
+                                border: "1px solid rgba(255,255,255,0.22)",
+                                boxShadow: "0 8px 18px rgba(0,0,0,0.12)",
+                                overflow: "hidden",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+                                position: "relative",
+                                "&:hover": {
+                                  boxShadow: "0 12px 22px rgba(0,0,0,0.18)",
+                                },
                               }}
                             >
                               <Box
-                                component="img"
-                                src="/sitio-web.webp"
-                                alt="Preview Sitios Web"
-                                loading="lazy"
-                                decoding="async"
-                                sx={{
-                                  position: "absolute",
-                                  top: "5%",
-                                  left: "12%",
-                                  width: "54.4%",
-                                  height: "81.7%",
-                                  objectFit: "cover",
-                                  borderRadius: "10px",
-                                  zIndex: 0,
-                                  backgroundColor: "black",
-                                }}
-                              />
-                              <Box
-                                component="img"
-                                src="/mano-celular.webp"
-                                alt="Mano con celular"
-                                loading="lazy"
-                                decoding="async"
+                                component="video"
+                                src={option.video}
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                preload="metadata"
                                 sx={{
                                   width: "100%",
-                                  height: "auto",
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  zIndex: 1,
-                                  pointerEvents: "none",
+                                  height: 118,
+                                  objectFit: "cover",
+                                  objectPosition: option.objectPosition || "center center",
+                                  display: "block",
+                                  background: `linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`,
                                 }}
                               />
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  inset: 0,
+                                  background: "linear-gradient(180deg, rgba(4,12,22,0.28), rgba(4,12,22,0.46))",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  pointerEvents: "none",
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: 0.8,
+                                    px: 1.6,
+                                    py: 0.8,
+                                    borderRadius: "999px",
+                                    background: "rgba(255,255,255,0.12)",
+                                    border: "1px solid rgba(255,255,255,0.38)",
+                                    boxShadow: "0 14px 26px rgba(0,0,0,0.24)",
+                                    backdropFilter: "blur(8px)",
+                                  }}
+                                >
+                                  <Typography
+                                    sx={{
+                                      color: "#fff",
+                                      fontSize: "0.82rem",
+                                      fontWeight: 800,
+                                      letterSpacing: "0.04em",
+                                      lineHeight: 1,
+                                    }}
+                                  >
+                                    Click
+                                  </Typography>
+                                  <Box
+                                    component="img"
+                                    src="/clic.jpg"
+                                    alt="Click"
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      objectFit: "contain",
+                                      display: "block",
+                                      filter: "brightness(0) invert(1)",
+                                    }}
+                                  />
+                                </Box>
+                              </Box>
                             </Box>
-                          </Card>
-                        </SwiperSlide>
-                      </Swiper>
-
-                    </motion.div>
-                  </Grid>
-                );
-              }
-
-
-              // ✅ resto de las cards como estaban
-              return (
-                <Grid item xs={12} md={4} key={feature.id}>
+                          </motion.div>
+                          <Typography
+                            sx={{
+                              textAlign: "center",
+                              fontWeight: 800,
+                              fontSize: "0.86rem",
+                              color: "#ffffff",
+                              pt: 0.85,
+                              px: 0.6,
+                              letterSpacing: "0.01em",
+                              lineHeight: 1.15,
+                            }}
+                          >
+                            {option.title}
+                          </Typography>
+                        </Box>
+                      </motion.div>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Grid>
+            </Grid>
+          ) : (
+            <Grid container spacing={2.2} alignItems="stretch">
+              {featureHighlights.map((option, index) => (
+                <Grid item xs={12} sm={6} md={3} key={option.id}>
                   <motion.div
                     initial="hidden"
                     animate={hasAnimated ? "visible" : "hidden"}
                     variants={cardAnimation}
-                    custom={index}
+                    custom={index + 1}
                   >
-                    <Card sx={{ position: "relative", overflow: "hidden" }}>
-                      <StyledCardActionArea href={feature.link} target="_self">
-                        <CardMedia
-                          component="img"
-                          image={feature.image}
-                          alt={feature.title}
-                          loading="lazy"
-                          sx={{ height: isMobile ? 205 : 250, transition: "transform 1s ease" }}
-                        />
-                        <Overlay className="overlay">
-                          <Typography
-                            variant="h6"
+                    <Box>
+                      <motion.div whileTap={{ scale: 0.985 }} whileHover={{ scale: 1.01 }}>
+                        <Box
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Seleccionar ${option.label}`}
+                          onClick={() => handleOpenFeatureVideo(option)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleOpenFeatureVideo(option);
+                            }
+                          }}
+                              sx={{
+                                borderRadius: "28px",
+                                backgroundColor: "#ffffff",
+                                border: "1px solid rgba(255,255,255,0.22)",
+                                boxShadow: "0 12px 24px rgba(0,0,0,0.14)",
+                                overflow: "hidden",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+                                position: "relative",
+                                "&:hover": {
+                                  boxShadow: "0 16px 28px rgba(0,0,0,0.18)",
+                                },
+                              }}
+                            >
+                          <Box
+                            component="video"
+                            src={option.video}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="metadata"
                             sx={{
-                              fontWeight: "bold",
-                              mt: isMobile ? 2 : 3,
-                              mb: 1,
-                              textAlign: "left",
-                              px: 1,
-                              fontSize: isMobile ? "1.15rem" : "1.4rem",
+                              width: "100%",
+                              height: 138,
+                              objectFit: "cover",
+                              objectPosition: option.objectPosition || "center center",
+                              display: "block",
+                              background: `linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              inset: 0,
+                              background: "linear-gradient(180deg, rgba(4,12,22,0.24), rgba(4,12,22,0.42))",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              pointerEvents: "none",
                             }}
                           >
-                            {feature.title}
-                          </Typography>
-                          <AdditionalContent className="additional">
-                            <Typography variant="body2" sx={{ mb: 1, px: 1 }}>
-                              {feature.desc}
-                            </Typography>
-                            <Box sx={{ textAlign: "center", mt: 2 }}>
-                              <Box
-                                component="span"
-                                role="button"
-                                tabIndex={0}
-                                className="btn-3-features"
+                            <Box
+                              sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 0.9,
+                                px: 1.9,
+                                py: 0.95,
+                                borderRadius: "999px",
+                                background: "rgba(255,255,255,0.12)",
+                                border: "1px solid rgba(255,255,255,0.42)",
+                                boxShadow: "0 16px 28px rgba(0,0,0,0.24)",
+                                backdropFilter: "blur(8px)",
+                              }}
+                            >
+                              <Typography
                                 sx={{
-                                  zIndex: 5,
-                                  cursor: "pointer",
-                                  display: "inline-block",
-                                }}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleContactClick(feature.title);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === " ") {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleContactClick(feature.title);
-                                  }
+                                  color: "#fff",
+                                  fontSize: "0.88rem",
+                                  fontWeight: 800,
+                                  letterSpacing: "0.05em",
+                                  lineHeight: 1,
                                 }}
                               >
-                                <span>Contratar</span>
-                              </Box>
+                                Click
+                              </Typography>
+                              <Box
+                                component="img"
+                                src="/clic.jpg"
+                                alt="Click"
+                                sx={{
+                                  width: 22,
+                                  height: 22,
+                                  objectFit: "contain",
+                                  display: "block",
+                                  filter: "brightness(0) invert(1)",
+                                }}
+                              />
                             </Box>
-                          </AdditionalContent>
-                        </Overlay>
-                      </StyledCardActionArea>
-                    </Card>
+                          </Box>
+                        </Box>
+                      </motion.div>
+                      <Typography
+                        sx={{
+                          textAlign: "center",
+                          fontWeight: 800,
+                          fontSize: "1rem",
+                          color: "#ffffff",
+                          pt: 0.95,
+                          px: 0.8,
+                          letterSpacing: "0.01em",
+                          lineHeight: 1.12,
+                        }}
+                      >
+                        {option.title}
+                      </Typography>
+                    </Box>
                   </motion.div>
                 </Grid>
-              );
-            })}
-          </Grid>
+              ))}
+            </Grid>
+          )}
         </Box>
         <DialogTrabajos
           open={openTrabajos}
@@ -778,6 +1000,94 @@ function Features({ videoReady }) {
           primaryLabel="Ver Servicios"
           onPrimaryClick={() => { handleCloseTrabajos(); navigate("/servicios"); }}
         />
+        <Dialog
+          open={Boolean(selectedFeatureVideo)}
+          onClose={handleCloseFeatureVideo}
+          maxWidth={false}
+          BackdropProps={{
+            sx: {
+              backgroundColor: "rgba(0, 0, 0, 0.82)",
+              backdropFilter: "blur(4px)",
+            },
+          }}
+          PaperProps={{
+            sx: {
+              width: { xs: "72vw", sm: "270px", md: "290px" },
+              aspectRatio: `${selectedFeatureAspectRatio}`,
+              height: "auto",
+              maxHeight: "88vh",
+              maxWidth: "84vw",
+              background: "rgba(7, 16, 27, 0.96)",
+              borderRadius: "24px",
+              border: "2px solid rgba(255,255,255,0.9)",
+              overflow: "hidden",
+              position: "relative",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
+            },
+          }}
+        >
+          <IconButton
+            aria-label="Cerrar video"
+            onClick={handleCloseFeatureVideo}
+            sx={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              zIndex: 2,
+              color: "#fff",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              "&:hover": {
+                backgroundColor: "rgba(0,0,0,0.68)",
+              },
+            }}
+          >
+            <CloseRoundedIcon
+              sx={{
+                animation: selectedFeatureVideo ? "featureCloseSpin 0.55s ease-out" : "none",
+                "@keyframes featureCloseSpin": {
+                  "0%": { transform: "rotate(0deg)" },
+                  "100%": { transform: "rotate(1080deg)" },
+                },
+              }}
+            />
+          </IconButton>
+
+          {selectedFeatureVideo && (
+            <Box
+              sx={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                p: { xs: 1, sm: 1.4 },
+                boxSizing: "border-box",
+              }}
+            >
+              <Box
+                component="video"
+                src={selectedFeatureVideo.video}
+                autoPlay
+                muted
+                loop
+                playsInline
+                onLoadedMetadata={(e) => {
+                  const video = e.currentTarget;
+                  if (video.videoWidth && video.videoHeight) {
+                    setSelectedFeatureAspectRatio(video.videoWidth / video.videoHeight);
+                  }
+                }}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  borderRadius: "18px",
+                  backgroundColor: "#000",
+                }}
+              />
+            </Box>
+          )}
+        </Dialog>
       </Container >
     </Box >
   );

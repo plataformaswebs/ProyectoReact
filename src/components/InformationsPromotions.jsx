@@ -9,6 +9,7 @@ import 'swiper/css';
 import emailjs from "@emailjs/browser";
 
 const VISITA_PRECIOS_KEY = "visita_pago_unico_notificada";
+const RESERVA_TEST_AMOUNT = 50;
 
 const InformationsPromotions = ({
   isMobile,
@@ -54,7 +55,7 @@ const InformationsPromotions = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: 30000,
+          amount: RESERVA_TEST_AMOUNT,
           buyOrder: "RSW-" + Date.now().toString().slice(-10),
           sessionId: "SES-" + Date.now(),
           returnUrl: isLocal

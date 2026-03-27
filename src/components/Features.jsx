@@ -43,7 +43,7 @@ const featureHighlights = [
     label: "Sitios Web",
     title: "Administración",
     video: "/feature-1.mp4",
-    objectPosition: "center 20%",
+    objectPosition: "center 32%",
     toneA: "#2c95e3",
     toneB: "#0f6fb8",
   },
@@ -76,6 +76,13 @@ const featureHighlights = [
   },
 ];
 
+const featureDialogMessages = {
+  "mini-1": "Gestiona tu negocio, clientes y trabajos en tiempo real.",
+  "mini-2": "Vende tus productos online y recibe pagos de forma simple y segura.",
+  "mini-3": "Atención automática 24/7 para tus clientes.",
+  "mini-4": "Genera ingresos mensuales automáticos para tu negocio.",
+};
+
 // EFECTOS
 const StyledCardActionArea = styled(CardActionArea)({
   position: "relative",
@@ -99,12 +106,14 @@ function FeaturePreviewVideo({
   objectPosition,
   shouldPlay,
   background,
+  playbackRate = 1,
 }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    video.playbackRate = playbackRate;
 
     if (shouldPlay) {
       const playPromise = video.play();
@@ -120,7 +129,7 @@ function FeaturePreviewVideo({
         // no-op
       }
     }
-  }, [shouldPlay]);
+  }, [shouldPlay, playbackRate]);
 
   return (
     <Box
@@ -156,6 +165,7 @@ function Features({ videoReady }) {
   const timestampRef = useRef(Date.now());
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isSmallMobileHeight = useMediaQuery("(max-height: 700px)");
   const prefersReducedMotion = useReducedMotion();
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -271,16 +281,11 @@ function Features({ videoReady }) {
   useEffect(() => {
     if (!inView || prefersReducedMotion) return;
 
-    if (!isMobile) {
-      setActivePreviewId((current) => current || (featureHighlights[0]?.id ?? null));
-      return;
-    }
-
     let currentIndex = 0;
     const interval = setInterval(() => {
       currentIndex = (currentIndex + 1) % featureHighlights.length;
       setActivePreviewId(featureHighlights[currentIndex].id);
-    }, 2200);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [inView, prefersReducedMotion, isMobile]);
@@ -865,14 +870,15 @@ function Features({ videoReady }) {
                                 src={option.video}
                                 height={118}
                                 objectPosition={option.objectPosition}
-                                shouldPlay={isMobile ? activePreviewId === option.id : true}
+                                shouldPlay={activePreviewId === option.id}
+                                playbackRate={2}
                                 background={`linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`}
                               />
                               <Box
                                 sx={{
                                   position: "absolute",
                                   inset: 0,
-                                  background: "linear-gradient(180deg, rgba(4,12,22,0.28), rgba(4,12,22,0.46))",
+                                  background: "linear-gradient(180deg, rgba(4,12,22,0.42), rgba(4,12,22,0.62))",
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -985,14 +991,15 @@ function Features({ videoReady }) {
                             src={option.video}
                             height={138}
                             objectPosition={option.objectPosition}
-                            shouldPlay={isMobile ? activePreviewId === option.id : true}
+                            shouldPlay={activePreviewId === option.id}
+                            playbackRate={2}
                             background={`linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`}
                           />
                           <Box
                             sx={{
                               position: "absolute",
                               inset: 0,
-                              background: "linear-gradient(180deg, rgba(4,12,22,0.24), rgba(4,12,22,0.42))",
+                              background: "linear-gradient(180deg, rgba(4,12,22,0.4), rgba(4,12,22,0.58))",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -1080,80 +1087,131 @@ function Features({ videoReady }) {
             },
           }}
           PaperProps={{
-            sx: {
-              width: { xs: "72vw", sm: "270px", md: "290px" },
+              sx: {
+              width: {
+                xs: isSmallMobileHeight ? "85vw" : "86vw",
+                sm: "340px",
+                md: "370px",
+              },
               aspectRatio: `${selectedFeatureAspectRatio}`,
               height: "auto",
-              maxHeight: "88vh",
+              maxHeight: isSmallMobileHeight ? "86vh" : "90vh",
               maxWidth: "84vw",
-              background: "rgba(7, 16, 27, 0.96)",
+              background: "transparent",
               borderRadius: "24px",
-              border: "2px solid rgba(255,255,255,0.9)",
-              overflow: "hidden",
+              border: "none",
+              overflow: "visible",
               position: "relative",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
+              transform: "translateY(-34px)",
+              boxShadow: "none",
             },
           }}
         >
-          <IconButton
-            aria-label="Cerrar video"
-            onClick={handleCloseFeatureVideo}
-            sx={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              zIndex: 2,
-              color: "#fff",
-              backgroundColor: "rgba(0,0,0,0.5)",
-              "&:hover": {
-                backgroundColor: "rgba(0,0,0,0.68)",
-              },
-            }}
-          >
-            <CloseRoundedIcon
-              sx={{
-                animation: selectedFeatureVideo ? "featureCloseSpin 0.55s ease-out" : "none",
-                "@keyframes featureCloseSpin": {
-                  "0%": { transform: "rotate(0deg)" },
-                  "100%": { transform: "rotate(1080deg)" },
-                },
-              }}
-            />
-          </IconButton>
-
           {selectedFeatureVideo && (
             <Box
               sx={{
                 width: "100%",
-                height: "100%",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                p: { xs: 1, sm: 1.4 },
+                flexDirection: "column",
+                gap: isSmallMobileHeight ? 0.8 : 0.9,
+                p: {
+                  xs: isSmallMobileHeight ? 0.45 : 0.55,
+                  sm: 0.75,
+                },
                 boxSizing: "border-box",
               }}
             >
               <Box
-                component="video"
-                src={selectedFeatureVideo.video}
-                autoPlay
-                muted
-                loop
-                playsInline
-                onLoadedMetadata={(e) => {
-                  const video = e.currentTarget;
-                  if (video.videoWidth && video.videoHeight) {
-                    setSelectedFeatureAspectRatio(video.videoWidth / video.videoHeight);
-                  }
-                }}
                 sx={{
                   width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                  borderRadius: "18px",
-                  backgroundColor: "#000",
+                  borderRadius: isSmallMobileHeight ? "18px" : "20px",
+                  overflow: "hidden",
+                  backgroundColor: "rgba(7, 16, 27, 0.96)",
+                  border: "2px solid rgba(255,255,255,0.9)",
+                  position: "relative",
+                  boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
                 }}
-              />
+              >
+                <IconButton
+                  aria-label="Cerrar video"
+                  onClick={handleCloseFeatureVideo}
+                  sx={{
+                    position: "absolute",
+                    top: 12,
+                    right: 12,
+                    zIndex: 2,
+                    color: "#fff",
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                    "&:hover": {
+                      backgroundColor: "rgba(0,0,0,0.68)",
+                    },
+                  }}
+                >
+                  <CloseRoundedIcon
+                    sx={{
+                      animation: selectedFeatureVideo ? "featureCloseSpin 0.55s ease-out" : "none",
+                      "@keyframes featureCloseSpin": {
+                        "0%": { transform: "rotate(0deg)" },
+                        "100%": { transform: "rotate(1080deg)" },
+                      },
+                    }}
+                  />
+                </IconButton>
+                <Box
+                  component="video"
+                  src={selectedFeatureVideo.video}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  onLoadedMetadata={(e) => {
+                    const video = e.currentTarget;
+                    if (video.videoWidth && video.videoHeight) {
+                      setSelectedFeatureAspectRatio(video.videoWidth / video.videoHeight);
+                    }
+                  }}
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "center 38%",
+                    display: "block",
+                    backgroundColor: "#000",
+                    maxHeight: isSmallMobileHeight ? "66vh" : "none",
+                  }}
+                />
+              </Box>
+              <Box
+                sx={{
+                  width: "100%",
+                  borderRadius: isSmallMobileHeight ? "16px" : "18px",
+                  border: "2px solid rgba(255,255,255,0.55)",
+                  background: "linear-gradient(180deg, rgba(28, 42, 63, 0.98), rgba(12, 20, 33, 1))",
+                  boxShadow: "0 18px 34px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08)",
+                  px: isSmallMobileHeight ? 0.95 : 1.1,
+                  py: isSmallMobileHeight ? 0.98 : 1.28,
+                  boxSizing: "border-box",
+                }}
+              >
+                <Typography
+                  sx={{
+                    textAlign: "center",
+                    color: "rgba(255,255,255,0.98)",
+                    fontSize: {
+                      xs: isSmallMobileHeight ? "0.84rem" : "0.9rem",
+                      sm: "0.98rem",
+                    },
+                    lineHeight: isSmallMobileHeight ? 1.34 : 1.42,
+                    fontWeight: 800,
+                    letterSpacing: "0.012em",
+                    textShadow: "0 2px 12px rgba(0,0,0,0.45)",
+                  }}
+                >
+                  {featureDialogMessages[selectedFeatureVideo.id] || "Gestiona tu negocio, clientes y trabajos en tiempo real."}
+                </Typography>
+              </Box>
             </Box>
           )}
         </Dialog>

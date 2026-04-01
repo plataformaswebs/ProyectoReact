@@ -750,7 +750,7 @@ function Features({ videoReady }) {
                             handleContactClick("Sitios Web");
                           }}
                         >
-                          <Box sx={{ maxWidth: "60%" }}>
+                          <Box sx={{ maxWidth: "68%" }}>
                             <Typography
                               variant="h4"
                               sx={{
@@ -758,20 +758,24 @@ function Features({ videoReady }) {
                                 mb: 0.5,
                                 textAlign: "left",
                                 color: "#fff",
-                                fontSize: "1.1rem",
+                                fontSize: "0.9rem",
+                                whiteSpace: "nowrap",
+                                lineHeight: 1.05,
                               }}
                             >
-                              Contrata tu Sitio web
+                              Convierte visitas en clientes
                             </Typography>
                             <Typography
                               variant="body2"
                               sx={{
                                 color: "#fff",
                                 textAlign: "left",
-                                fontSize: "0.65rem",
+                                fontSize: "0.62rem",
+                                maxWidth: "82%",
+                                lineHeight: 1.2,
                               }}
                             >
-                              Agendamiento, Cartas, Planes y más!
+                              Atrae clientes, muestra tus servicios y vende más online.
                             </Typography>
                           </Box>
                         </Box>
@@ -779,7 +783,7 @@ function Features({ videoReady }) {
                         <Box
                           sx={{
                             position: "absolute",
-                            right: 0,
+                            right: "-8px",
                             bottom: 0,
                             height: "100%",
                             aspectRatio: "572 / 788",

@@ -143,6 +143,10 @@ const ConfigurarTrabajos = () => {
     fetchTrabajos();
   }, []);
 
+  useEffect(() => {
+    console.log("Clientes cargados en ConfigurarTrabajos:", trabajos);
+  }, [trabajos]);
+
   const trabajosOrdenados = [...trabajos].sort((a, b) => {
     const aListo = Number(a.Porcentaje) === 100 ? 1 : 0;
     const bListo = Number(b.Porcentaje) === 100 ? 1 : 0;
@@ -275,10 +279,14 @@ const ConfigurarTrabajos = () => {
     }
   };
 
-  const handleChange = (index, field, value) => {
-    const updated = [...trabajos];
-    updated[index][field] = value;
-    setTrabajos(updated);
+  const handleChange = (sitioWeb, field, value) => {
+    setTrabajos((prevTrabajos) =>
+      prevTrabajos.map((trabajo) =>
+        trabajo.SitioWeb === sitioWeb
+          ? { ...trabajo, [field]: value }
+          : trabajo
+      )
+    );
   };
 
   //BOTÓN GUARDAR
@@ -673,7 +681,7 @@ const ConfigurarTrabajos = () => {
                             let num = Math.min(100, Math.max(0, Number(val || 0)));
 
                             // actualiza el estado con el número ya corregido
-                            handleChange(index, "Porcentaje", num);
+                            handleChange(trabajo.SitioWeb, "Porcentaje", num);
                           }}
                           inputProps={{
                             min: 0,

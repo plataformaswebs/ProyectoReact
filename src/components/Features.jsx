@@ -83,6 +83,29 @@ const featureDialogMessages = {
   "mini-4": "Genera ingresos mensuales automáticos para tu negocio.",
 };
 
+const featureDialogSectionStyles = {
+  "mini-1": {
+    border: "2px solid rgba(129, 212, 250, 0.9)",
+    background: "linear-gradient(180deg, rgba(0, 153, 255, 0.98), rgba(0, 82, 163, 1))",
+    boxShadow: "0 18px 38px rgba(0, 123, 255, 0.34), inset 0 1px 0 rgba(255,255,255,0.16)",
+  },
+  "mini-2": {
+    border: "2px solid rgba(129, 199, 132, 0.88)",
+    background: "linear-gradient(180deg, rgba(21, 153, 92, 0.98), rgba(8, 97, 58, 1))",
+    boxShadow: "0 18px 38px rgba(15, 122, 74, 0.32), inset 0 1px 0 rgba(255,255,255,0.14)",
+  },
+  "mini-3": {
+    border: "2px solid rgba(255, 183, 77, 0.9)",
+    background: "linear-gradient(180deg, rgba(255, 152, 0, 0.98), rgba(198, 99, 0, 1))",
+    boxShadow: "0 18px 38px rgba(255, 140, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.14)",
+  },
+  "mini-4": {
+    border: "2px solid rgba(255, 241, 118, 0.9)",
+    background: "linear-gradient(180deg, rgba(255, 193, 7, 0.98), rgba(194, 133, 0, 1))",
+    boxShadow: "0 18px 38px rgba(255, 193, 7, 0.32), inset 0 1px 0 rgba(255,255,255,0.14)",
+  },
+};
+
 // EFECTOS
 const StyledCardActionArea = styled(CardActionArea)({
   position: "relative",
@@ -176,6 +199,7 @@ function Features({ videoReady }) {
   const [didAutoSlide, setDidAutoSlide] = useState(false);
   const [selectedFeatureVideo, setSelectedFeatureVideo] = useState(null);
   const [selectedFeatureAspectRatio, setSelectedFeatureAspectRatio] = useState(9 / 16);
+  const [isFeatureVideoLoading, setIsFeatureVideoLoading] = useState(false);
   const [activePreviewId, setActivePreviewId] = useState(null);
   // TRABAJOS ACTIVOS
   const trabajosActivos = useMemo(
@@ -241,12 +265,16 @@ function Features({ videoReady }) {
   const handleTrabajosClick = () => setOpenTrabajos(true);
   const handleCloseTrabajos = () => setOpenTrabajos(false);
   const handleOpenFeatureVideo = (feature) => {
+    window.dispatchEvent(new Event("pauseAmbientVideos"));
+    setIsFeatureVideoLoading(true);
     setSelectedFeatureVideo(feature);
     setSelectedFeatureAspectRatio(9 / 16);
   };
   const handleCloseFeatureVideo = () => {
+    window.dispatchEvent(new Event("resumeAmbientVideos"));
     setSelectedFeatureVideo(null);
     setSelectedFeatureAspectRatio(9 / 16);
+    setIsFeatureVideoLoading(false);
   };
 
   //ATRASO MATRIX
@@ -279,7 +307,7 @@ function Features({ videoReady }) {
   }, [inView, prefersReducedMotion, isMobile]);
 
   useEffect(() => {
-    if (!inView || prefersReducedMotion) return;
+    if (!inView || prefersReducedMotion || selectedFeatureVideo) return;
 
     let currentIndex = 0;
     const interval = setInterval(() => {
@@ -288,7 +316,7 @@ function Features({ videoReady }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [inView, prefersReducedMotion, isMobile]);
+  }, [inView, prefersReducedMotion, isMobile, selectedFeatureVideo]);
 
   const matrixColumns = useMemo(() => {
     const count = isMobile ? 18 : 50;
@@ -874,7 +902,7 @@ function Features({ videoReady }) {
                                 src={option.video}
                                 height={118}
                                 objectPosition={option.objectPosition}
-                                shouldPlay={activePreviewId === option.id}
+                                shouldPlay={!selectedFeatureVideo && activePreviewId === option.id}
                                 playbackRate={2}
                                 background={`linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`}
                               />
@@ -913,7 +941,7 @@ function Features({ videoReady }) {
                                       lineHeight: 1,
                                     }}
                                   >
-                                    Click
+                                    Revisar
                                   </Typography>
                                   <Box
                                     component="img"
@@ -995,7 +1023,7 @@ function Features({ videoReady }) {
                             src={option.video}
                             height={138}
                             objectPosition={option.objectPosition}
-                            shouldPlay={activePreviewId === option.id}
+                            shouldPlay={!selectedFeatureVideo && activePreviewId === option.id}
                             playbackRate={2}
                             background={`linear-gradient(180deg, ${option.toneA}22 0%, #ffffff 100%)`}
                           />
@@ -1034,7 +1062,7 @@ function Features({ videoReady }) {
                                   lineHeight: 1,
                                 }}
                               >
-                                Click
+                                Revisar
                               </Typography>
                               <Box
                                 component="img"
@@ -1086,12 +1114,12 @@ function Features({ videoReady }) {
           maxWidth={false}
           BackdropProps={{
             sx: {
-              backgroundColor: "rgba(0, 0, 0, 0.82)",
-              backdropFilter: "blur(4px)",
+              backgroundColor: "rgba(0, 0, 0, 0.9)",
+              backdropFilter: "blur(6px)",
             },
           }}
           PaperProps={{
-              sx: {
+            sx: {
               width: {
                 xs: isSmallMobileHeight ? "85vw" : "86vw",
                 sm: "340px",
@@ -1108,6 +1136,11 @@ function Features({ videoReady }) {
               position: "relative",
               transform: "translateY(-34px)",
               boxShadow: "none",
+              animation: prefersReducedMotion ? "none" : "featureDialogEnter 0.24s ease-out",
+              "@keyframes featureDialogEnter": {
+                "0%": { opacity: 0, transform: "translateY(-20px) scale(0.97)" },
+                "100%": { opacity: 1, transform: "translateY(-34px) scale(1)" },
+              },
             },
           }}
         >
@@ -1136,8 +1169,73 @@ function Features({ videoReady }) {
                   border: "2px solid rgba(255,255,255,0.9)",
                   position: "relative",
                   boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    inset: "-2px",
+                    borderRadius: "inherit",
+                    background:
+                      "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.88) 12%, rgba(255,255,255,0.18) 24%, transparent 36%)",
+                    backgroundSize: "260% 260%",
+                    animation: prefersReducedMotion ? "none" : "featureBorderGlow 3.2s linear infinite",
+                    pointerEvents: "none",
+                    zIndex: 0,
+                    mask:
+                      "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                    maskComposite: "exclude",
+                    WebkitMask:
+                      "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                    WebkitMaskComposite: "xor",
+                  },
+                  "@keyframes featureBorderGlow": {
+                    "0%": { backgroundPosition: "-220% 0" },
+                    "100%": { backgroundPosition: "220% 0" },
+                  },
                 }}
               >
+                {isFeatureVideoLoading && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      zIndex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1.1,
+                      background:
+                        "radial-gradient(circle at center, rgba(22,34,49,0.88), rgba(5,10,18,0.97))",
+                      backdropFilter: "blur(4px)",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: "50%",
+                        border: "2px solid rgba(255,255,255,0.18)",
+                        borderTopColor: "rgba(255,255,255,0.92)",
+                        animation: "featureLoaderSpin 0.9s linear infinite",
+                        "@keyframes featureLoaderSpin": {
+                          "0%": { transform: "rotate(0deg)" },
+                          "100%": { transform: "rotate(360deg)" },
+                        },
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        color: "rgba(255,255,255,0.92)",
+                        fontSize: { xs: "0.78rem", sm: "0.84rem" },
+                        fontWeight: 700,
+                        letterSpacing: "0.03em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Cargando demo
+                    </Typography>
+                  </Box>
+                )}
                 <IconButton
                   aria-label="Cerrar video"
                   onClick={handleCloseFeatureVideo}
@@ -1170,12 +1268,14 @@ function Features({ videoReady }) {
                   muted
                   loop
                   playsInline
+                  preload="auto"
                   onLoadedMetadata={(e) => {
                     const video = e.currentTarget;
                     if (video.videoWidth && video.videoHeight) {
                       setSelectedFeatureAspectRatio(video.videoWidth / video.videoHeight);
                     }
                   }}
+                  onCanPlay={() => setIsFeatureVideoLoading(false)}
                   sx={{
                     width: "100%",
                     height: "100%",
@@ -1184,16 +1284,34 @@ function Features({ videoReady }) {
                     display: "block",
                     backgroundColor: "#000",
                     maxHeight: isSmallMobileHeight ? "66vh" : "none",
+                    transform: prefersReducedMotion ? "none" : "scale(1.018)",
+                    animation: prefersReducedMotion ? "none" : "featureVideoZoom 0.28s ease-out",
+                    "@keyframes featureVideoZoom": {
+                      "0%": { opacity: 0.86, transform: "scale(1.055)" },
+                      "100%": { opacity: 1, transform: "scale(1.018)" },
+                    },
                   }}
                 />
               </Box>
-              <Box
+              <motion.div
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                animate={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.26, ease: "easeOut", delay: prefersReducedMotion ? 0 : 0.08 }}
+                style={{ width: "100%" }}
+              >
+                <Box
                 sx={{
                   width: "100%",
                   borderRadius: isSmallMobileHeight ? "16px" : "18px",
-                  border: "2px solid rgba(255,255,255,0.55)",
-                  background: "linear-gradient(180deg, rgba(28, 42, 63, 0.98), rgba(12, 20, 33, 1))",
-                  boxShadow: "0 18px 34px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08)",
+                  border:
+                    (featureDialogSectionStyles[selectedFeatureVideo?.id] || {}).border ||
+                    "2px solid rgba(255,255,255,0.55)",
+                  background:
+                    (featureDialogSectionStyles[selectedFeatureVideo?.id] || {}).background ||
+                    "linear-gradient(180deg, rgba(28, 42, 63, 0.98), rgba(12, 20, 33, 1))",
+                  boxShadow:
+                    (featureDialogSectionStyles[selectedFeatureVideo?.id] || {}).boxShadow ||
+                    "0 18px 34px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08)",
                   px: isSmallMobileHeight ? 0.95 : 1.1,
                   py: isSmallMobileHeight ? 0.98 : 1.28,
                   boxSizing: "border-box",
@@ -1216,6 +1334,7 @@ function Features({ videoReady }) {
                   {featureDialogMessages[selectedFeatureVideo.id] || "Gestiona tu negocio, clientes y trabajos en tiempo real."}
                 </Typography>
               </Box>
+              </motion.div>
             </Box>
           )}
         </Dialog>

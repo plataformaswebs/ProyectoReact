@@ -97,7 +97,11 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
   const pdfSrc = `/plataformasweb-pdf.pdf#zoom=${isMobile ? 100 : 60}`;
   const location = useLocation();
   const mostrarAnimacion = videoReady || (location.pathname !== '/' && location.pathname !== '');
-  const showTopBanner = location.pathname === "/";
+  const [conCupos, setConCupos] = useState(() => {
+    const savedValue = localStorage.getItem("ConCupos");
+    return savedValue === "true";
+  });
+  const showTopBanner = location.pathname === "/" && conCupos;
   const [animacionMostrada, setAnimacionMostrada] = useState(false);
   const mostrarLogo = mostrarAnimacion || animacionMostrada;
   const [scrollY, setScrollY] = useState(0);
@@ -106,6 +110,22 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
   const [mostrarTexto, setMostrarTexto] = useState(true);
   const [openDialogOneClick, setOpenDialogOneClick] = useState(false);
   const [pendingUser, setPendingUser] = useState(null);
+  const [hoveredDesktopItem, setHoveredDesktopItem] = useState(null);
+
+  useEffect(() => {
+    const syncConCupos = () => {
+      const savedValue = localStorage.getItem("ConCupos");
+      setConCupos(savedValue === "true");
+    };
+
+    window.addEventListener("storage", syncConCupos);
+    window.addEventListener("conCuposChanged", syncConCupos);
+
+    return () => {
+      window.removeEventListener("storage", syncConCupos);
+      window.removeEventListener("conCuposChanged", syncConCupos);
+    };
+  }, []);
 
   // ⏱️ ALERTA PRINCIPAL
   useEffect(() => {
@@ -461,7 +481,13 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
 
               <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
                 {menuItems
-                  .map((item, index) => (
+                  .map((item, index) => {
+                    const isInicioActive = item.name === "Inicio" && location.pathname === "/";
+                    const showUnderline = hoveredDesktopItem
+                      ? hoveredDesktopItem === item.name
+                      : isInicioActive;
+
+                    return (
                     <Button
                       key={item.name}
                       component={motion.button}
@@ -470,6 +496,8 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
                       animate="visible"
                       variants={menuItemVariants}
                       onClick={() => handleClick(item)}
+                      onMouseEnter={() => setHoveredDesktopItem(item.name)}
+                      onMouseLeave={() => setHoveredDesktopItem(null)}
                       sx={{
                         color: "#fff",
                         fontFamily: "Poppins, sans-serif",
@@ -478,13 +506,36 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
                         border: "none",
                         borderRadius: "6px",
                         cursor: "pointer",
-                        "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+                        position: "relative",
+                        fontWeight: showUnderline ? 700 : 500,
+                        textShadow: showUnderline ? "0 1px 6px rgba(59,130,246,0.35)" : "none",
+                        "&::after": {
+                          content: '""',
+                          position: "absolute",
+                          left: "50%",
+                          bottom: 4,
+                          width: showUnderline ? "68%" : 0,
+                          height: "4px",
+                          borderRadius: "999px",
+                          transform: "translateX(-50%)",
+                          background: "linear-gradient(90deg, #38bdf8 0%, #2563eb 100%)",
+                          boxShadow: showUnderline ? "0 0 10px rgba(56,189,248,0.65)" : "none",
+                          transition: "width 0.28s ease, box-shadow 0.28s ease",
+                        },
+                        "&:hover": {
+                          backgroundColor: "rgba(255,255,255,0.1)",
+                          "&::after": {
+                            width: "68%",
+                            boxShadow: "0 0 10px rgba(56,189,248,0.5)",
+                          },
+                        },
                         transition: "all 0.3s ease",
                       }}
                     >
                       {item.name}
                     </Button>
-                  ))}
+                    );
+                  })}
               </Box>
 
 

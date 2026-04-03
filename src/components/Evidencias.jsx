@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { Box, Typography, Grid, Card, CardMedia, useTheme, useMediaQuery, Snackbar, Alert, } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useInView } from "react-intersection-observer";
@@ -10,6 +10,7 @@ const Evidencias = () => {
     const [visible, setVisible] = useState(false);
     const sectionRef = useRef();
     const videosRef = useRef([]);
+    const [activeVideoIndex, setActiveVideoIndex] = useState(0);
     const [scrollY, setScrollY] = useState(0);
     const { ref, inView } = useInView({ threshold: 0.3, triggerOnce: true, rootMargin: '0px 0px -30% 0px' });
     const [hasAnimated, setHasAnimated] = useState(false);
@@ -62,8 +63,8 @@ const Evidencias = () => {
     ];
 
     const evidenciaIndices = isMobile
-        ? [[0, 1], [2, 3], [4, 5], [6]]   // Mobile → 3 filas de 2 + 1 fila de 1
-        : [[0], [1], [2], [3], [4], [5], [6]]; // Desktop → todas en filas individuales
+        ? [[0, 1], [2, 3], [4, 5], [6]]   // Mobile â†’ 3 filas de 2 + 1 fila de 1
+        : [[0], [1], [2], [3], [4], [5], [6]]; // Desktop â†’ todas en filas individuales
 
 
     const letterVariants = {
@@ -79,41 +80,15 @@ const Evidencias = () => {
         if (reason === 'clickaway') return;
         setSnackbarOpen(false);
     };
-
-    // Reproducción automática solo si es visible
     useEffect(() => {
-        if (!videosRef.current.length) return;
+        if (!inView) return;
 
-        const observers = videosRef.current.map((video) => {
-            if (!video) return null;
+        const interval = setInterval(() => {
+            setActiveVideoIndex((prev) => (prev + 1) % evidencias.length);
+        }, 2000);
 
-            const observer = new IntersectionObserver(
-                ([entry]) => {
-                    if (entry.isIntersecting) {
-                        video.play().catch(() => { });
-                    } else {
-                        video.pause();
-                    }
-                },
-                {
-                    root: null,
-                    threshold: 0.5,           // al menos 50% visible
-                    rootMargin: "0px 0px -10% 0px", // puedes ajustar sensibilidad
-                }
-            );
-
-            observer.observe(video);
-            return observer;
-        });
-
-        return () => {
-            observers.forEach((observer, index) => {
-                if (observer && videosRef.current[index]) {
-                    observer.unobserve(videosRef.current[index]);
-                }
-            });
-        };
-    }, [evidencias.length]);
+        return () => clearInterval(interval);
+    }, [inView, evidencias.length]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -154,9 +129,21 @@ const Evidencias = () => {
         }
     }, [imagenInView]);
 
+    useEffect(() => {
+        videosRef.current.forEach((video, index) => {
+            if (!video) return;
+
+            if (inView && index === activeVideoIndex) {
+                video.play().catch(() => { });
+            } else {
+                video.pause();
+            }
+        });
+    }, [activeVideoIndex, inView]);
+
     return (
         <Box sx={{ width: '100%', position: 'relative', mt: '-80px' }}>
-            {/* Sección 1 */}
+            {/* SecciÃ³n 1 */}
             <Box
                 sx={{
                     position: 'relative',
@@ -190,7 +177,7 @@ const Evidencias = () => {
                         top: '30px',
                         left: 0,
                         right: 0,
-                        zIndex: 5, // 👈 más alto que la mano (3)
+                        zIndex: 5, // mas alto que la mano (3)
                     }}
                 >
                     <motion.div
@@ -223,8 +210,8 @@ const Evidencias = () => {
                 <Box
                     ref={imagenRef}
                     sx={{
-                        position: 'absolute', // 🚀 clave!
-                        bottom: '5%', // 🚀 hace que sobresalga un 10% en Sección 2
+                        position: 'absolute', // ðŸš€ clave!
+                        bottom: '5%', // ðŸš€ hace que sobresalga un 10% en SecciÃ³n 2
                         left: '27%',
                         transform: 'translateX(0%)',
                         width: '100%',
@@ -234,7 +221,7 @@ const Evidencias = () => {
                         pointerEvents: 'none', // para que no bloquee clics
                     }}
                 >
-                    {/* Video detrás */}
+                    {/* Video detrÃ¡s */}
                     <motion.video
                         ref={videoRef}
                         src="/video-administracion.mp4"
@@ -282,7 +269,7 @@ const Evidencias = () => {
 
 
 
-            {/* Sección 2 */}
+            {/* SecciÃ³n 2 */}
             <Box
                 sx={{
                     position: 'relative',
@@ -347,20 +334,20 @@ const Evidencias = () => {
                                 sx={{
                                     fontFamily: '"Poppins", sans-serif',
                                     fontSize: { xs: "1.5rem", md: "2rem" },
-                                    paddingX: { xs: "10px", md: "30px" }, // 👈 mejor usar paddingX para izquierda y derecha
-                                    paddingY: { xs: "10px", md: "20px" }, // 👈 también puedes darle arriba/abajo si quieres más aire
+                                    paddingX: { xs: "10px", md: "30px" }, // mejor usar paddingX para izquierda y derecha
+                                    paddingY: { xs: "10px", md: "20px" }, // tambien puedes darle arriba/abajo si quieres mas aire
                                     letterSpacing: "3px",
                                     my: 0,
                                     display: "flex",
                                     flexWrap: "wrap",
-                                    justifyContent: "center", // 👈 ahora el contenido dentro queda al centro
+                                    justifyContent: "center", // ðŸ‘ˆ ahora el contenido dentro queda al centro
                                     alignItems: "center",
                                     backgroundColor: "transparent",
                                     color: "lightgray",
-                                    textAlign: "center", // 👈 adicional para asegurar texto centrado
+                                    textAlign: "center", // ðŸ‘ˆ adicional para asegurar texto centrado
                                 }}
                             >
-                                {/* Barra | café al inicio */}
+                                {/* Barra | cafÃ© al inicio */}
                                 <motion.span
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={inView || hasAnimated ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
@@ -452,12 +439,10 @@ const Evidencias = () => {
                                                                     playsInline
                                                                     muted
                                                                     loop
-                                                                    preload="none"
+                                                                    preload="metadata"
                                                                     controls={false}
                                                                     disablePictureInPicture
                                                                     controlsList="nodownload nofullscreen noremoteplayback"
-                                                                    onCanPlay={(e) => e.target.play()}
-                                                                    onLoadedData={(e) => e.target.play()}
                                                                     onClick={(e) => {
                                                                         const video = e.target;
 
@@ -502,7 +487,7 @@ const Evidencias = () => {
                                                                             position: "absolute",
                                                                             bottom: 4,
                                                                             left: "50%",
-                                                                            transform: "translateX(-50%)", // ✅ solo centra
+                                                                            transform: "translateX(-50%)", // âœ… solo centra
                                                                             zIndex: 2,
                                                                         }}
                                                                     >
@@ -514,7 +499,7 @@ const Evidencias = () => {
                                                                             transition={{
                                                                                 duration: 0.6,
                                                                                 ease: "easeOut",
-                                                                                delay: 1   // ⏳ delay de 1 segundo
+                                                                                delay: 1   // delay de 1 segundo
                                                                             }}
                                                                             sx={{
                                                                                 width: 70,
@@ -561,7 +546,7 @@ const Evidencias = () => {
                                                                 rel="noopener noreferrer"
 
                                                                 sx={{
-                                                                    fontSize: evidencias[n].label === "investigadores-privados.cl" ? "0.63rem" : "0.75rem", // 👈 solo cambia aquí
+                                                                    fontSize: evidencias[n].label === "investigadores-privados.cl" ? "0.63rem" : "0.75rem", // ðŸ‘ˆ solo cambia aquÃ­
 
                                                                     display: 'block',
                                                                     mt: 1.5,
@@ -607,7 +592,7 @@ const Evidencias = () => {
                                 {/* Texto final */}
                                 <Grid item xs={12}>
                                     <Typography
-                                        ref={muchosMasRef} // 👈 le pasamos el observer
+                                        ref={muchosMasRef} // ðŸ‘ˆ le pasamos el observer
                                         variant="body1"
                                         align="center"
                                         sx={{
@@ -629,7 +614,7 @@ const Evidencias = () => {
                                                 key={i}
                                                 custom={i}
                                                 initial={{ opacity: 0, y: 20 }}
-                                                animate={muchosMasInView ? { opacity: 1, y: 0 } : {}} // 👈 ahora depende solo de este ref
+                                                animate={muchosMasInView ? { opacity: 1, y: 0 } : {}} // ðŸ‘ˆ ahora depende solo de este ref
                                                 transition={{ delay: i * 0.05, duration: 0.4 }}
                                                 style={{
                                                     display: "inline-block",
@@ -659,3 +644,7 @@ const Evidencias = () => {
 };
 
 export default Evidencias;
+
+
+
+

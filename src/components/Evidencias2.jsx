@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+﻿import React, { useRef, useState, useEffect } from 'react';
 import { Box, Typography, CardMedia, useTheme, useMediaQuery, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useInView } from "react-intersection-observer";
@@ -54,11 +54,12 @@ const SeccionDestacada = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const videosRef = useRef([]);
+    const [activeVideoIndex, setActiveVideoIndex] = useState(0);
     const { ref, inView } = useInView({ threshold: 0.3, triggerOnce: true, rootMargin: '0px 0px -30% 0px' });
     const [hasAnimated, setHasAnimated] = useState(false);
 
 
-    //EVITAR ANIMACIÓN DUPLICADA
+    //EVITAR ANIMACIÃ“N DUPLICADA
     useEffect(() => {
         if (inView && !hasAnimated) {
             setHasAnimated(true);
@@ -76,17 +77,26 @@ const SeccionDestacada = () => {
     };
 
     useEffect(() => {
-        if (inView && !hasAnimated) {
-            setHasAnimated(true);
+        if (!inView) return;
 
-            // Reproduce todos los videos una vez visibles
-            videosRef.current.forEach((video) => {
-                if (video && typeof video.play === 'function') {
-                    video.play().catch(() => { }); // evita error si autoplay bloqueado
-                }
-            });
-        }
-    }, [inView, hasAnimated]);
+        const interval = setInterval(() => {
+            setActiveVideoIndex((prev) => (prev + 1) % evidencias.length);
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [inView]);
+
+    useEffect(() => {
+        videosRef.current.forEach((video, index) => {
+            if (!video) return;
+
+            if (inView && index === activeVideoIndex) {
+                video.play().catch(() => { });
+            } else {
+                video.pause();
+            }
+        });
+    }, [activeVideoIndex, inView]);
 
     const renderScrollRow = (delay = '0s') => (
         <Box
@@ -185,7 +195,7 @@ const SeccionDestacada = () => {
                     zIndex: 2,
                 }}
             >
-                {/* Panel blanco con título y videos */}
+                {/* Panel blanco con tÃ­tulo y videos */}
                 <Box
                     ref={ref}
                     sx={{
@@ -228,20 +238,20 @@ const SeccionDestacada = () => {
                             style={{ color: 'black' }}
                         >
 
-                            {/* Barra | café al inicio */}
+                            {/* Barra | cafÃ© al inicio */}
                             <motion.span
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={inView || hasAnimated ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
                                 transition={{ delay: 0.3 }}
                                 style={{
-                                    color: "#8B4513",           // Café
+                                    color: "#8B4513",           // CafÃ©
                                     fontWeight: "bold",
-                                    marginRight: "1px",         // 🔸 Más pegado a la 'N'
+                                    marginRight: "1px",         // ðŸ”¸ MÃ¡s pegado a la 'N'
                                     marginTop: "-6px",
-                                    fontSize: "0.8em",          // 🔸 Un poco más bajo que el texto
-                                    lineHeight: 1,              // 🔸 Alineación vertical más precisa
+                                    fontSize: "0.8em",          // ðŸ”¸ Un poco mÃ¡s bajo que el texto
+                                    lineHeight: 1,              // ðŸ”¸ AlineaciÃ³n vertical mÃ¡s precisa
                                     display: "inline-block",
-                                    transform: "translateY(2px)" // 🔸 Ligero ajuste vertical si lo ves muy arriba/abajo
+                                    transform: "translateY(2px)" // ðŸ”¸ Ligero ajuste vertical si lo ves muy arriba/abajo
                                 }}
                             >
                                 |
@@ -277,7 +287,7 @@ const SeccionDestacada = () => {
                             ml: 2,
                             alignItems: 'flex-end', // Alinea los videos abajo
                             mt: 4,
-                            // mr: '10px', // Elimina este margen para que todos estén alineados
+                            // mr: '10px', // Elimina este margen para que todos estÃ©n alineados
                         }}
                     >
                         {evidencias.map((evidencia, i) => (
@@ -298,10 +308,10 @@ const SeccionDestacada = () => {
                                         justifyContent: "flex-end",
                                     }}
                                 >
-                                    {/* 🔹 Contenedor relativo para video + logo */}
+                                    {/* ðŸ”¹ Contenedor relativo para video + logo */}
                                     <Box
                                         sx={{
-                                            position: "relative",   // ✅ necesario para el overlay
+                                            position: "relative",   // âœ… necesario para el overlay
                                             width: "100%",
                                             height: 270,
                                             borderRadius: 2,
@@ -316,7 +326,7 @@ const SeccionDestacada = () => {
                                             playsInline
                                             muted
                                             loop
-                                            preload="auto"
+                                            preload="metadata"
                                             controls={false}
                                             disablePictureInPicture
                                             controlsList="nodownload nofullscreen noremoteplayback"
@@ -332,7 +342,7 @@ const SeccionDestacada = () => {
                                             }}
                                         />
 
-                                        {/* 🔹 Logo dentro del video */}
+                                        {/* ðŸ”¹ Logo dentro del video */}
                                         {evidencia.logo && (
                                             <Box
                                                 component={motion.div}
@@ -345,8 +355,8 @@ const SeccionDestacada = () => {
                                                 }}
                                                 sx={{
                                                     position: "absolute",
-                                                    bottom: 8,           // 🔹 mitad de 70px para que sobresalga justo la mitad
-                                                    left: "28%",           // 🔹 centro exacto
+                                                    bottom: 8,           // ðŸ”¹ mitad de 70px para que sobresalga justo la mitad
+                                                    left: "28%",           // ðŸ”¹ centro exacto
                                                     width: 60,
                                                     height: 60,
                                                     borderRadius: "50%",
@@ -376,7 +386,7 @@ const SeccionDestacada = () => {
                                         )}
                                     </Box>
 
-                                    {/* 🔹 Texto debajo del video */}
+                                    {/* ðŸ”¹ Texto debajo del video */}
                                     <Typography
                                         variant="body2"
                                         align="center"
@@ -417,7 +427,7 @@ const SeccionDestacada = () => {
                             fontWeight: 700,
                             fontFamily: 'Poppins, sans-serif',
                             fontSize: '1.2rem',
-                            mt: 5, // Más separación respecto a los videos
+                            mt: 5, // MÃ¡s separaciÃ³n respecto a los videos
                             letterSpacing: 1,
                             textShadow: '0 1px 8px #b2ebf2',
                         }}
@@ -450,7 +460,7 @@ const SeccionDestacada = () => {
                             objectFit: 'contain',
                             display: 'block',
                             position: "relative", // o absolute si lo necesitas fijo
-                            zIndex: -1,            // 👈 asegura que quede detrás
+                            zIndex: -1,            // ðŸ‘ˆ asegura que quede detrÃ¡s
                         }}
                     />
 
@@ -461,3 +471,5 @@ const SeccionDestacada = () => {
 };
 
 export default SeccionDestacada;
+
+

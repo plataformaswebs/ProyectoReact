@@ -21,6 +21,7 @@ function Hero({ informationsRef, setVideoReady }) {
   const [mostrarContenido, setMostrarContenido] = useState(false);
   const isVideoInViewportRef = useRef(true);
   const isDocumentVisibleRef = useRef(true);
+  const ambientPausedRef = useRef(false);
 
 
 
@@ -63,6 +64,7 @@ function Hero({ informationsRef, setVideoReady }) {
 
     const shouldKeepPlaying = () =>
       hasStarted &&
+      !ambientPausedRef.current &&
       isDocumentVisibleRef.current &&
       isVideoInViewportRef.current &&
       !video.ended &&
@@ -81,9 +83,23 @@ function Hero({ informationsRef, setVideoReady }) {
         video.pause();
       }
     };
+    const handlePauseAmbientVideos = () => {
+      ambientPausedRef.current = true;
+      if (hasStarted) {
+        video.pause();
+      }
+    };
+    const handleResumeAmbientVideos = () => {
+      ambientPausedRef.current = false;
+      if (shouldKeepPlaying()) {
+        video.play().catch(() => { });
+      }
+    };
 
     video.addEventListener("pause", handlePause);
     document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pauseAmbientVideos", handlePauseAmbientVideos);
+    window.addEventListener("resumeAmbientVideos", handleResumeAmbientVideos);
 
     // Pausar si no esta visible en pantalla
     const observer = new IntersectionObserver(
@@ -104,6 +120,8 @@ function Hero({ informationsRef, setVideoReady }) {
       clearTimeout(startTimer);
       video.removeEventListener("pause", handlePause);
       document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pauseAmbientVideos", handlePauseAmbientVideos);
+      window.removeEventListener("resumeAmbientVideos", handleResumeAmbientVideos);
       observer.disconnect();
     };
   }, []);

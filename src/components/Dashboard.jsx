@@ -5,7 +5,7 @@ import {
     Paper,
     Typography,
     useMediaQuery,
-    useTheme, Snackbar, Alert
+    useTheme, Snackbar, Alert, Switch, FormControlLabel
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -69,7 +69,11 @@ const Dashboard = () => {
     const [mostrarContadorPrincipal, setMostrarContadorPrincipal] = useState(false);
     const [mostrarContadorChile, setMostrarContadorChile] = useState(false);
     const [mostrarContadorInt, setMostrarContadorInt] = useState(false);
-    const [snackbarServicios, setSnackbarServicios] = useState(false);
+    const [snackbarServicios, setSnackbarServicios] = useState({
+        open: false,
+        message: "",
+        severity: "info",
+    });
     const location = useLocation();
     const [usuario, setUsuario] = useState(null);
     const [visitasTotales, setVisitasTotales] = useState(0);
@@ -93,6 +97,8 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [openPase, setOpenPase] = useState(false);
     const [analyticsDisponible, setAnalyticsDisponible] = useState(true);
+    const [conCupos, setConCupos] = useState(() => localStorage.getItem("ConCupos") === "true");
+    const [guardandoConCupos, setGuardandoConCupos] = useState(false);
 
     //GOOGLE ANALYTICS
     useEffect(() => {
@@ -149,6 +155,20 @@ const Dashboard = () => {
         }
     }, []);
 
+    useEffect(() => {
+        const syncConCupos = () => {
+            setConCupos(localStorage.getItem("ConCupos") === "true");
+        };
+
+        window.addEventListener("storage", syncConCupos);
+        window.addEventListener("conCuposChanged", syncConCupos);
+
+        return () => {
+            window.removeEventListener("storage", syncConCupos);
+            window.removeEventListener("conCuposChanged", syncConCupos);
+        };
+    }, []);
+
     //PASE MENSUAL
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -165,6 +185,54 @@ const Dashboard = () => {
             document.body.style.zoom = "100%";
         };
     }, []);
+
+    const handleChangeConCupos = async (event) => {
+        const nextValue = event.target.checked;
+        const previousValue = conCupos;
+
+        setConCupos(nextValue);
+        setGuardandoConCupos(true);
+
+        try {
+            const isLocal = window.location.hostname === "localhost";
+            const endpoint = isLocal
+                ? "http://localhost:8888/.netlify/functions/actualizarSeguridad"
+                : "/.netlify/functions/actualizarSeguridad";
+
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: 1,
+                    valor: nextValue ? 1 : 0,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("No se pudo actualizar Seguridad.xlsx");
+            }
+
+            localStorage.setItem("ConCupos", String(nextValue));
+            window.dispatchEvent(new Event("conCuposChanged"));
+            setSnackbarServicios({
+                open: true,
+                message: nextValue
+                    ? "✅ Se activaron los cupos de Plataformas Web."
+                    : "🚫 Se desactivaron los cupos de Plataformas Web.",
+                severity: "success",
+            });
+        } catch (error) {
+            console.error("Error actualizando ConCupos:", error);
+            setConCupos(previousValue);
+            setSnackbarServicios({
+                open: true,
+                message: "⚠️ No se pudo actualizar el estado de los cupos.",
+                severity: "error",
+            });
+        } finally {
+            setGuardandoConCupos(false);
+        }
+    };
 
 
     return (
@@ -231,6 +299,63 @@ const Dashboard = () => {
             />
 
             <Grid item sx={{ pt: isMobile ? 11 : 11 }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mb: 1,
+                        position: "relative",
+                        zIndex: 1,
+                    }}
+                >
+                    <Box
+                        sx={{
+                            px: 2,
+                            py: 0.45,
+                            minWidth: isMobile ? "170px" : "190px",
+                            borderRadius: "999px",
+                            background: "rgba(5, 15, 30, 0.58)",
+                            border: "1px solid rgba(255,255,255,0.16)",
+                            backdropFilter: "blur(8px)",
+                            boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+                            display: "flex",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={conCupos}
+                                    onChange={handleChangeConCupos}
+                                    disabled={guardandoConCupos}
+                                    size="small"
+                                    sx={{
+                                        "& .MuiSwitch-switchBase.Mui-checked": {
+                                            color: "#4fc3f7",
+                                        },
+                                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                            backgroundColor: "#29b6f6",
+                                            opacity: 1,
+                                        },
+                                    }}
+                                />
+                            }
+                            label={guardandoConCupos ? "Guardando..." : "Con Cupos"}
+                            sx={{
+                                m: 0,
+                                width: "100%",
+                                color: "white",
+                                justifyContent: "space-between",
+                                "& .MuiFormControlLabel-label": {
+                                    fontSize: isMobile ? "0.82rem" : "0.9rem",
+                                    fontWeight: 700,
+                                    letterSpacing: "0.02em",
+                                    whiteSpace: "nowrap",
+                                },
+                            }}
+                        />
+                    </Box>
+                </Box>
                 <Box
                     sx={{
                         display: "flex",
@@ -654,17 +779,17 @@ const Dashboard = () => {
 
             </Grid >
             <Snackbar
-                open={snackbarServicios}
+                open={snackbarServicios.open}
                 autoHideDuration={2000}
-                onClose={() => setSnackbarServicios(false)}
+                onClose={() => setSnackbarServicios((prev) => ({ ...prev, open: false }))}
                 anchorOrigin={{ vertical: "top", horizontal: "center" }}
             >
                 <Alert
-                    severity="info" icon={false}
-                    onClose={() => setSnackbarServicios(false)}
+                    severity={snackbarServicios.severity} icon={false}
+                    onClose={() => setSnackbarServicios((prev) => ({ ...prev, open: false }))}
                     sx={{ width: "100%", fontSize: "0.9rem", boxShadow: 3 }}
                 >
-                    🚧 En Construcción...
+                    {snackbarServicios.message}
                 </Alert>
             </Snackbar>
             {/*<DialogPaseMensual

@@ -1,6 +1,7 @@
 // src/router.jsx
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate, useOutletContext } from "react-router-dom";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import App from "./App";
 const Servicios = lazy(() => import("./components/Servicios"));
 const Nosotros = lazy(() => import("./components/Nosotros"));
@@ -24,8 +25,43 @@ const Terms = lazy(() => import("./components/legal/Terms"));
 const DataDeletion = lazy(() => import("./components/legal/DataDeletion"));
 
 // ✅ HOC para envolver cualquier componente con Suspense
+const RouteLoadingFallback = () => (
+    <Box
+        sx={{
+            minHeight: "60vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            px: 2,
+            background: "linear-gradient(180deg, rgba(6,31,53,0.95), rgba(3,17,30,0.98))",
+        }}
+    >
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1.5,
+                color: "#fff",
+            }}
+        >
+            <CircularProgress size={34} thickness={4.2} sx={{ color: "#3b82f6" }} />
+            <Typography
+                sx={{
+                    fontFamily: "Poppins, sans-serif",
+                    fontSize: "0.95rem",
+                    fontWeight: 500,
+                    color: "rgba(255,255,255,0.92)",
+                }}
+            >
+                Cargando contenido...
+            </Typography>
+        </Box>
+    </Box>
+);
+
 const withSuspense = (Component) => (
-    <Suspense fallback={null}>
+    <Suspense fallback={<RouteLoadingFallback />}>
         <Component />
     </Suspense>
 );
@@ -45,7 +81,7 @@ const ProtectedRoute = ({ children }) => {
 function HomeWrapper() {
     const { informationsRef, setVideoReady } = useOutletContext();
     return (
-        <Suspense fallback={null}>
+        <Suspense fallback={<RouteLoadingFallback />}>
             <Home informationsRef={informationsRef} setVideoReady={setVideoReady} />
         </Suspense>
     );

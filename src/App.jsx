@@ -18,6 +18,7 @@ import Cargando from './components/Cargando';
 import { AnimatePresence, motion } from 'framer-motion';
 import "./components/css/App.css";
 import { initGoogleAnalytics, trackPageView } from "./helpers/HelperAnalytics.js"; //GOOGLE ANALYTICS
+import { obtenerConCuposDesdeSeguridad } from "./helpers/HelperSeguridad.js";
 import DialogTrabajoEnRevision from "./components/DialogTrabajoEnRevision";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Chat from "./components/PWBot/Chat";
@@ -60,6 +61,20 @@ function App() {
   useEffect(() => {
     trackPageView(location.pathname + location.search); // en cada cambio de ruta
   }, [location]);
+
+  useEffect(() => {
+    const syncConCupos = async () => {
+      try {
+        const conCupos = await obtenerConCuposDesdeSeguridad();
+        localStorage.setItem("ConCupos", String(conCupos));
+        window.dispatchEvent(new Event("conCuposChanged"));
+      } catch (error) {
+        console.warn("No se pudo cargar ConCupos desde Seguridad.xlsx:", error);
+      }
+    };
+
+    syncConCupos();
+  }, []);
 
   // Warm-up Chat API + preconnect para reducir latencia inicial
   useEffect(() => {

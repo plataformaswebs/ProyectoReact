@@ -11,12 +11,12 @@ import "./css/Informations.css";
 import "swiper/css";
 import InformationsPromotions from './InformationsPromotions';
 
-const promotions = [
+const promotionsBase = [
   {
     id: 1,
     title: "📅 Suscripción Mensual",
     description: "Tu presencia digital activa mes a mes.",
-    image: "/promocion-1.webp",
+    image: "/promocion-1.avif",
     price: "$29.990 CLP",
     priceUSD: "$32 USD",
     extraPrices: [
@@ -36,7 +36,7 @@ const promotions = [
     id: 2,
     title: "💎 Pago Único",
     description: "Sitio web sin mensualidades.",
-    image: "/promocion-1.webp",
+    image: "/promocion-1.avif",
     price: "$99.990 CLP",
     priceUSD: "$105 USD",
     extraPrices: [
@@ -56,7 +56,7 @@ const promotions = [
     id: 3,
     title: "🛒 Tienda Online",
     description: "Vende tus productos online de forma segura.",
-    image: "/Informations-2.jpg",
+    image: "/Informations-2.avif",
     price: "$250.000 a $400.000 CLP",
     priceUSD: "$265 a $425 USD",
     extraPrices: [
@@ -76,7 +76,7 @@ const promotions = [
     id: 4,
     title: "🖥️ Sistemas a la Medida",
     description: "Desarrollo adaptado a tu negocio.",
-    image: "/Informations-3.jpg",
+    image: "/Informations-3.avif",
     price: "$600.000 a $4.000.000 CLP",
     priceUSD: "$635 a $4.200 USD",
     extraPrices: [
@@ -246,6 +246,10 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
 
   // Controla la vista del componente
   const [isGrabbing, setIsGrabbing] = useState(false);
+  const [conCupos, setConCupos] = useState(() => {
+    const savedValue = localStorage.getItem("ConCupos");
+    return savedValue === "true";
+  });
   const { ref, inView } = useInView({ threshold: 0.15, triggerOnce: false, });
 
   const theme = useTheme();
@@ -261,6 +265,40 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
   const [hasAnimated2, setHasAnimated2] = useState(false);
 
   //ANIMACIÓN DESCRIPTORES
+  useEffect(() => {
+    const syncConCupos = () => {
+      const savedValue = localStorage.getItem("ConCupos");
+      setConCupos(savedValue === "true");
+    };
+
+    window.addEventListener("storage", syncConCupos);
+    window.addEventListener("conCuposChanged", syncConCupos);
+
+    return () => {
+      window.removeEventListener("storage", syncConCupos);
+      window.removeEventListener("conCuposChanged", syncConCupos);
+    };
+  }, []);
+
+  const promotions = useMemo(
+    () =>
+      promotionsBase.map((promo) =>
+        promo.id === 1
+          ? {
+            ...promo,
+            price: conCupos ? "$29.990 CLP" : "$119.990 CLP",
+            priceUSD: conCupos ? "$32 USD" : "$120 USD",
+          }
+          : promo.id === 2
+            ? {
+              ...promo,
+              price: conCupos ? "$99.990 CLP" : "$199.990 CLP",
+            }
+            : promo
+      ),
+    [conCupos]
+  );
+
   useEffect(() => {
     if (swiperInView && swiperInstance && !hasAnimated) {
       swiperInstance.slideTo(0, 1500); // mueve del último al primero
@@ -515,6 +553,7 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
             <InformationsPromotions
               isMobile={isMobile}
               promotions={promotions}
+              conCupos={conCupos}
               swiperRef={swiperRef}
               showArrow={showArrow}
               swiperInstance={swiperInstance}

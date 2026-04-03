@@ -215,7 +215,7 @@ function OrbitSystem({ isMobile, orbitInViewRef, orbitInView, controls }) {
                     delay: 0.08 + i * 0.06,
                     y: {
                       duration: 3.4,
-                      repeat: Infinity,
+                      repeat: orbitInView ? 2 : 0,
                       ease: "easeInOut",
                     },
                   },
@@ -287,7 +287,7 @@ function OrbitSystem({ isMobile, orbitInViewRef, orbitInView, controls }) {
                 delay: 0.08,
                 y: {
                   duration: 3.4,
-                  repeat: Infinity,
+                  repeat: orbitInView ? 2 : 0,
                   ease: "easeInOut",
                 },
               },
@@ -318,7 +318,7 @@ function OrbitSystem({ isMobile, orbitInViewRef, orbitInView, controls }) {
                 background:
                   "linear-gradient(130deg, transparent 40%, rgba(255,255,255,0.8) 50%, transparent 60%)",
                 transform: "translateX(-100%)",
-                animation: "shineDiagonal 4s ease-in-out infinite",
+                animation: "shineDiagonal 2.4s ease-in-out 2",
                 borderRadius: "inherit",
                 pointerEvents: "none",
                 zIndex: 1,
@@ -429,12 +429,25 @@ const Areas = () => {
   }, [isMobile]);
 
   useEffect(() => {
-    data.forEach((_, index) => {
-      if (inView && videosRef.current[index]) {
-        videosRef.current[index].play().catch(() => { });
+    videosRef.current.forEach((video, index) => {
+      if (!video) return;
+
+      const isCafeVideo = index === 3;
+
+      if (isCafeVideo && inView && !hasAnimated) {
+        video.play().catch(() => { });
+      } else {
+        video.pause();
+        if (video.readyState >= 2) {
+          try {
+            video.currentTime = 0.05;
+          } catch (_) {
+            // no-op
+          }
+        }
       }
     });
-  }, [inView]);
+  }, [inView, hasAnimated]);
 
 
   useEffect(() => {
@@ -580,7 +593,7 @@ const Areas = () => {
                           justifyContent: "center",
                           alignItems: "center",
                           transformStyle: "preserve-3d",
-                          transition: "transform 2.6s",
+                          transition: "transform 1.4s",
                           transitionDelay: inView ? "0.8s" : "0s",
                           transform: inView || hasAnimated
                             ? "rotateY(180deg)"
@@ -650,6 +663,7 @@ const Areas = () => {
                           src={item.image}
                           muted
                           playsInline
+                          preload="metadata"
                           style={{
                             position: "absolute",
                             backfaceVisibility: "hidden",

@@ -609,7 +609,7 @@ const InformationsPromotions = ({
                               component="span"
                               sx={{
                                 fontWeight: 600,
-                                fontSize: "0.8rem",
+                                fontSize: { xs: "0.68rem", sm: "0.8rem" },
                                 opacity: 0.9,
                               }}
                             >

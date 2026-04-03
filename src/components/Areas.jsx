@@ -438,13 +438,6 @@ const Areas = () => {
         video.play().catch(() => { });
       } else {
         video.pause();
-        if (video.readyState >= 2) {
-          try {
-            video.currentTime = 0.05;
-          } catch (_) {
-            // no-op
-          }
-        }
       }
     });
   }, [inView, hasAnimated]);
@@ -663,7 +656,17 @@ const Areas = () => {
                           src={item.image}
                           muted
                           playsInline
-                          preload="metadata"
+                          preload={isMobile ? "auto" : "metadata"}
+                          onLoadedData={(e) => {
+                            if (index !== 3) {
+                              try {
+                                e.currentTarget.currentTime = 0.05;
+                                e.currentTarget.pause();
+                              } catch (_) {
+                                // no-op
+                              }
+                            }
+                          }}
                           style={{
                             position: "absolute",
                             backfaceVisibility: "hidden",

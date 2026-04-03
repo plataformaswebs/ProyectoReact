@@ -62,8 +62,8 @@ const Dashboard = () => {
     const isSmallMobile = useMediaQuery("(max-width:360px)");     // iPhone SE / muy compacto
     const isLargeMobile = useMediaQuery("(min-width:400px) and (max-width:480px)"); // iPhone 14 Pro Max
     const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // ≤600px en general
-    const cardSize = isSmallMobile ? "200px" : isLargeMobile ? "320px" : isMobile ? "280px" : "340px";
-    const smallCardSize = isSmallMobile ? "90px" : isLargeMobile ? "150px" : isMobile ? "130px" : "165px";
+    const cardSize = isSmallMobile ? "180px" : isLargeMobile ? "280px" : isMobile ? "245px" : "340px";
+    const smallCardSize = isSmallMobile ? "82px" : isLargeMobile ? "132px" : isMobile ? "116px" : "165px";
 
 
     const [mostrarContadorPrincipal, setMostrarContadorPrincipal] = useState(false);
@@ -330,6 +330,13 @@ const Dashboard = () => {
                                     disabled={guardandoConCupos}
                                     size="small"
                                     sx={{
+                                        "& .MuiSwitch-switchBase": {
+                                            color: "#ef5350",
+                                        },
+                                        "& .MuiSwitch-track": {
+                                            backgroundColor: "#c62828",
+                                            opacity: 1,
+                                        },
                                         "& .MuiSwitch-switchBase.Mui-checked": {
                                             color: "#4fc3f7",
                                         },
@@ -340,17 +347,22 @@ const Dashboard = () => {
                                     }}
                                 />
                             }
-                            label={guardandoConCupos ? "Guardando..." : "Con Cupos"}
+                            label={guardandoConCupos ? "Actualizando.." : "Con Cupos"}
                             sx={{
                                 m: 0,
                                 width: "100%",
                                 color: "white",
                                 justifyContent: "space-between",
                                 "& .MuiFormControlLabel-label": {
+                                    color: "#ffffff",
                                     fontSize: isMobile ? "0.82rem" : "0.9rem",
                                     fontWeight: 700,
                                     letterSpacing: "0.02em",
                                     whiteSpace: "nowrap",
+                                },
+                                "& .MuiFormControlLabel-label.Mui-disabled": {
+                                    color: "#ffffff",
+                                    opacity: 1,
                                 },
                             }}
                         />
@@ -787,7 +799,12 @@ const Dashboard = () => {
                 <Alert
                     severity={snackbarServicios.severity} icon={false}
                     onClose={() => setSnackbarServicios((prev) => ({ ...prev, open: false }))}
-                    sx={{ width: "100%", fontSize: "0.9rem", boxShadow: 3 }}
+                    sx={{
+                        width: "100%",
+                        fontSize: isMobile ? "0.74rem" : "0.9rem",
+                        boxShadow: 3,
+                        whiteSpace: "nowrap",
+                    }}
                 >
                     {snackbarServicios.message}
                 </Alert>

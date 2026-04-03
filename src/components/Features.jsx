@@ -86,23 +86,23 @@ const featureDialogMessages = {
 const featureDialogSectionStyles = {
   "mini-1": {
     border: "2px solid rgba(129, 212, 250, 0.9)",
-    background: "linear-gradient(180deg, rgba(0, 153, 255, 0.98), rgba(0, 82, 163, 1))",
-    boxShadow: "0 18px 38px rgba(0, 123, 255, 0.34), inset 0 1px 0 rgba(255,255,255,0.16)",
+    background: "linear-gradient(180deg, rgba(24, 168, 255, 0.99), rgba(0, 108, 204, 1))",
+    boxShadow: "0 18px 38px rgba(0, 123, 255, 0.24)",
   },
   "mini-2": {
     border: "2px solid rgba(129, 199, 132, 0.88)",
-    background: "linear-gradient(180deg, rgba(21, 153, 92, 0.98), rgba(8, 97, 58, 1))",
-    boxShadow: "0 18px 38px rgba(15, 122, 74, 0.32), inset 0 1px 0 rgba(255,255,255,0.14)",
+    background: "linear-gradient(180deg, rgba(29, 174, 108, 0.99), rgba(12, 123, 74, 1))",
+    boxShadow: "0 18px 38px rgba(15, 122, 74, 0.24)",
   },
   "mini-3": {
     border: "2px solid rgba(255, 183, 77, 0.9)",
-    background: "linear-gradient(180deg, rgba(255, 152, 0, 0.98), rgba(198, 99, 0, 1))",
-    boxShadow: "0 18px 38px rgba(255, 140, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.14)",
+    background: "linear-gradient(180deg, rgba(255, 166, 26, 0.99), rgba(224, 116, 0, 1))",
+    boxShadow: "0 18px 38px rgba(255, 140, 0, 0.24)",
   },
   "mini-4": {
     border: "2px solid rgba(255, 241, 118, 0.9)",
-    background: "linear-gradient(180deg, rgba(255, 193, 7, 0.98), rgba(194, 133, 0, 1))",
-    boxShadow: "0 18px 38px rgba(255, 193, 7, 0.32), inset 0 1px 0 rgba(255,255,255,0.14)",
+    background: "linear-gradient(180deg, rgba(255, 205, 39, 0.99), rgba(214, 154, 9, 1))",
+    boxShadow: "0 18px 38px rgba(255, 193, 7, 0.24)",
   },
 };
 
@@ -1125,9 +1125,8 @@ function Features({ videoReady }) {
                 sm: "340px",
                 md: "370px",
               },
-              aspectRatio: `${selectedFeatureAspectRatio}`,
               height: "auto",
-              maxHeight: isSmallMobileHeight ? "86vh" : "90vh",
+              maxHeight: isSmallMobileHeight ? "90vh" : "94vh",
               maxWidth: "84vw",
               background: "transparent",
               borderRadius: "24px",
@@ -1138,7 +1137,7 @@ function Features({ videoReady }) {
               boxShadow: "none",
               animation: prefersReducedMotion ? "none" : "featureDialogEnter 0.24s ease-out",
               "@keyframes featureDialogEnter": {
-                "0%": { opacity: 0, transform: "translateY(-20px) scale(0.97)" },
+                "0%": { opacity: 1, transform: "translateY(-20px) scale(0.97)" },
                 "100%": { opacity: 1, transform: "translateY(-34px) scale(1)" },
               },
             },
@@ -1163,6 +1162,11 @@ function Features({ videoReady }) {
               <Box
                 sx={{
                   width: "100%",
+                  aspectRatio: `${selectedFeatureAspectRatio}`,
+                  maxHeight: {
+                    xs: isSmallMobileHeight ? "68vh" : "72vh",
+                    sm: "74vh",
+                  },
                   borderRadius: isSmallMobileHeight ? "18px" : "20px",
                   overflow: "hidden",
                   backgroundColor: "rgba(7, 16, 27, 0.96)",
@@ -1280,23 +1284,24 @@ function Features({ videoReady }) {
                     width: "100%",
                     height: "100%",
                     objectFit: "contain",
-                    objectPosition: "center 38%",
+                    objectPosition: "center 46%",
                     display: "block",
                     backgroundColor: "#000",
-                    maxHeight: isSmallMobileHeight ? "66vh" : "none",
                     transform: prefersReducedMotion ? "none" : "scale(1.018)",
-                    animation: prefersReducedMotion ? "none" : "featureVideoZoom 0.28s ease-out",
+                    filter: prefersReducedMotion ? "none" : "brightness(1)",
+                    animation: prefersReducedMotion ? "none" : "featureVideoZoom 0.5s ease-out",
                     "@keyframes featureVideoZoom": {
-                      "0%": { opacity: 0.86, transform: "scale(1.055)" },
-                      "100%": { opacity: 1, transform: "scale(1.018)" },
+                      "0%": { opacity: 0.9, transform: "scale(1.055)", filter: "brightness(0.45)" },
+                      "100%": { opacity: 1, transform: "scale(1.018)", filter: "brightness(1)" },
                     },
                   }}
                 />
               </Box>
               <motion.div
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
-                animate={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-                transition={{ duration: 0.26, ease: "easeOut", delay: prefersReducedMotion ? 0 : 0.08 }}
+                key={selectedFeatureVideo.id}
+                initial={prefersReducedMotion ? false : { y: 34 }}
+                animate={{ y: 0 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.34, ease: "easeOut", delay: prefersReducedMotion ? 0 : 0.08 }}
                 style={{ width: "100%" }}
               >
                 <Box
@@ -1312,23 +1317,22 @@ function Features({ videoReady }) {
                   boxShadow:
                     (featureDialogSectionStyles[selectedFeatureVideo?.id] || {}).boxShadow ||
                     "0 18px 34px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08)",
-                  px: isSmallMobileHeight ? 0.95 : 1.1,
-                  py: isSmallMobileHeight ? 0.98 : 1.28,
+                  px: isSmallMobileHeight ? 1.05 : 1.3,
+                  py: isSmallMobileHeight ? 1.05 : 1.4,
                   boxSizing: "border-box",
                 }}
               >
                 <Typography
                   sx={{
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.98)",
+                    color: "#ffffff",
                     fontSize: {
-                      xs: isSmallMobileHeight ? "0.84rem" : "0.9rem",
-                      sm: "0.98rem",
+                      xs: isSmallMobileHeight ? "0.9rem" : "0.96rem",
+                      sm: "1.02rem",
                     },
-                    lineHeight: isSmallMobileHeight ? 1.34 : 1.42,
-                    fontWeight: 800,
+                    lineHeight: isSmallMobileHeight ? 1.36 : 1.44,
+                    fontWeight: 900,
                     letterSpacing: "0.012em",
-                    textShadow: "0 2px 12px rgba(0,0,0,0.45)",
                   }}
                 >
                   {featureDialogMessages[selectedFeatureVideo.id] || "Gestiona tu negocio, clientes y trabajos en tiempo real."}

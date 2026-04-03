@@ -507,7 +507,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
                         borderRadius: "6px",
                         cursor: "pointer",
                         position: "relative",
-                        fontWeight: showUnderline ? 700 : 500,
+                        fontWeight: 600,
                         textShadow: showUnderline ? "0 1px 6px rgba(59,130,246,0.35)" : "none",
                         "&::after": {
                           content: '""',

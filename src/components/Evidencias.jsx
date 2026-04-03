@@ -1,7 +1,8 @@
 ﻿import React, { useEffect, useRef, useState } from 'react';
-import { Box, Typography, Grid, Card, CardMedia, useTheme, useMediaQuery, Snackbar, Alert, } from '@mui/material';
+import { Box, Typography, Grid, Card, CardMedia, useTheme, useMediaQuery, Snackbar, Alert, Dialog, IconButton } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useInView } from "react-intersection-observer";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 const Evidencias = () => {
     const theme = useTheme();
@@ -11,6 +12,8 @@ const Evidencias = () => {
     const sectionRef = useRef();
     const videosRef = useRef([]);
     const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+    const [mobileBatchIndex, setMobileBatchIndex] = useState(0);
+    const [selectedEvidenceIndex, setSelectedEvidenceIndex] = useState(null);
     const [scrollY, setScrollY] = useState(0);
     const { ref, inView } = useInView({ threshold: 0.3, triggerOnce: true, rootMargin: '0px 0px -30% 0px' });
     const [hasAnimated, setHasAnimated] = useState(false);
@@ -81,14 +84,31 @@ const Evidencias = () => {
         setSnackbarOpen(false);
     };
     useEffect(() => {
-        if (!inView) return;
+        if (!isMobile || !inView || selectedEvidenceIndex !== null) return;
+
+        const totalBatches = evidenciaIndices.length;
+        const interval = setInterval(() => {
+            setMobileBatchIndex((prev) => (prev + 1) % totalBatches);
+        }, 2500);
+
+        return () => clearInterval(interval);
+    }, [isMobile, inView, selectedEvidenceIndex, evidenciaIndices.length]);
+
+    useEffect(() => {
+        if (!isMobile) return;
+        setMobileBatchIndex(0);
+    }, [isMobile]);
+
+    useEffect(() => {
+        if (isMobile) return;
+        if (!inView || selectedEvidenceIndex !== null) return;
 
         const interval = setInterval(() => {
             setActiveVideoIndex((prev) => (prev + 1) % evidencias.length);
         }, 2000);
 
         return () => clearInterval(interval);
-    }, [inView, evidencias.length]);
+    }, [inView, evidencias.length, selectedEvidenceIndex, isMobile]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -133,13 +153,19 @@ const Evidencias = () => {
         videosRef.current.forEach((video, index) => {
             if (!video) return;
 
-            if (inView && index === activeVideoIndex) {
+            const mobileActiveIndexes = evidenciaIndices[mobileBatchIndex] || [];
+
+            const shouldPlay = isMobile
+                ? inView && selectedEvidenceIndex === null && mobileActiveIndexes.includes(index)
+                : inView && selectedEvidenceIndex === null && index === activeVideoIndex;
+
+            if (shouldPlay) {
                 video.play().catch(() => { });
             } else {
                 video.pause();
             }
         });
-    }, [activeVideoIndex, inView]);
+    }, [activeVideoIndex, inView, selectedEvidenceIndex, isMobile, mobileBatchIndex, evidenciaIndices]);
 
     return (
         <Box sx={{ width: '100%', position: 'relative', mt: '-80px' }}>
@@ -443,34 +469,9 @@ const Evidencias = () => {
                                                                     controls={false}
                                                                     disablePictureInPicture
                                                                     controlsList="nodownload nofullscreen noremoteplayback"
-                                                                    onClick={(e) => {
-                                                                        const video = e.target;
-
-                                                                        const requestFullscreen =
-                                                                            video.requestFullscreen ||
-                                                                            video.webkitEnterFullscreen ||
-                                                                            video.webkitRequestFullscreen ||
-                                                                            video.msRequestFullscreen;
-
-                                                                        if (requestFullscreen) {
-                                                                            requestFullscreen.call(video);
-
-                                                                            // Opcional: cambiar estilo cuando entra en fullscreen
-                                                                            const handleFullscreenChange = () => {
-                                                                                const isFullscreen =
-                                                                                    document.fullscreenElement === video ||
-                                                                                    document.webkitFullscreenElement === video ||
-                                                                                    document.msFullscreenElement === video;
-
-                                                                                video.style.objectFit = isFullscreen ? 'contain' : 'cover';
-                                                                            };
-
-                                                                            document.addEventListener('fullscreenchange', handleFullscreenChange);
-                                                                            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-                                                                            document.addEventListener('msfullscreenchange', handleFullscreenChange);
-                                                                        }
-
-                                                                        if (video.paused) video.play();
+                                                                    onClick={() => {
+                                                                        setActiveVideoIndex(n);
+                                                                        setSelectedEvidenceIndex(n);
                                                                     }}
                                                                     sx={{
                                                                         height: "100%",
@@ -638,6 +639,124 @@ const Evidencias = () => {
                     Para ver más trabajos contáctanos vía redes sociales.
                 </Alert>
             </Snackbar>
+
+            <Dialog
+                open={selectedEvidenceIndex !== null}
+                onClose={() => setSelectedEvidenceIndex(null)}
+                maxWidth={false}
+                BackdropProps={{
+                    sx: {
+                        backgroundColor: "rgba(0, 0, 0, 0.9)",
+                        backdropFilter: "blur(6px)",
+                    },
+                }}
+                PaperProps={{
+                    sx: {
+                        width: { xs: "88vw", sm: "360px", md: "390px" },
+                        maxWidth: "88vw",
+                        background: "transparent",
+                        borderRadius: "24px",
+                        boxShadow: "none",
+                        overflow: "visible",
+                        transform: "translateY(-16px)",
+                    },
+                }}
+            >
+                {selectedEvidenceIndex !== null && (
+                    <Box
+                        sx={{
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                            p: { xs: 0.5, sm: 0.7 },
+                            boxSizing: "border-box",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: "100%",
+                                borderRadius: "20px",
+                                overflow: "hidden",
+                                backgroundColor: "rgba(7,16,27,0.96)",
+                                border: "2px solid rgba(255,255,255,0.9)",
+                                position: "relative",
+                                boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
+                            }}
+                        >
+                            <IconButton
+                                aria-label="Cerrar video"
+                                onClick={() => setSelectedEvidenceIndex(null)}
+                                sx={{
+                                    position: "absolute",
+                                    top: 12,
+                                    right: 12,
+                                    zIndex: 2,
+                                    color: "#fff",
+                                    backgroundColor: "rgba(0,0,0,0.5)",
+                                    "&:hover": {
+                                        backgroundColor: "rgba(0,0,0,0.68)",
+                                    },
+                                }}
+                            >
+                                <CloseRoundedIcon />
+                            </IconButton>
+
+                            <Box
+                                component="video"
+                                src={evidencias[selectedEvidenceIndex].video}
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                preload="auto"
+                                controls={false}
+                                sx={{
+                                    width: "100%",
+                                    maxHeight: { xs: "68vh", sm: "74vh" },
+                                    display: "block",
+                                    backgroundColor: "#000",
+                                    objectFit: "contain",
+                                }}
+                            />
+                        </Box>
+
+                        <motion.div
+                            key={evidencias[selectedEvidenceIndex].label}
+                            initial={{ y: 24 }}
+                            animate={{ y: 0 }}
+                            transition={{ duration: 0.28, ease: "easeOut", delay: 0.06 }}
+                            style={{ width: "100%" }}
+                        >
+                            <Box
+                                sx={{
+                                    width: "100%",
+                                    borderRadius: "18px",
+                                    border: "2px solid rgba(129, 212, 250, 0.9)",
+                                    background: "linear-gradient(180deg, rgba(24, 168, 255, 0.99), rgba(0, 108, 204, 1))",
+                                    boxShadow: "0 18px 38px rgba(0, 123, 255, 0.24)",
+                                    px: 1.2,
+                                    py: 1.25,
+                                    boxSizing: "border-box",
+                                }}
+                            >
+                                <Typography
+                                    sx={{
+                                        textAlign: "center",
+                                        color: "#ffffff",
+                                        fontSize: { xs: "0.92rem", sm: "1rem" },
+                                        lineHeight: 1.4,
+                                        fontWeight: 900,
+                                        letterSpacing: "0.01em",
+                                    }}
+                                >
+                                    {evidencias[selectedEvidenceIndex].label}
+                                </Typography>
+                            </Box>
+                        </motion.div>
+                    </Box>
+                )}
+            </Dialog>
 
         </Box >
     );

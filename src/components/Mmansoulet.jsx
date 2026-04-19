@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+﻿import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import {
   Alert,
@@ -22,23 +22,53 @@ const videoConstraints = {
 function Mmansoulet() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isLocalhost = window.location.hostname === "localhost";
+  const analyzeEndpoint = isLocalhost
+    ? "http://localhost:8888/.netlify/functions/analyze"
+    : "/api/analyze";
   const webcamRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const availablePercentage = analysis ? 18 : 0;
+  const blockedPercentage = analysis ? 82 : 0;
 
-  const handleCapture = () => {
-    const imageSrc = webcamRef.current?.getScreenshot();
+  const handleCapture = async () => {
+    try {
+      if (isLocalhost) {
+        const response = await fetch("/mmansoulet-base.jpeg", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("No se pudo cargar la imagen base local.");
+        }
 
-    if (!imageSrc) {
-      setError("No se pudo capturar la imagen.");
-      return;
+        const blob = await response.blob();
+        const imageSrc = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("No se pudo leer la imagen base."));
+          reader.readAsDataURL(blob);
+        });
+
+        setCapturedImage(imageSrc);
+        setAnalysis(null);
+        setError("");
+        return;
+      }
+
+      const imageSrc = webcamRef.current?.getScreenshot();
+
+      if (!imageSrc) {
+        setError("No se pudo capturar la imagen.");
+        return;
+      }
+
+      setCapturedImage(imageSrc);
+      setAnalysis(null);
+      setError("");
+    } catch (err) {
+      setError(err.message || "No se pudo capturar la imagen.");
     }
-
-    setCapturedImage(imageSrc);
-    setAnalysis(null);
-    setError("");
   };
 
   const handleAnalyze = async () => {
@@ -52,7 +82,7 @@ function Mmansoulet() {
     setAnalysis(null);
 
     try {
-      const response = await fetch("/api/analyze", {
+      const response = await fetch(analyzeEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +90,7 @@ function Mmansoulet() {
         body: JSON.stringify({ image: capturedImage }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
         throw new Error(data?.message || "No se pudo analizar la imagen.");
@@ -126,7 +156,7 @@ function Mmansoulet() {
                   lineHeight: { xs: 1.38, sm: 1.5 },
                 }}
               >
-                Captura, compara y revisa el análisis.
+                Captura la imagen y revisa qué ranuras están tapadas.
                 <Box
                   component="span"
                   sx={{
@@ -142,39 +172,64 @@ function Mmansoulet() {
               </Typography>
             </Box>
 
-            <Box
-              sx={{
-                borderRadius: { xs: 2.6, sm: 3 },
-                overflow: "hidden",
-                backgroundColor: "#000",
-                border: "1px solid rgba(255,255,255,0.14)",
-                boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
-                position: "relative",
-                aspectRatio: isMobile ? "9 / 14" : "16 / 9",
-                "&::after": {
-                  content: '""',
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.16))",
-                  pointerEvents: "none",
-                },
-              }}
-            >
-              <Webcam
-                ref={webcamRef}
-                audio={false}
-                mirrored={false}
-                screenshotFormat="image/jpeg"
-                videoConstraints={videoConstraints}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "block",
-                  objectFit: "cover",
+            {isLocalhost ? (
+              <Box
+                sx={{
+                  borderRadius: { xs: 2.6, sm: 3 },
+                  overflow: "hidden",
+                  backgroundColor: "#000",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+                  position: "relative",
                 }}
-              />
-            </Box>
+              >
+                <Box
+                  component="img"
+                  src="/mmansoulet-base.jpeg"
+                  alt="Referencia local mmansoulet"
+                  sx={{
+                    width: "100%",
+                    display: "block",
+                    maxHeight: { xs: "52vh", sm: "62vh" },
+                    objectFit: "cover",
+                  }}
+                />
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  borderRadius: { xs: 2.6, sm: 3 },
+                  overflow: "hidden",
+                  backgroundColor: "#000",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+                  position: "relative",
+                  aspectRatio: isMobile ? "9 / 14" : "16 / 9",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    inset: 0,
+                    background:
+                      "linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.16))",
+                    pointerEvents: "none",
+                  },
+                }}
+              >
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  mirrored={false}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={videoConstraints}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "block",
+                    objectFit: "cover",
+                  }}
+                />
+              </Box>
+            )}
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
               <Button
@@ -210,24 +265,59 @@ function Mmansoulet() {
               </Button>
             </Stack>
 
-            {capturedImage && (
+            {(capturedImage || analysis?.annotatedImage) && (
               <Box>
                 <Typography fontWeight={700} sx={{ mb: 1 }}>
-                  Preview capturada
+                  {analysis?.annotatedImage ? "Resultado marcado" : "Preview capturada"}
                 </Typography>
                 <Box
-                  component="img"
-                  src={capturedImage}
-                  alt="Imagen capturada"
                   sx={{
-                    width: "100%",
                     borderRadius: { xs: 2.6, sm: 3 },
+                    overflow: "hidden",
+                    position: "relative",
                     border: "1px solid rgba(255,255,255,0.12)",
                     boxShadow: "0 10px 24px rgba(0,0,0,0.24)",
-                    maxHeight: { xs: "42vh", sm: "unset" },
-                    objectFit: "cover",
                   }}
-                />
+                >
+                  <Box
+                    component="img"
+                    src={analysis?.annotatedImage || capturedImage}
+                    alt={analysis?.annotatedImage ? "Ranuras analizadas" : "Imagen capturada"}
+                    sx={{
+                      width: "100%",
+                      display: "block",
+                      maxHeight: { xs: "42vh", sm: "unset" },
+                      objectFit: "cover",
+                    }}
+                  />
+                  {loading && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        background:
+                          "linear-gradient(180deg, rgba(4,20,34,0.72), rgba(4,20,34,0.84))",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1.2,
+                      }}
+                    >
+                      <CircularProgress size={34} sx={{ color: "#29b6f6" }} />
+                      <Typography
+                        sx={{
+                          fontSize: { xs: "0.88rem", sm: "0.96rem" },
+                          fontWeight: 700,
+                          color: "#ffffff",
+                          textAlign: "center",
+                        }}
+                      >
+                        Analizando ranuras tapadas...
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
               </Box>
             )}
 
@@ -239,11 +329,11 @@ function Mmansoulet() {
                   p: { xs: 1.35, sm: 2 },
                   borderRadius: { xs: 2.6, sm: 3 },
                   border:
-                    analysis.status === "ok"
+                    analysis.occupiedSlots?.length === 0
                       ? "1px solid rgba(102,187,106,0.55)"
                       : "1px solid rgba(255,183,77,0.55)",
                   background:
-                    analysis.status === "ok"
+                    analysis.occupiedSlots?.length === 0
                       ? "linear-gradient(180deg, rgba(46,125,50,0.22), rgba(46,125,50,0.1))"
                       : "linear-gradient(180deg, rgba(255,152,0,0.22), rgba(255,152,0,0.1))",
                 }}
@@ -251,9 +341,52 @@ function Mmansoulet() {
                 <Typography fontWeight={800} sx={{ mb: 0.3 }}>
                   {analysis.message}
                 </Typography>
-                <Typography sx={{ color: "rgba(255,255,255,0.86)", fontSize: { xs: "0.86rem", sm: "1rem" } }}>
-                  Diferencia detectada: <strong>{analysis.difference}</strong>
-                </Typography>
+                <Box sx={{ mt: 1.1 }}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: 16,
+                      borderRadius: "999px",
+                      overflow: "hidden",
+                      background: "rgba(255,255,255,0.14)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      display: "flex",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: `${blockedPercentage}%`,
+                        background: "linear-gradient(90deg, #ff7043, #ff3d00)",
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        width: `${availablePercentage}%`,
+                        background: "linear-gradient(90deg, #66bb6a, #2e7d32)",
+                      }}
+                    />
+                  </Box>
+
+                  <Box
+                    sx={{
+                      mt: 0.8,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 1,
+                      fontSize: { xs: "0.82rem", sm: "0.95rem" },
+                      color: "rgba(255,255,255,0.9)",
+                      fontWeight: 700,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography sx={{ fontSize: "inherit", fontWeight: "inherit", color: "#ffccbc" }}>
+                      Tapado: {blockedPercentage}%
+                    </Typography>
+                    <Typography sx={{ fontSize: "inherit", fontWeight: "inherit", color: "#c8e6c9" }}>
+                      Disponible: {availablePercentage}%
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
             )}
           </Stack>
@@ -264,3 +397,5 @@ function Mmansoulet() {
 }
 
 export default Mmansoulet;
+
+

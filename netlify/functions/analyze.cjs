@@ -1,7 +1,5 @@
 const path = require("path");
-const { compareImages, decodeBase64Image } = require("../helpers/image-compare.cjs");
-
-const DIFFERENCE_LIMIT = 5000;
+const { analyzeSlots, decodeBase64Image } = require("../helpers/slot-analyzer.cjs");
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
@@ -26,14 +24,12 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body || "{}");
     const imageBuffer = decodeBase64Image(body.image);
-    const baseImagePath = path.join(__dirname, "reference", "base.jpg");
+    const baseImagePath = path.join(__dirname, "reference", "base.jpeg");
 
-    const difference = await compareImages({
+    const analysis = await analyzeSlots({
       imageBuffer,
       baseImagePath,
     });
-
-    const isValid = difference < DIFFERENCE_LIMIT;
 
     return {
       statusCode: 200,
@@ -41,9 +37,14 @@ exports.handler = async (event) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        status: isValid ? "ok" : "error",
-        difference,
-        message: isValid ? "Imagen válida" : "Se detectaron diferencias",
+        status: "ok",
+        occupiedSlots: analysis.occupiedSlots,
+        slots: analysis.slots,
+        occupancyPercentage: analysis.occupancyPercentage,
+        annotatedImage: analysis.annotatedImage,
+        message: analysis.occupiedSlots.length
+          ? "Se detectaron ranuras tapadas"
+          : "No se detectaron ranuras tapadas",
       }),
     };
   } catch (error) {
@@ -54,7 +55,10 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         status: "error",
-        difference: 0,
+        occupiedSlots: [],
+        slots: [],
+        occupancyPercentage: 0,
+        annotatedImage: null,
         message: error.message || "No se pudo analizar la imagen.",
       }),
     };

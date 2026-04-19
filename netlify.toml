@@ -20,7 +20,7 @@
   included_files = [
     "netlify/functions/Servicios.xlsx",
     "netlify/functions/Clientes.xlsx",
-    "netlify/functions/reference/base.jpg",
+    "netlify/functions/reference/base.jpeg",
     "public/plantilla_boleta.html"
   ]
 

@@ -10,6 +10,7 @@ const Administracion = lazy(() => import("./components/Administracion"));
 const Catalogo = lazy(() => import("./components/Catalogo"));
 const Home = lazy(() => import("./components/Home"));
 const Dashboard = lazy(() => import("./components/Dashboard"));
+const Mmansoulet = lazy(() => import("./components/Mmansoulet"));
 const ConfigurarServicios = lazy(() => import("./components/configuraciones/ConfigurarServicios"));
 const ConfigurarTrabajos = lazy(() => import("./components/configuraciones/ConfigurarTrabajos"));
 const ConfigurarEnRevision = lazy(() => import("./components/configuraciones/ConfigurarEnRevision"));
@@ -101,6 +102,7 @@ const router = createBrowserRouter(
                 { path: "administracion", element: withSuspense(Administracion) },
                 { path: "catalogo", element: withSuspense(Catalogo) },
                 { path: "dashboard", element: withSuspense(Dashboard) },
+                { path: "mmansoulet", element: withSuspense(Mmansoulet) },
                 { path: "reserva", element: withSuspense(Reserva) },
                 { path: "suscripcion", element: withSuspense(Suscripcion) },
                 { path: "paypal-exito", element: withSuspense(SuscripcionPayPal) },

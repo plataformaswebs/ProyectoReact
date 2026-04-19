@@ -45,6 +45,7 @@ function App() {
   const [revisionId, setRevisionId] = useState(null);
   const [openChat, setOpenChat] = useState(false);
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+  const isMmansouletRoute = location.pathname === "/mmansoulet";
 
   //EFECTO CAMBIAR DE RUTA
   useEffect(() => {
@@ -296,7 +297,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {location.pathname !== "/administracion" && location.pathname !== "/dashboard" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/configurar-en-revision" && location.pathname !== "/clientes" && (
+      {location.pathname !== "/administracion" && location.pathname !== "/dashboard" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/configurar-en-revision" && location.pathname !== "/clientes" && !isMmansouletRoute && (
         <MusicaApp src="/musica-app.mp3" volume={0.25} btnSize={33} />
       )}
       {/* Pantalla de carga */}
@@ -344,7 +345,7 @@ function App() {
         }}
       >
         {/* Navbar solo si no estás en /administracion */}
-        {location.pathname !== "/administracion" && (
+        {location.pathname !== "/administracion" && !isMmansouletRoute && (
           <Suspense fallback={null}>
             <Navbar contactoRef={contactoRef} informationsRef={informationsRef} videoReady={videoReady} />
           </Suspense>
@@ -394,10 +395,10 @@ function App() {
         )}
 
         {/* Footer (excepto en administración) */}
-        {location.pathname !== "/administracion" && location.pathname !== "/dashboard" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/configurar-en-revision" && location.pathname !== "/clientes" && location.pathname !== "/reservas" && <Footer />}
+        {location.pathname !== "/administracion" && location.pathname !== "/dashboard" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/configurar-en-revision" && location.pathname !== "/clientes" && location.pathname !== "/reservas" && !isMmansouletRoute && <Footer />}
 
         {/* Botón WhatsApp */}
-        {location.pathname !== "/administracion" && location.pathname !== "/dashboard" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/configurar-en-revision" && location.pathname !== "/clientes" && location.pathname !== "/reservas" && (
+        {location.pathname !== "/administracion" && location.pathname !== "/dashboard" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/configurar-en-revision" && location.pathname !== "/clientes" && location.pathname !== "/reservas" && !isMmansouletRoute && (
           <Box sx={{ position: "fixed", bottom: "75px", right: "15px", zIndex: 100, transition: "bottom 0.3s ease", }}>
             <IconButton
               className="pwbot-pulse"

@@ -20,8 +20,14 @@
   included_files = [
     "netlify/functions/Servicios.xlsx",
     "netlify/functions/Clientes.xlsx",
+    "netlify/functions/reference/base.jpg",
     "public/plantilla_boleta.html"
   ]
 
   node_bundler = "esbuild"
   external_node_modules = ["chrome-aws-lambda", "puppeteer-core"]
+
+[[redirects]]
+  from = "/api/analyze"
+  to = "/.netlify/functions/analyze"
+  status = 200

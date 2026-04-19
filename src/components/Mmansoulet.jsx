@@ -22,15 +22,18 @@ const videoConstraints = {
 function Mmansoulet() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isLocalhost = window.location.hostname === "localhost";
-  const analyzeEndpoint = isLocalhost
-    ? "http://localhost:8888/.netlify/functions/analyze"
-    : "/api/analyze";
+  const hostname = window.location.hostname;
+  const isProductionHost = hostname === "plataformas-web.cl" || hostname === "www.plataformas-web.cl";
+  const isLocalhost = hostname === "localhost";
+  const analyzeEndpoint = isProductionHost
+    ? "/api/analyze"
+    : `http://${hostname}:8888/.netlify/functions/analyze`;
   const webcamRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [analysisLocked, setAnalysisLocked] = useState(false);
   const availablePercentage = analysis ? 18 : 0;
   const blockedPercentage = analysis ? 82 : 0;
 
@@ -53,6 +56,7 @@ function Mmansoulet() {
         setCapturedImage(imageSrc);
         setAnalysis(null);
         setError("");
+        setAnalysisLocked(false);
         return;
       }
 
@@ -66,6 +70,7 @@ function Mmansoulet() {
       setCapturedImage(imageSrc);
       setAnalysis(null);
       setError("");
+      setAnalysisLocked(false);
     } catch (err) {
       setError(err.message || "No se pudo capturar la imagen.");
     }
@@ -74,6 +79,11 @@ function Mmansoulet() {
   const handleAnalyze = async () => {
     if (!capturedImage) {
       setError("Primero debes capturar una imagen.");
+      return;
+    }
+
+    if (analysisLocked) {
+      setError("Toma una nueva captura para volver a analizar.");
       return;
     }
 
@@ -96,7 +106,12 @@ function Mmansoulet() {
         throw new Error(data?.message || "No se pudo analizar la imagen.");
       }
 
+      if (!data?.annotatedImage) {
+        throw new Error("El analisis no devolvio una imagen procesada.");
+      }
+
       setAnalysis(data);
+      setAnalysisLocked(true);
     } catch (err) {
       setError(err.message || "Ocurrió un error al analizar la imagen.");
     } finally {
@@ -250,7 +265,7 @@ function Mmansoulet() {
               <Button
                 variant="contained"
                 onClick={handleAnalyze}
-                disabled={!capturedImage || loading}
+                disabled={!capturedImage || loading || analysisLocked}
                 sx={{
                   minHeight: { xs: 46, sm: 50 },
                   textTransform: "none",
@@ -261,7 +276,7 @@ function Mmansoulet() {
                   boxShadow: "0 10px 24px rgba(46,125,50,0.35)",
                 }}
               >
-                {loading ? <CircularProgress size={20} color="inherit" /> : "Analizar"}
+                {loading ? <CircularProgress size={20} color="inherit" /> : analysisLocked ? "Analizado" : "Analizar"}
               </Button>
             </Stack>
 

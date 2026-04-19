@@ -25,6 +25,7 @@ function Mmansoulet() {
   const hostname = window.location.hostname;
   const isProductionHost = hostname === "plataformas-web.cl" || hostname === "www.plataformas-web.cl";
   const isLocalhost = hostname === "localhost";
+  const useLocalReferenceCapture = false;
   const analyzeEndpoint = isProductionHost
     ? "/api/analyze"
     : `http://${hostname}:8888/.netlify/functions/analyze`;
@@ -39,7 +40,7 @@ function Mmansoulet() {
 
   const handleCapture = async () => {
     try {
-      if (isLocalhost) {
+      if (isLocalhost && useLocalReferenceCapture) {
         const response = await fetch("/mmansoulet-base.jpeg", { cache: "no-store" });
         if (!response.ok) {
           throw new Error("No se pudo cargar la imagen base local.");
@@ -171,7 +172,9 @@ function Mmansoulet() {
                   lineHeight: { xs: 1.38, sm: 1.5 },
                 }}
               >
-                Captura la imagen y revisa qué ranuras están tapadas.
+                {isMobile
+                  ? "Captura y revisa ranuras tapadas."
+                  : "Captura la imagen y revisa qué ranuras están tapadas."}
                 <Box
                   component="span"
                   sx={{
@@ -187,64 +190,40 @@ function Mmansoulet() {
               </Typography>
             </Box>
 
-            {isLocalhost ? (
-              <Box
-                sx={{
-                  borderRadius: { xs: 2.6, sm: 3 },
-                  overflow: "hidden",
-                  backgroundColor: "#000",
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
-                  position: "relative",
+            <Box
+              sx={{
+                borderRadius: { xs: 2.6, sm: 3 },
+                overflow: "hidden",
+                backgroundColor: "#000",
+                border: "1px solid rgba(255,255,255,0.14)",
+                boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+                position: "relative",
+                aspectRatio: isMobile ? "9 / 10.5" : "16 / 9",
+                maxHeight: { xs: "39vh", sm: "unset" },
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.16))",
+                  pointerEvents: "none",
+                },
+              }}
+            >
+              <Webcam
+                ref={webcamRef}
+                audio={false}
+                mirrored={false}
+                screenshotFormat="image/jpeg"
+                videoConstraints={videoConstraints}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "block",
+                  objectFit: "cover",
                 }}
-              >
-                <Box
-                  component="img"
-                  src="/mmansoulet-base.jpeg"
-                  alt="Referencia local mmansoulet"
-                  sx={{
-                    width: "100%",
-                    display: "block",
-                    maxHeight: { xs: "52vh", sm: "62vh" },
-                    objectFit: "cover",
-                  }}
-                />
-              </Box>
-            ) : (
-              <Box
-                sx={{
-                  borderRadius: { xs: 2.6, sm: 3 },
-                  overflow: "hidden",
-                  backgroundColor: "#000",
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
-                  position: "relative",
-                  aspectRatio: isMobile ? "9 / 14" : "16 / 9",
-                  "&::after": {
-                    content: '""',
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.16))",
-                    pointerEvents: "none",
-                  },
-                }}
-              >
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  mirrored={false}
-                  screenshotFormat="image/jpeg"
-                  videoConstraints={videoConstraints}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "block",
-                    objectFit: "cover",
-                  }}
-                />
-              </Box>
-            )}
+              />
+            </Box>
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
               <Button

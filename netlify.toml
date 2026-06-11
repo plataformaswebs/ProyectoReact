@@ -3,7 +3,7 @@
   command = "npm run build"
 
 [dev]
-  command = "npx wait-on http://localhost:5173 && tail -f /dev/null"
+  command = "npm run dev"
   targetPort = 5173
   port = 8888
   publish = "dist"
@@ -25,7 +25,7 @@
   ]
 
   node_bundler = "esbuild"
-  external_node_modules = ["chrome-aws-lambda", "puppeteer-core"]
+  external_node_modules = ["chrome-aws-lambda", "puppeteer-core", "sharp"]
 
 [[redirects]]
   from = "/api/analyze"

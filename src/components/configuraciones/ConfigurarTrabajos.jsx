@@ -377,33 +377,35 @@ const ConfigurarTrabajos = () => {
 
   // CONFIRMACIÓN + CORREO
   const handleEnviarCorreo = async () => {
+    const hoy = new Date();
+    const fecha = `${String(hoy.getDate()).padStart(2, "0")}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${hoy.getFullYear()}`;
+
+    const params = {
+      sitioWeb: dialogFinalizar.trabajo?.SitioWeb || "plataformas-web.cl",
+      nombre: dialogFinalizar.trabajo?.NombreCliente || "Ignacio",
+      logoCliente:
+        dialogFinalizar.trabajo?.LogoCliente ||
+        "https://plataformas-web.cl/logo-plataformas-web-correo.png",
+      email:
+        dialogFinalizar.trabajo?.EmailCliente ||
+        "plataformas.web.cl@gmail.com",
+      fechaEntrega: fecha,
+      cc: "plataformas.web.cl@gmail.com",
+    };
+
     try {
-      const hoy = new Date();
-      const fecha = `${String(hoy.getDate()).padStart(2, "0")}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${hoy.getFullYear()}`;
-
-      const params = {
-        sitioWeb: dialogFinalizar.trabajo?.SitioWeb || "plataformas-web.cl",
-        nombre: dialogFinalizar.trabajo?.NombreCliente || "Ignacio",
-        logoCliente:
-          dialogFinalizar.trabajo?.LogoCliente ||
-          "https://plataformas-web.cl/logo-plataformas-web-correo.png",
-        email:
-          dialogFinalizar.trabajo?.EmailCliente ||
-          "plataformas.web.cl@gmail.com",
-        fechaEntrega: fecha,
-        cc: "plataformas.web.cl@gmail.com", // 👈 campo CC
-      };
-
       await emailjs.send(
-        "service_kz3yaug",      // Service ID
-        "template_yowj1al",     // Template ID
+        "service_tbh6hwi",
+        "template_yowj1al",
         params,
-        "lwCAuhptLOofypnhx"     // Public Key
+        "lwCAuhptLOofypnhx"
       );
-
       console.log("✅ Correo enviado correctamente a:", params.email, "(CC:", params.cc, ")");
     } catch (error) {
-      console.error("❌ Error al enviar correo:", error);
+      console.error("❌ Error al enviar correo (template_yowj1al):", error);
+      console.error("   status:", error?.status);
+      console.error("   text:", error?.text);
+      console.error("   params enviados:", params);
     }
   };
 

@@ -148,3 +148,4 @@ Plan ID PRUEBAS: P-8EU757650D1649723NHAFXNQ
 Producto asociado: PROD-57P335166G714234C
 
 npm run dev:all (NEW COMMAND)
+npx kill-port 5173 8888 2>/dev/null; netlify dev

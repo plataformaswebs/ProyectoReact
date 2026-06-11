@@ -25,7 +25,10 @@
   ]
 
   node_bundler = "esbuild"
-  external_node_modules = ["chrome-aws-lambda", "puppeteer-core", "sharp", "aws-sdk"]
+  external_node_modules = ["aws-sdk"]
+
+[functions.generarComprobante]
+  external_node_modules = ["chrome-aws-lambda", "puppeteer-core", "aws-sdk"]
 
 [[redirects]]
   from = "/api/analyze"

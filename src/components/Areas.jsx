@@ -358,14 +358,14 @@ const Areas = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [delayed, setDelayed] = useState(false);
-  const { ref, inView } = useInView({ threshold: 0.15, triggerOnce: false, });
+  const { ref, inView } = useInView({ threshold: 0.15, triggerOnce: true });
   const [scrollY, setScrollY] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const videosRef = useRef([]);
-  const { ref: refGrid, inView: inViewGrid } = useInView({ threshold: 0.25, triggerOnce: false });
+  const { ref: refGrid, inView: inViewGrid } = useInView({ threshold: 0.25, triggerOnce: true });
   const [hasEntered, setHasEntered] = useState(false);
   const controls = useAnimation();
-  const { ref: orbitInViewRef, inView: orbitInView } = useInView({ threshold: 0.25, triggerOnce: false, });
+  const { ref: orbitInViewRef, inView: orbitInView } = useInView({ threshold: 0.25, triggerOnce: true });
 
 
   //EVITAR ANIMACIÓN DUPLICADA

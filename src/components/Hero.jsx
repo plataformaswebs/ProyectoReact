@@ -302,7 +302,7 @@ function Hero({ informationsRef, setVideoReady }) {
                       gutterBottom
                       className="text"
                       sx={{
-                        fontSize: isMobile ? "1.2rem !important" : "2.3rem !important",
+                        fontSize: isMobile ? "1.2rem !important" : "1.7rem !important",
                         fontWeight: 600,
                         textAlign: "center",
                         fontFamily: "'Poppins', sans-serif",

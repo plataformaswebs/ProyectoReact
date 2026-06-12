@@ -78,11 +78,22 @@
 }
 
 @keyframes strikeAnim {
-  from {
-    width: 0%;
-  }
+  from { width: 0%; }
+  to   { width: 100%; }
+}
 
-  to {
-    width: 100%;
-  }
+@keyframes shineDiagonal {
+  0%   { transform: translateX(-120%); }
+  50%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+@keyframes clicBounce {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50%       { transform: scale(0.9) translateY(1px); }
+}
+
+@keyframes clockSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

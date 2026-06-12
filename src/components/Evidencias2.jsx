@@ -56,6 +56,7 @@ const SeccionDestacada = () => {
     const videosRef = useRef([]);
     const [activeVideoIndex, setActiveVideoIndex] = useState(0);
     const { ref, inView } = useInView({ threshold: 0.3, triggerOnce: true, rootMargin: '0px 0px -30% 0px' });
+    const { ref: scrollRef, inView: scrollVisible } = useInView({ threshold: 0, rootMargin: '200px 0px 200px 0px' });
     const [hasAnimated, setHasAnimated] = useState(false);
 
 
@@ -101,11 +102,13 @@ const SeccionDestacada = () => {
     const renderScrollRow = (delay = '0s') => (
         <Box
             sx={{
-                width: '3596px', // (1776 + 22) * 2
+                width: '3596px',
                 height: '336px',
                 display: 'flex',
                 animation: `${scrollLeft} 80s linear infinite`,
                 animationDelay: delay,
+                animationPlayState: scrollVisible ? 'running' : 'paused',
+                willChange: 'transform',
             }}
         >
             <Box
@@ -135,6 +138,7 @@ const SeccionDestacada = () => {
 
     return (
         <Box
+            ref={scrollRef}
             sx={{
                 position: 'relative',
                 width: '100%',

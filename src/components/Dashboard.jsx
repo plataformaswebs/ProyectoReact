@@ -48,12 +48,44 @@ const Contador = ({ valorFinal, texto, subtexto, delay = 0, variant = "h5", inic
     }, [valorFinal, delay, iniciar]);
 
     return (
-        <>
-            <Typography variant={variant} fontWeight="bold">
-                {valor.toLocaleString("es-CL")} {texto}
+        <Box sx={{ textAlign: "center" }}>
+            <Typography
+                variant={variant}
+                sx={{ fontWeight: 800, lineHeight: 1, letterSpacing: "-0.5px" }}
+            >
+                {valor.toLocaleString("es-CL")}
             </Typography>
-            <Typography variant="body2">{subtexto}</Typography>
-        </>
+            {texto && (
+                <Typography sx={{
+                    fontSize: "0.78rem",
+                    fontWeight: 500,
+                    opacity: 0.8,
+                    mt: 0.25,
+                    lineHeight: 1.2,
+                }}>
+                    {texto}
+                </Typography>
+            )}
+            <Box sx={{
+                mt: texto ? 0.75 : 0.5,
+                mx: "auto",
+                width: "40%",
+                height: "1px",
+                background: "rgba(255,255,255,0.3)",
+                borderRadius: 1,
+            }} />
+            <Typography sx={{
+                fontSize: "0.6rem",
+                fontWeight: 700,
+                opacity: 0.65,
+                mt: 0.5,
+                textTransform: "uppercase",
+                letterSpacing: "0.9px",
+                lineHeight: 1.2,
+            }}>
+                {subtexto}
+            </Typography>
+        </Box>
     );
 };
 
@@ -530,7 +562,7 @@ const Dashboard = () => {
                                     {analyticsDisponible ? (
                                         <Contador
                                             valorFinal={visitasTotales || 0}
-                                            texto="Visitas"
+                                            texto="visitas"
                                             subtexto="Visitas totales"
                                             variant="h4"
                                             iniciar={mostrarContadorPrincipal}
@@ -604,7 +636,7 @@ const Dashboard = () => {
                                         display: "flex",
                                         justifyContent: "center",
                                         alignItems: "center",
-                                        p: 2,
+                                        p: isMobile ? 0.5 : 2,
                                     }}
                                 >
                                     {mostrarGrafico && (
@@ -613,12 +645,12 @@ const Dashboard = () => {
                                                 <Pie
                                                     data={datosGrafico}
                                                     cx="50%"
-                                                    cy="50%"
-                                                    outerRadius={isMobile ? 105 : 110}
+                                                    cy={isMobile ? "43%" : "48%"}
+                                                    outerRadius={isSmallMobile ? 62 : isLargeMobile ? 88 : isMobile ? 90 : 110}
                                                     dataKey="value"
                                                     isAnimationActive={true}
                                                     animationBegin={0}
-                                                    animationDuration={800} // ⏱️ Más suave
+                                                    animationDuration={800}
                                                     label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
                                                         if (percent === 0 || !mostrarPorcentajes) return null;
                                                         const RADIAN = Math.PI / 180;
@@ -636,7 +668,7 @@ const Dashboard = () => {
                                                                 fill="white"
                                                                 textAnchor="middle"
                                                                 dominantBaseline="central"
-                                                                fontSize={isMobile ? 15 : 18}
+                                                                fontSize={isMobile ? 13 : 18}
                                                                 fontWeight="bold"
                                                             >
                                                                 {(percent * 100).toFixed(0)}%
@@ -645,15 +677,18 @@ const Dashboard = () => {
                                                     }}
                                                     labelLine={false}
                                                 >
-
-                                                    <Cell fill="#6EB5FF" />   {/* Móvil - Azul pastel */}
-                                                    <Cell fill="#B0F0A5" />   {/* Escritorio - Verde más oscuro */}
-                                                    <Cell fill="#FFB3B3" />   {/* Tablet - Rojo pastel */}
+                                                    <Cell fill="#6EB5FF" />
+                                                    <Cell fill="#B0F0A5" />
+                                                    <Cell fill="#FFB3B3" />
                                                 </Pie>
                                                 <Legend
                                                     verticalAlign="bottom"
-                                                    height={isMobile ? 36 : 50}
-                                                    wrapperStyle={{ paddingTop: isMobile ? 0 : 10 }}
+                                                    height={isMobile ? 30 : 50}
+                                                    iconSize={isMobile ? 8 : 12}
+                                                    wrapperStyle={{
+                                                        fontSize: isMobile ? "0.68rem" : "0.875rem",
+                                                        paddingTop: isMobile ? 2 : 10,
+                                                    }}
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
@@ -702,7 +737,8 @@ const Dashboard = () => {
                                 {analyticsDisponible ? (
                                     <Contador
                                         valorFinal={visitasChile || 0}
-                                        subtexto="Chile"
+                                        texto="visitas"
+                                        subtexto="Chile 🇨🇱"
                                         delay={100}
                                         iniciar={mostrarContadorChile}
                                     />
@@ -757,7 +793,8 @@ const Dashboard = () => {
                                 {analyticsDisponible ? (
                                     <Contador
                                         valorFinal={visitasInternacional || 0}
-                                        subtexto="Internacionales"
+                                        texto="visitas"
+                                        subtexto="Internacional 🌍"
                                         delay={100}
                                         iniciar={mostrarContadorInt}
                                     />

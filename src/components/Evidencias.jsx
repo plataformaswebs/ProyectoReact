@@ -66,8 +66,8 @@ const Evidencias = () => {
     ];
 
     const evidenciaIndices = isMobile
-        ? [[0, 1], [2, 3], [4, 5], [6]]   // Mobile â†’ 3 filas de 2 + 1 fila de 1
-        : [[0], [1], [2], [3], [4], [5], [6]]; // Desktop â†’ todas en filas individuales
+        ? [[0, 1], [2, 3], [4, 5], [6]]   // Mobile â†' 3 filas de 2 + 1 fila de 1
+        : [[0], [1], [2], [3], [4], [5], [6]]; // Desktop â†' todas en filas individuales
 
 
     const letterVariants = {
@@ -254,7 +254,7 @@ const Evidencias = () => {
                         loop
                         muted
                         playsInline
-                        preload="auto"
+                        preload="none"
                         initial={{ x: 300, opacity: 0 }}
                         animate={imagenInView ? { x: '0%', opacity: 1 } : { x: 300, opacity: 0 }}
                         transition={{ duration: 1, ease: 'easeOut' }}
@@ -366,11 +366,11 @@ const Evidencias = () => {
                                     my: 0,
                                     display: "flex",
                                     flexWrap: "wrap",
-                                    justifyContent: "center", // ðŸ‘ˆ ahora el contenido dentro queda al centro
+                                    justifyContent: "center", // ðŸ'ˆ ahora el contenido dentro queda al centro
                                     alignItems: "center",
                                     backgroundColor: "transparent",
                                     color: "lightgray",
-                                    textAlign: "center", // ðŸ‘ˆ adicional para asegurar texto centrado
+                                    textAlign: "center", // ðŸ'ˆ adicional para asegurar texto centrado
                                 }}
                             >
                                 {/* Barra | cafÃ© al inicio */}
@@ -519,6 +519,8 @@ const Evidencias = () => {
                                                                                 component="img"
                                                                                 src={evidencias[n].logo}
                                                                                 alt={`${evidencias[n].label} logo`}
+                                                                                loading="lazy"
+                                                                                decoding="async"
                                                                                 sx={{
                                                                                     width: "100%",
                                                                                     height: "100%",
@@ -547,7 +549,7 @@ const Evidencias = () => {
                                                                 rel="noopener noreferrer"
 
                                                                 sx={{
-                                                                    fontSize: evidencias[n].label === "investigadores-privados.cl" ? "0.63rem" : "0.75rem", // ðŸ‘ˆ solo cambia aquÃ­
+                                                                    fontSize: evidencias[n].label === "investigadores-privados.cl" ? "0.63rem" : "0.75rem", // ðŸ'ˆ solo cambia aquÃ­
 
                                                                     display: 'block',
                                                                     mt: 1.5,
@@ -593,7 +595,7 @@ const Evidencias = () => {
                                 {/* Texto final */}
                                 <Grid item xs={12}>
                                     <Typography
-                                        ref={muchosMasRef} // ðŸ‘ˆ le pasamos el observer
+                                        ref={muchosMasRef} // ðŸ'ˆ le pasamos el observer
                                         variant="body1"
                                         align="center"
                                         sx={{
@@ -615,7 +617,7 @@ const Evidencias = () => {
                                                 key={i}
                                                 custom={i}
                                                 initial={{ opacity: 0, y: 20 }}
-                                                animate={muchosMasInView ? { opacity: 1, y: 0 } : {}} // ðŸ‘ˆ ahora depende solo de este ref
+                                                animate={muchosMasInView ? { opacity: 1, y: 0 } : {}} // ðŸ'ˆ ahora depende solo de este ref
                                                 transition={{ delay: i * 0.05, duration: 0.4 }}
                                                 style={{
                                                     display: "inline-block",

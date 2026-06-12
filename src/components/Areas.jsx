@@ -472,7 +472,7 @@ const Areas = () => {
         backgroundRepeat: "no-repeat",
         backgroundSize: isMobile ? "100% 100%" : "100% auto",
         backgroundPosition: isMobile ? "center" : "",
-        backgroundAttachment: isMobile ? "initial" : "fixed",
+        backgroundAttachment: "scroll",
         minHeight: isMobile ? "85vh" : "auto",
         paddingTop: "10px !important",
         padding: { xs: 4, md: 16 },

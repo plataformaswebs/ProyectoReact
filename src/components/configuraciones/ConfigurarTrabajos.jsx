@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Table, TableHead, TableRow, TableCell, TableBody, IconButton, TextField, Snackbar, Alert, Container, Paper, LinearProgress, Tooltip, useTheme, useMediaQuery } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, IconButton, Snackbar, Alert, Container, Paper, Slider, Tooltip, useTheme, useMediaQuery } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
 import { motion, AnimatePresence } from "framer-motion";
 import MenuInferior from './MenuInferior';
@@ -13,7 +14,7 @@ import DialogTrabajoTerminado from "./DialogTrabajoTerminado";
 import { CircularProgress } from "@mui/material";
 import emailjs from "emailjs-com";
 
-const ActionButton = ({ title, color, onClick, icon }) => (
+const ActionButton = ({ title, color, onClick, icon, compact = false }) => (
   <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
     <Tooltip title={title}>
       <IconButton
@@ -21,8 +22,8 @@ const ActionButton = ({ title, color, onClick, icon }) => (
         color={color}
         onClick={onClick}
         sx={{
-          "& svg": { fontSize: 28 },    // más grandes
-          p: 0.6,                       // menos padding interno
+          "& svg": { fontSize: compact ? 20 : 28 },
+          p: compact ? 0.25 : 0.6,
         }}
       >
         {icon}
@@ -32,11 +33,13 @@ const ActionButton = ({ title, color, onClick, icon }) => (
 );
 const ConfigurarTrabajos = () => {
   const [trabajos, setTrabajos] = useState([]);
+  const [pendingChanges, setPendingChanges] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "success" });
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const cardSize = isMobile ? "300px" : "340px";
   const [openDialogAgregar, setOpenDialogAgregar] = useState(false);
+  const [trabajoAEditar, setTrabajoAEditar] = useState(null);
   const [loadingSave, setLoadingSave] = useState(null);
   const [loadingDialog, setLoadingDialog] = useState(false);
   const [loadingSaveAll, setLoadingSaveAll] = useState(false);
@@ -136,6 +139,12 @@ const ConfigurarTrabajos = () => {
   };
 
   const agregarTrabajo = () => {
+    setTrabajoAEditar(null);
+    setOpenDialogAgregar(true);
+  };
+
+  const editarTrabajo = (trabajo) => {
+    setTrabajoAEditar(trabajo);
     setOpenDialogAgregar(true);
   };
 
@@ -187,7 +196,7 @@ const ConfigurarTrabajos = () => {
         Anterior
       </Button>
       <Typography variant="body2" sx={{ color: "white" }}>
-        PÃ¡gina {paginaActual} de {totalPaginas}
+        Página {paginaActual} de {totalPaginas}
       </Typography>
       <Button
         variant="outlined"
@@ -280,13 +289,10 @@ const ConfigurarTrabajos = () => {
   };
 
   const handleChange = (sitioWeb, field, value) => {
-    setTrabajos((prevTrabajos) =>
-      prevTrabajos.map((trabajo) =>
-        trabajo.SitioWeb === sitioWeb
-          ? { ...trabajo, [field]: value }
-          : trabajo
-      )
-    );
+    setPendingChanges((prev) => ({
+      ...prev,
+      [sitioWeb]: { ...(prev[sitioWeb] || {}), [field]: value },
+    }));
   };
 
   //BOTÓN GUARDAR
@@ -323,6 +329,17 @@ const ConfigurarTrabajos = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Error al guardar");
 
+      // Aplicar cambios al estado guardado (triggers reorder) y limpiar pending
+      setTrabajos((prev) =>
+        prev.map((t) =>
+          t.SitioWeb === trabajo.SitioWeb ? { ...t, ...payload, Porcentaje: payload.nuevoPorcentaje, Estado: payload.nuevoEstado } : t
+        )
+      );
+      setPendingChanges((prev) => {
+        const next = { ...prev };
+        delete next[trabajo.SitioWeb];
+        return next;
+      });
       setSnackbar({
         open: true,
         type: "success",
@@ -457,312 +474,214 @@ const ConfigurarTrabajos = () => {
               onClick={() => agregarTrabajo()}
               variant="outlined"
               color="inherit"
-              startIcon={<AddIcon sx={{ mr: mostrarTextoAgregarTrabajo ? -0.5 : 0 }} />}
               sx={{
                 color: "white",
                 borderColor: "white",
-                fontSize: { xs: "0.7rem", sm: "0.85rem" }, // 👈 más chico
-                px: { xs: mostrarTextoAgregarTrabajo ? 1 : 0.9, sm: mostrarTextoAgregarTrabajo ? 1.5 : 1 }, // padding horizontal reducido
-                py: { xs: 0.25, sm: 0.5 }, // padding vertical reducido
-                minWidth: mostrarTextoAgregarTrabajo ? "auto" : 36,
-                transition: "all 0.2s ease",
-                "& .MuiButton-startIcon": {
-                  marginRight: mostrarTextoAgregarTrabajo ? "2px" : 0,
-                  marginLeft: mostrarTextoAgregarTrabajo ? "-2px" : 0,
-                },
-                "&:hover": {
-                  backgroundColor: "#ffffff22",
-                  borderColor: "#ffffffcc",
-                },
+                fontSize: { xs: "0.7rem", sm: "0.85rem" },
+                px: { xs: 0.9, sm: 1 },
+                py: { xs: 0.25, sm: 0.5 },
+                minWidth: 36,
+                display: "flex",
+                alignItems: "center",
+                gap: 0,
+                overflow: "hidden",
+                "&:hover": { backgroundColor: "#ffffff22", borderColor: "#ffffffcc" },
               }}
             >
-              {mostrarTextoAgregarTrabajo ? "Agregar Trabajo" : ""}
+              <AddIcon sx={{ fontSize: 18, flexShrink: 0 }} />
+              <AnimatePresence>
+                {mostrarTextoAgregarTrabajo && (
+                  <motion.span
+                    initial={{ maxWidth: 140, opacity: 1, marginLeft: 4 }}
+                    exit={{ maxWidth: 0, opacity: 0, marginLeft: 0 }}
+                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                    style={{ overflow: "hidden", whiteSpace: "nowrap", display: "block" }}
+                  >
+                    Agregar Trabajo
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Button>
           </motion.div>
         </Box>
 
 
 
-        {/* Tabla */}
+        {/* Cards de trabajos */}
         <Box sx={{ position: "relative" }}>
-          <Paper
+          {mostrarPaginacion && renderPaginacion()}
+
+          <Box
             sx={{
-              overflow: "hidden",
-              borderRadius: 3,
-              boxShadow: 6,
+              display: "flex",
+              flexDirection: "column",
+              gap: { xs: 0.5, sm: 0.75 },
+              mt: mostrarPaginacion ? 1 : 0,
               opacity: loadingSaveAll ? 0.5 : 1,
               pointerEvents: loadingSaveAll ? "none" : "auto",
             }}
           >
-            {mostrarPaginacion && renderPaginacion()}
-            <Table
-              stickyHeader
-              size="small"
-              sx={{
-                minWidth: isMobile ? 400 : "auto",
-                "& .MuiTableCell-root": {
-                  fontFamily: "Poppins, sans-serif",
-                  border: "none !important", // 🚫 fuerza quitar todos los bordes
-                },
-                "& .MuiTableCell-head": {
-                  backgroundColor: "#ffffff",
-                  fontWeight: "bold",
-                  color: "#1b263b",
-                  fontFamily: "Poppins, sans-serif",
-                  border: "none !important",        // 🚫 sin líneas horizontales ni verticales
-                  "&:before, &:after": {            // 🚫 quita pseudo-elementos que pintan líneas
-                    display: "none !important",
-                  },
-                },
-                "& .MuiTableCell-body": {
-                  borderTop: "1px solid rgba(0,0,0,0.1)",    // ✅ solo arriba
-                  borderBottom: "1px solid rgba(0,0,0,0.1)", // ✅ solo abajo
-                },
-              }}
-            >
+            {trabajosPaginados.map((trabajo, index) => {
+              const pending = pendingChanges[trabajo.SitioWeb] || {};
+              const pct = Number(pending.Porcentaje ?? trabajo.Porcentaje);
+              const listo = pct === 100;
+              const activo = trabajo.Estado === 1;
 
-
-              <TableHead>
-                <TableRow>
-                  <TableCell
+              return (
+                <motion.div
+                  key={trabajo.SitioWeb}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: index * 0.04 }}
+                >
+                  <Paper
+                    elevation={0}
                     sx={{
-                      width: "70%",
-                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                      py: { xs: 0.5, sm: 1 },
-                      border: "none",   // 🚫 sin bordes
+                      borderRadius: 2.5,
+                      overflow: "hidden",
+                      border: listo
+                        ? "1px solid rgba(76,175,80,0.4)"
+                        : activo
+                        ? "1px solid rgba(255,255,255,0.12)"
+                        : "1px solid rgba(239,83,80,0.3)",
+                      background: listo
+                        ? "linear-gradient(135deg,#f1f8f1 0%,#e8f5e9 100%)"
+                        : activo
+                        ? "linear-gradient(135deg,#ffffff 0%,#f8fafd 100%)"
+                        : "linear-gradient(135deg,#fff8f8 0%,#fef2f2 100%)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+                      transition: "box-shadow 0.2s",
+                      "&:hover": { boxShadow: "0 4px 16px rgba(0,0,0,0.12)" },
                     }}
                   >
-                    Sitios Web/Sistemas
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      width: "20%",
-                      pr: 0,
-                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                      py: { xs: 0.5, sm: 1 },
-                      border: "none",   // 🚫 sin bordes
-                    }}
-                  >
-                    Progreso
-                  </TableCell>
-
-                  <TableCell
-                    align="center"
-                    sx={{
-                      width: "10%",
-                      pl: 0,
-                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                      py: { xs: 0.5, sm: 1 },
-                      border: "none",   // 🚫 sin bordes
-                    }}
-                  />
-                </TableRow>
-              </TableHead>
-
-
-
-              <TableBody>
-                {trabajosPaginados.map((trabajo, index) => (
-                  <TableRow
-                    key={trabajo.SitioWeb}
-                    component={motion.tr}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    sx={{
-                      bgcolor: trabajo.Porcentaje === 100 ? "#e8f5e9" : "#ffffff",
-                      "&:nth-of-type(odd)": {
-                        bgcolor: trabajo.Porcentaje === 100 ? "#e8f5e9" : "#f9f9f9",
-                      },
-                      "&:hover": {
-                        bgcolor:
-                          trabajo.Porcentaje === 100 ? "#c8e6c9" : "#f1f7ff",
-                      },
-                      "& td, & th": {
-                        py: { xs: 0.2, sm: 0.35 },
-                        px: { xs: 1, sm: 2 },
-                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                        color: "#1b263b",
-                        fontFamily: "Poppins, sans-serif",
-                        borderTop: "1px solid rgba(0,0,0,0.1)",     // ✅ solo arriba
-                        borderBottom: "1px solid rgba(0,0,0,0.1)",  // ✅ solo abajo
-                        borderLeft: "none",                        // 🚫 quitamos lados
-                        borderRight: "none",
-                      },
-                    }}
-                  >
-
-                    {/* Sitio Web */}
-                    <TableCell
+                    {/* Barra de color superior según progreso */}
+                    <Box
                       sx={{
-                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                        whiteSpace: "nowrap",
-                        color: trabajo.tipoApp === 1 ? "#0288d1" : "#333",
-                        fontWeight: 600,
-                        cursor: trabajo.tipoApp === 1 ? "pointer" : "default",
-                        textDecoration: "none",
+                        height: 3,
+                        backgroundImage: getGradient(pct),
+                        width: `${pct}%`,
+                        transition: "width 0.4s ease",
                       }}
-                    >
-                      {trabajo.tipoApp === 1 ? (
-                        <a
-                          href={`https://${trabajo.SitioWeb}`}
+                    />
+
+                    <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.2, sm: 0.35 } }}>
+                      {/* Fila superior: nombre + badge + acciones */}
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0 }}>
+                        {/* Tipo icono */}
+                        <Typography sx={{ fontSize: { xs: "0.85rem", sm: "1rem" }, lineHeight: 1, flexShrink: 0 }}>
+                          {Number(trabajo.TipoApp || trabajo.tipoApp) === 1 ? "🌐" : "⚙️"}
+                        </Typography>
+
+                        {/* Nombre */}
+                        <Typography
+                          sx={{
+                            flex: 1,
+                            fontWeight: 700,
+                            fontSize: { xs: "0.78rem", sm: "0.875rem" },
+                            color: Number(trabajo.TipoApp || trabajo.tipoApp) === 1 ? "#0277bd" : "#1b263b",
+                            fontFamily: "Poppins, sans-serif",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                          component={Number(trabajo.TipoApp || trabajo.tipoApp) === 1 ? "a" : "span"}
+                          href={Number(trabajo.TipoApp || trabajo.tipoApp) === 1 ? `https://${trabajo.SitioWeb}` : undefined}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ textDecoration: "none", color: "#0288d1" }}
+                          style={{ textDecoration: "none" }}
                         >
                           {trabajo.SitioWeb}
-                        </a>
-                      ) : (
-                        trabajo.SitioWeb
-                      )}
-                    </TableCell>
+                        </Typography>
 
-
-
-                    {/* Progreso editable */}
-                    <TableCell sx={{ pr: 0 }}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: isMobile ? "column" : "row", // 📱 columna / 🖥️ fila
-                          alignItems: "center",
-                          gap: isMobile ? 0.5 : 1, // 👈 más pegado en mobile
-                          width: "100%",
-                        }}
-                      >
-                        {/* Barra de progreso */}
+                        {/* Badge % */}
                         <Box
                           sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0,
-                            flex: 1,
-                            width: isMobile ? "100%" : "100%", // 📱 compacto / 🖥️ full
+                            px: 0.9,
+                            py: 0.1,
+                            borderRadius: "999px",
+                            backgroundImage: getGradient(pct),
+                            flexShrink: 0,
                           }}
                         >
-                          <LinearProgress
-                            variant="determinate"
-                            value={trabajo.Porcentaje}
-                            sx={{
-                              flex: 1,
-                              height: 8,
-                              borderRadius: 2,
-                              "& .MuiLinearProgress-bar": {
-                                backgroundImage: getGradient(trabajo.Porcentaje), // 🎨 gradiente dinámico
-                                transition: "transform 0.6s ease-in-out",
-                              },
-                            }}
-                          />
-
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              minWidth: 32,
-                              textAlign: "right",
-                              fontWeight: 600,
-                            }}
-                          >
-                            {trabajo.Porcentaje}%
+                          <Typography sx={{ fontSize: "0.68rem", fontWeight: 800, color: "#fff", lineHeight: 1.6 }}>
+                            {pct}%
                           </Typography>
                         </Box>
 
-                        {/* Input de porcentaje */}
-                        <TextField
-                          type="number"
-                          value={trabajo.Porcentaje}
-                          onChange={(e) => {
-                            let val = e.target.value;
-
-                            // evitar 0 iniciales innecesarios
-                            if (/^0\d+/.test(val)) {
-                              val = val.replace(/^0+/, "");
-                            }
-
-                            // limitar entre 0 y 100
-                            let num = Math.min(100, Math.max(0, Number(val || 0)));
-
-                            // actualiza el estado con el número ya corregido
-                            handleChange(trabajo.SitioWeb, "Porcentaje", num);
-                          }}
-                          inputProps={{
-                            min: 0,
-                            max: 100,
-                            style: { textAlign: "right" },
-                          }}
-                          size="small"
-                          sx={{
-                            width: 90,
-                            alignSelf: isMobile ? "flex-start" : "center",
-                            mt: isMobile ? 0.25 : 0,
-                          }}
-                        />
-
-
-
+                        {/* Acciones */}
+                        <Box sx={{ display: "flex", gap: 0, flexShrink: 0 }}>
+                          <ActionButton compact title="Editar" color="info" onClick={() => editarTrabajo(trabajo)} icon={<EditRoundedIcon />} />
+                          <ActionButton
+                            compact
+                            title={activo ? "Guardar" : "Eliminar"}
+                            color={activo ? "primary" : "error"}
+                            onClick={() => activo ? handleGuardarClick({ ...trabajo, ...pending }) : abrirDialog(trabajo)}
+                            icon={activo
+                              ? loadingSave === trabajo.SitioWeb ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />
+                              : <DeleteIcon />}
+                          />
+                          <ActionButton
+                            compact
+                            title={activo ? "Eliminar" : "Restaurar"}
+                            color={activo ? "error" : "success"}
+                            onClick={() => activo ? abrirDialog(trabajo) : restaurarTrabajo(trabajo)}
+                            icon={activo ? <DeleteIcon /> : <RestoreIcon />}
+                          />
+                        </Box>
                       </Box>
-                    </TableCell>
 
-
-                                        {/* Botones de acción */}
-                    <TableCell align="center">
-                      <Box sx={{ display: "inline-flex", gap: 0.3 }}>
-                        <ActionButton
-                          title={trabajo.Estado === 1 ? "Guardar cambios" : "Eliminar"}
-                          color={trabajo.Estado === 1 ? "primary" : "error"}
-                          disabled={trabajo.Estado === 1 ? loadingSave === trabajo.SitioWeb : loadingDialogAction === "eliminar"}
-                          onClick={() => {
-                            if (trabajo.Estado === 1) {
-                              handleGuardarClick(trabajo);   // 👈 usamos el nuevo handler
-                            } else {
-                              abrirDialog(trabajo); // eliminar con confirmación
-                            }
-                          }}
-                          icon={
-                            trabajo.Estado === 1 ? (
-                              loadingSave === trabajo.SitioWeb ? (
-                                <CircularProgress size={20} color="inherit" />
-                              ) : (
-                                <SaveIcon />
-                              )
-                            ) : (
-                              <DeleteIcon />
-                            )
-                          }
-                        />
-                        <ActionButton
-                          title={trabajo.Estado === 1 ? "Eliminar" : "Restaurar"}
-                          color={trabajo.Estado === 1 ? "error" : "success"}
-                          onClick={() => {
-                            if (trabajo.Estado === 1) {
-                              abrirDialog(trabajo); // eliminar con confirmación
-                            } else {
-                              restaurarTrabajo(trabajo); // restaurar directo
-                            }
-                          }}
-                          icon={trabajo.Estado === 1 ? <DeleteIcon /> : <RestoreIcon />}
-                        />
+                      {/* Slider */}
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.25 }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Slider
+                            value={pct}
+                            onChange={(_, v) => handleChange(trabajo.SitioWeb, "Porcentaje", v)}
+                            step={5}
+                            min={0}
+                            max={100}
+                            size="small"
+                            sx={{
+                              py: "1px",
+                              "& .MuiSlider-track": { backgroundImage: getGradient(pct), border: "none", height: 5 },
+                              "& .MuiSlider-rail": { height: 5, opacity: 0.2, backgroundColor: "#90a4ae" },
+                              "& .MuiSlider-thumb": {
+                                width: 13, height: 13,
+                                "&:hover, &.Mui-focusVisible": { boxShadow: "0 0 0 6px rgba(0,0,0,0.08)" },
+                              },
+                            }}
+                          />
+                        </Box>
+                        {!activo && (
+                          <Typography sx={{ fontSize: "0.65rem", color: "#ef5350", fontWeight: 700, flexShrink: 0 }}>
+                            INACTIVO
+                          </Typography>
+                        )}
+                        {listo && activo && (
+                          <Typography sx={{ fontSize: "0.65rem", color: "#388e3c", fontWeight: 700, flexShrink: 0 }}>
+                            ✓ PRD
+                          </Typography>
+                        )}
                       </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Paper>
+                    </Box>
+                  </Paper>
+                </motion.div>
+              );
+            })}
+          </Box>
 
           {loadingSaveAll && (
             <Box
               sx={{
                 position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                bgcolor: "rgba(255,255,255,0.6)",
+                top: 0, left: 0,
+                width: "100%", height: "100%",
+                bgcolor: "rgba(255,255,255,0.55)",
+                backdropFilter: "blur(2px)",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 zIndex: 10,
+                borderRadius: 2,
               }}
             >
               <CircularProgress />
@@ -785,8 +704,9 @@ const ConfigurarTrabajos = () => {
         {/*DIALOG: AGREGAR TRABAJO*/}
         <DialogAgregarTrabajo
           open={openDialogAgregar}
-          onClose={() => setOpenDialogAgregar(false)}
+          onClose={() => { setOpenDialogAgregar(false); setTrabajoAEditar(null); }}
           onSave={handleSaveTrabajo}
+          trabajoEditar={trabajoAEditar}
         />
         {/*DIALOG: ELIMINAR*/}
         <Dialog open={dialog.open} onClose={cerrarDialog} >
@@ -872,7 +792,7 @@ const ConfigurarTrabajos = () => {
             borderRadius: "999px",
             background: "rgba(0,0,0,0.55)",
             border: "1px solid rgba(255,255,255,0.25)",
-            display: "flex",
+            display: mostrarMenuInferior ? "none" : "flex",
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",

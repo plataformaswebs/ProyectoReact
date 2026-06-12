@@ -1,16 +1,18 @@
-import * as XLSX from "xlsx";
-
 export const cargarTrabajos = async (urlExcel) => {
   try {
-    const response = await fetch(urlExcel, {
-      cache: "no-store",
-      headers: {
-        "Cache-Control": "no-store",
-        "Pragma": "no-cache",
-      },
-    });
+    const [xlsxMod, response] = await Promise.all([
+      import("xlsx"),
+      fetch(urlExcel, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-store",
+          "Pragma": "no-cache",
+        },
+      }),
+    ]);
     if (!response.ok) throw new Error("No se pudo obtener el archivo Excel");
 
+    const XLSX = xlsxMod.default ?? xlsxMod;
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
     const workbook = XLSX.read(data, { type: "array" });

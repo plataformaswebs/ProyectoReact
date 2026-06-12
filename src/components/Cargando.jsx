@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import "./css/Cargando.css";
@@ -13,7 +13,7 @@ const Cargando = () => {
     const [showImage, setShowImage] = useState(false);
     const [showStrips, setShowStrips] = useState(true);
 
-    // ✅ NUEVO: control de “desbloqueo” (una sola vez) + reflejo en UI
+    // ✅ NUEVO: control de "desbloqueo" (una sola vez) + reflejo en UI
     const didUnlock = useRef(false);
     const [unlocked, setUnlocked] = useState(false);
 

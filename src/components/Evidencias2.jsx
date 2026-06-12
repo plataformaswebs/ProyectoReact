@@ -59,7 +59,7 @@ const SeccionDestacada = () => {
     const [hasAnimated, setHasAnimated] = useState(false);
 
 
-    //EVITAR ANIMACIÃ“N DUPLICADA
+    //EVITAR ANIMACIÃ"N DUPLICADA
     useEffect(() => {
         if (inView && !hasAnimated) {
             setHasAnimated(true);
@@ -112,12 +112,16 @@ const SeccionDestacada = () => {
                 component="img"
                 src="/fondo-mongodb.svg"
                 alt="fondo"
+                loading="lazy"
+                decoding="async"
                 sx={{ width: '1776px', height: '336px', objectFit: 'cover', display: 'block', mr: '22px' }}
             />
             <Box
                 component="img"
                 src="/fondo-mongodb.svg"
                 alt="fondo"
+                loading="lazy"
+                decoding="async"
                 sx={{ width: '1776px', height: '336px', objectFit: 'cover', display: 'block', mr: '22px' }}
             />
         </Box>
@@ -246,12 +250,12 @@ const SeccionDestacada = () => {
                                 style={{
                                     color: "#8B4513",           // CafÃ©
                                     fontWeight: "bold",
-                                    marginRight: "1px",         // ðŸ”¸ MÃ¡s pegado a la 'N'
+                                    marginRight: "1px",         // ðŸ"¸ MÃ¡s pegado a la 'N'
                                     marginTop: "-6px",
-                                    fontSize: "0.8em",          // ðŸ”¸ Un poco mÃ¡s bajo que el texto
-                                    lineHeight: 1,              // ðŸ”¸ AlineaciÃ³n vertical mÃ¡s precisa
+                                    fontSize: "0.8em",          // ðŸ"¸ Un poco mÃ¡s bajo que el texto
+                                    lineHeight: 1,              // ðŸ"¸ AlineaciÃ³n vertical mÃ¡s precisa
                                     display: "inline-block",
-                                    transform: "translateY(2px)" // ðŸ”¸ Ligero ajuste vertical si lo ves muy arriba/abajo
+                                    transform: "translateY(2px)" // ðŸ"¸ Ligero ajuste vertical si lo ves muy arriba/abajo
                                 }}
                             >
                                 |
@@ -308,7 +312,7 @@ const SeccionDestacada = () => {
                                         justifyContent: "flex-end",
                                     }}
                                 >
-                                    {/* ðŸ”¹ Contenedor relativo para video + logo */}
+                                    {/* ðŸ"¹ Contenedor relativo para video + logo */}
                                     <Box
                                         sx={{
                                             position: "relative",   // âœ… necesario para el overlay
@@ -342,7 +346,7 @@ const SeccionDestacada = () => {
                                             }}
                                         />
 
-                                        {/* ðŸ”¹ Logo dentro del video */}
+                                        {/* ðŸ"¹ Logo dentro del video */}
                                         {evidencia.logo && (
                                             <Box
                                                 component={motion.div}
@@ -355,8 +359,8 @@ const SeccionDestacada = () => {
                                                 }}
                                                 sx={{
                                                     position: "absolute",
-                                                    bottom: 8,           // ðŸ”¹ mitad de 70px para que sobresalga justo la mitad
-                                                    left: "28%",           // ðŸ”¹ centro exacto
+                                                    bottom: 8,           // ðŸ"¹ mitad de 70px para que sobresalga justo la mitad
+                                                    left: "28%",           // ðŸ"¹ centro exacto
                                                     width: 60,
                                                     height: 60,
                                                     borderRadius: "50%",
@@ -374,6 +378,8 @@ const SeccionDestacada = () => {
                                                     component="img"
                                                     src={evidencia.logo}
                                                     alt={`${evidencia.label} logo`}
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     sx={{
                                                         width: "100%",
                                                         height: "100%",
@@ -386,7 +392,7 @@ const SeccionDestacada = () => {
                                         )}
                                     </Box>
 
-                                    {/* ðŸ”¹ Texto debajo del video */}
+                                    {/* ðŸ"¹ Texto debajo del video */}
                                     <Typography
                                         variant="body2"
                                         align="center"
@@ -454,13 +460,15 @@ const SeccionDestacada = () => {
                         component="img"
                         src="/mongodb.svg"
                         alt="mongodb"
+                        loading="lazy"
+                        decoding="async"
                         sx={{
                             left: '-1%',
                             height: '100%',
                             objectFit: 'contain',
                             display: 'block',
                             position: "relative", // o absolute si lo necesitas fijo
-                            zIndex: -1,            // ðŸ‘ˆ asegura que quede detrÃ¡s
+                            zIndex: -1,            // ðŸ'ˆ asegura que quede detrÃ¡s
                         }}
                     />
 

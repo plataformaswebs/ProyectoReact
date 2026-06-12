@@ -1,11 +1,13 @@
-import * as XLSX from "xlsx";
-
 export const cargarTrabajosEnRevision = async (urlExcel) => {
   try {
-    const response = await fetch(urlExcel);
+    const [xlsxMod, response] = await Promise.all([
+      import("xlsx"),
+      fetch(urlExcel),
+    ]);
 
     if (!response.ok) throw new Error("No se pudo obtener el archivo Excel");
 
+    const XLSX = xlsxMod.default ?? xlsxMod;
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
     const workbook = XLSX.read(data, { type: "array" });

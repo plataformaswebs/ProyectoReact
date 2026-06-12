@@ -1,19 +1,21 @@
-import * as XLSX from "xlsx";
-
 export const cargarClientesDesdeExcel = async () => {
   const urlExcel = `https://plataformas-web-buckets.s3.us-east-2.amazonaws.com/Clientes.xlsx?t=${Date.now()}`;
 
   try {
-    const response = await fetch(urlExcel, {
-      headers: {
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache",
-        "Expires": "0",
-      },
-    });
+    const [xlsxMod, response] = await Promise.all([
+      import("xlsx"),
+      fetch(urlExcel, {
+        headers: {
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache",
+          "Expires": "0",
+        },
+      }),
+    ]);
 
     if (!response.ok) throw new Error("No se pudo obtener el archivo Excel");
 
+    const XLSX = xlsxMod.default ?? xlsxMod;
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
     const workbook = XLSX.read(data, { type: "array" });

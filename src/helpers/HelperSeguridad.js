@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 const SEGURIDAD_S3_URL =
   "https://plataformas-web-buckets.s3.us-east-2.amazonaws.com/Seguridad.xlsx";
 
@@ -21,6 +19,8 @@ export const cargarSeguridadDesdeExcel = async () => {
     throw new Error("No se pudo obtener Seguridad.xlsx");
   }
 
+  const xlsxMod = await import("xlsx");
+  const XLSX = xlsxMod.default ?? xlsxMod;
   const arrayBuffer = await response.arrayBuffer();
   const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: "array" });
   const hoja = workbook.Sheets[workbook.SheetNames[0]];

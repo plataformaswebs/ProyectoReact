@@ -25,7 +25,7 @@ function Home() {
           `,
                     backgroundSize: "50px 50px",
                     backgroundPosition: "center",
-                    backgroundAttachment: "fixed",
+                    backgroundAttachment: "scroll",
                     color: "white",
                     overflow: "visible",
                 }}

@@ -9,7 +9,7 @@ import emailjs from "@emailjs/browser";
 import { FormControl, InputLabel, Select, MenuItem, Tooltip, CircularProgress } from "@mui/material";
 import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import HowToRegRoundedIcon from "@mui/icons-material/HowToRegRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
@@ -75,6 +75,12 @@ const GreenDot = styled("div")(() => ({
   boxShadow: "0 0 6px rgba(0,255,0,0.5)",
 }));
 
+const shineCard = keyframes({
+  "0%":   { left: "-75%" },
+  "55%":  { left: "130%" },
+  "100%": { left: "130%" },
+});
+
 // Animaciones definidas correctamente
 const greenMoneyPulse = keyframes({
   "0%": { textShadow: "0 0 4px rgba(0, 200, 83, 0.4)" },
@@ -129,6 +135,7 @@ const Clientes = () => {
   const [openDialogCliente, setOpenDialogCliente] = useState(false);
   const [enRevision, setEnRevision] = useState(false);
   const [openAgregarCliente, setOpenAgregarCliente] = useState(false);
+  const [clienteAEditar, setClienteAEditar] = useState(null);
   const [dialog, setDialog] = useState({ open: false, sitioWeb: "" });
   const [loadingDialogAction, setLoadingDialogAction] = useState(null);
   const [cobrando, setCobrando] = useState(false);
@@ -155,18 +162,39 @@ const Clientes = () => {
   const diffMs = hoy - primerDiaMes;
   const diasAtraso = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 
+  // Suscriptores siempre cuentan como pagados
+  const esPagado = (c) => c.pagado || !!c.suscripcion;
+
+  const PAGINAS_PROPIAS = ["ivelpink.cl", "plataformas-web.cl", "plataformas-web.com"];
+  const esPaginaPropia = (c) => PAGINAS_PROPIAS.includes((c.sitioWeb || c.URL || "").toLowerCase().trim());
+
+  const ordenarClientes = (lista) =>
+    [...lista].sort((a, b) => {
+      const propiaA = esPaginaPropia(a) ? 1 : 0;
+      const propiaB = esPaginaPropia(b) ? 1 : 0;
+      if (propiaA !== propiaB) return propiaA - propiaB;
+
+      const suscA = !!a.suscripcion ? 1 : 0;
+      const suscB = !!b.suscripcion ? 1 : 0;
+      if (suscA !== suscB) return suscA - suscB;
+
+      const pagadoA = a.pagado ? 0 : 1;
+      const pagadoB = b.pagado ? 0 : 1;
+      return pagadoA - pagadoB;
+    });
+
   //GANADO
   const totalGanado = clientes.reduce((acc, c) => {
     const valorLimpio = c.valor?.replace(/[$.\s\r\n]/g, "") || "0";
     const valor = parseInt(valorLimpio, 10) || 0;
-    return c.pagado ? acc + valor : acc;
+    return esPagado(c) ? acc + valor : acc;
   }, 0);
 
   //DEUDA
   const totalDeuda = clientes.reduce((acc, c) => {
     const valorLimpio = c.valor?.replace(/[$.\s\r\n]/g, "") || "0";
     const valor = parseInt(valorLimpio, 10) || 0;
-    return !c.pagado ? acc + valor : acc;
+    return !esPagado(c) ? acc + valor : acc;
   }, 0);
 
 
@@ -221,7 +249,7 @@ const Clientes = () => {
         }
 
         // 4. Guardar en estado
-        setClientes(clientesConEstado);
+        setClientes(ordenarClientes(clientesConEstado));
 
       } catch (err) {
         console.error("❌ Error cargando Clientes.xlsx:", err);
@@ -313,7 +341,7 @@ const Clientes = () => {
       if (res.ok) {
         const nuevosClientes = await cargarClientesDesdeExcel();
         setTotalGanadoAnterior(totalGanado);
-        setClientes(nuevosClientes);
+        setClientes(ordenarClientes(nuevosClientes));
 
         setTipoCambioVisual(revertir ? "reversion" : "ganancia");
         setIniciarAnimacionContador(true);
@@ -425,7 +453,7 @@ const Clientes = () => {
         // 💵 Lógica dinámica según dominio
         const dominio = (cliente.sitioWeb || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "");
 
-        // si es alguno de los sitios “exentos” => cobra 300 CLP
+        // si es alguno de los sitios "exentos" => cobra 300 CLP
         const sitiosPrueba = ["plataformas-web.cl", "ivelpink.cl"];
         const esSitioPrueba = sitiosPrueba.some((s) => dominio.includes(s));
 
@@ -640,15 +668,15 @@ const Clientes = () => {
         variant="h6"
         fontWeight={700}
         sx={{
-          fontSize: "1.1rem",
-          lineHeight: 1.2,
+          fontSize: "1rem",
+          lineHeight: 1.3,
           color: mostrarEfecto
             ? esGanancia
               ? "transparent"
               : esReversion
-                ? "#d32f2f"
-                : "#212121"
-            : "#212121",
+                ? "#ffcdd2"
+                : "#fff"
+            : "#fff",
           background:
             mostrarEfecto && esGanancia
               ? "linear-gradient(90deg, #69f0ae, #00e676, #00c853)"
@@ -685,12 +713,20 @@ const Clientes = () => {
 
   //DIALOG AGREGAR CLIENTE
   const agregarCliente = () => {
+    setClienteAEditar(null);
+    setOpenAgregarCliente(true);
+  };
+
+  //DIALOG EDITAR CLIENTE
+  const editarCliente = (cliente) => {
+    setClienteAEditar(cliente);
     setOpenAgregarCliente(true);
   };
 
   //DIALOG CERRAR
   const handleCloseAgregarCliente = () => {
     setOpenAgregarCliente(false);
+    setClienteAEditar(null);
   };
 
   //DIALOG DESPUES DE GUARDAR
@@ -703,7 +739,7 @@ const Clientes = () => {
         pagado: !!c.pagado,
         enRevision: false,
       }));
-      setClientes(clientesConEstado);
+      setClientes(ordenarClientes(clientesConEstado));
       setSnackbar({
         open: true,
         type: "success",
@@ -782,12 +818,12 @@ const Clientes = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idCliente: cliente.idCliente,
-          suscripcion: nuevoEstado, // ðŸ‘ˆ true = activar, false = anular
+          suscripcion: nuevoEstado, // ðŸ'ˆ true = activar, false = anular
         }),
       });
 
       const data = await res.json();
-      console.log("ðŸ”„ SuscripciÃ³n actualizada:", data);
+      console.log("Suscripcion actualizada:", data);
 
       if (res.ok) {
         const nuevosClientes = await cargarClientesDesdeExcel();
@@ -802,7 +838,8 @@ const Clientes = () => {
   return (
     <Box
       sx={{
-        height: isMobile ? "100dvh" : "100vh",
+        minHeight: "100vh",
+        height: isMobile ? "100dvh" : "auto",
         width: "100vw",
         display: "flex",
         flexDirection: "column",
@@ -811,8 +848,10 @@ const Clientes = () => {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        overflow: "hidden",
+        overflowX: "hidden",
+        overflowY: isMobile ? "hidden" : "auto",
         paddingTop: isMobile ? 11 : 12,
+        pb: isMobile ? 0 : 4,
       }}
     >
 
@@ -821,15 +860,15 @@ const Clientes = () => {
           display: "flex",
           flexDirection: "row",
           flexWrap: "nowrap",
-          justifyContent: "center", // ðŸ‘ˆ asegura que se centre en el medio
+          justifyContent: "center",
           alignItems: "stretch",
           gap: 1.5,
           mb: 2,
           width: "100%",
-          px: isMobile ? 1 : 0,
+          px: isMobile ? 1.5 : 0,
         }}
       >
-        {/* Cuadro Ganado */}
+        {/* Tarjeta Recaudado */}
         <MotionBox
           variants={variantes}
           initial={animacionTerminada ? false : "hidden"}
@@ -837,39 +876,43 @@ const Clientes = () => {
           transition={{ delay: 2, duration: 0.8, ease: "easeOut" }}
           onAnimationComplete={() => setAnimacionTerminada(true)}
           sx={{
-            backgroundColor: "#e8f5e9",
-            border: "2px solid #66bb6a",
-            borderRadius: 2,
-            px: 1.1,
-            py: 0.5,
+            position: "relative",
+            overflow: "hidden",
+            background: "linear-gradient(135deg, #1b5e20 0%, #2e7d32 45%, #43a047 100%)",
+            borderRadius: 2.5,
+            px: 1.5,
+            py: 0.75,
             flex: "1 1 auto",
-            maxWidth: 140,
-            minWidth: 130,
-            textAlign: "center",
-            height: "64px",
+            maxWidth: 175,
+            minWidth: 140,
             display: "flex",
             flexDirection: "column",
-            justifyContent: "start",
+            justifyContent: "center",
+            gap: 0.15,
+            boxShadow: "0 4px 16px rgba(27,94,32,0.45)",
+            // Shiny diagonal
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: "-75%",
+              width: "50%",
+              height: "100%",
+              background: "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
+              transform: "skewX(-20deg)",
+              animation: `${shineCard} 3.5s ease-in-out infinite`,
+              pointerEvents: "none",
+            },
           }}
         >
-          <Typography
-            variant="subtitle2"
-            fontWeight={600}
-            color="green"
-            sx={{ fontSize: "0.69rem", mt: 0.1 }}
-          >
-            Ganado {mesCapitalizado}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
+            <Typography sx={{ fontSize: "0.62rem", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+              Recaudado · {mesCapitalizado}
+            </Typography>
+            <Typography sx={{ fontSize: "0.85rem", lineHeight: 1 }}>💰</Typography>
+          </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexGrow: 1,
-              minHeight: "1rem",
-            }}
-          >
+          <Box sx={{ position: "relative", zIndex: 1 }}>
             <ContadorGanado
               valorFinal={totalGanado}
               valorInicial={totalGanadoAnterior}
@@ -877,16 +920,12 @@ const Clientes = () => {
             />
           </Box>
 
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ fontSize: "0.7rem" }}
-          >
-            {clientes.filter(c => c.pagado).length} pagado
+          <Typography sx={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.65)", fontWeight: 500, position: "relative", zIndex: 1 }}>
+            {clientes.filter(esPagado).length} cobrados
           </Typography>
         </MotionBox>
 
-        {/* Cuadro Deuda */}
+        {/* Tarjeta Por cobrar */}
         <MotionBox
           variants={variantes}
           initial={animacionTerminada ? false : "hidden"}
@@ -894,46 +933,36 @@ const Clientes = () => {
           transition={{ delay: 2, duration: 0.8, ease: "easeOut" }}
           onAnimationComplete={() => setAnimacionTerminada(true)}
           sx={{
-            backgroundColor: "#fff3e0",
-            border: "2px solid #ff9800",
-            borderRadius: 2,
-            px: 1.1,
-            py: 0.5,
+            background: "linear-gradient(135deg, #b71c1c 0%, #c62828 45%, #e53935 100%)",
+            borderRadius: 2.5,
+            px: 1.5,
+            py: 0.75,
             flex: "1 1 auto",
-            maxWidth: 140,
-            minWidth: 120,
-            textAlign: "center",
-            height: "64px",
+            maxWidth: 175,
+            minWidth: 140,
             display: "flex",
             flexDirection: "column",
-            justifyContent: "start",
+            justifyContent: "center",
+            gap: 0.15,
+            boxShadow: "0 4px 16px rgba(183,28,28,0.4)",
           }}
         >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Typography sx={{ fontSize: "0.62rem", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+              Por cobrar
+            </Typography>
+            <Typography sx={{ fontSize: "0.85rem", lineHeight: 1 }}>⏳</Typography>
+          </Box>
+
           <Typography
-            variant="subtitle2"
-            fontWeight={600}
-            color="orange"
-            sx={{ fontSize: "0.71rem", mt: 0.1 }}
-          >
-            Deuda actual
-          </Typography>
-          <Typography
-            variant="h6"
             fontWeight={700}
-            sx={{
-              fontSize: "1rem",
-              lineHeight: 1.1,
-              color: "#d32f2f",
-            }}
+            sx={{ fontSize: "1rem", lineHeight: 1.3, color: "#fff" }}
           >
             ${totalDeuda.toLocaleString("es-CL")} CLP
           </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ fontSize: "0.7rem" }}
-          >
-            {clientes.filter(c => !c.pagado).length} deben
+
+          <Typography sx={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.65)", fontWeight: 500 }}>
+            {clientes.filter(c => !esPagado(c)).length} pendientes
           </Typography>
         </MotionBox>
       </Box>
@@ -955,7 +984,7 @@ const Clientes = () => {
           alignItems="center"
           justifyContent="space-between"
           flexDirection="row"
-          pb={2}
+          pb={0.75}
           sx={{ width: isMobile ? "100%" : "70%", }}
         >
           {/* 🔸 Título a la derecha */}
@@ -963,8 +992,8 @@ const Clientes = () => {
             <GroupIcon
               sx={{
                 color: "white",
-                fontSize: { xs: 22, sm: 28 },
-                mt: "-2px",
+                fontSize: { xs: 18, sm: 22 },
+                mt: "-1px",
                 mr: { xs: "-2px", sm: 0 },
               }}
             />
@@ -973,8 +1002,9 @@ const Clientes = () => {
               sx={{
                 color: "white",
                 fontWeight: 700,
-                fontSize: { xs: "0.9rem", sm: "1.15rem" },
+                fontSize: { xs: "0.82rem", sm: "1rem" },
                 whiteSpace: "nowrap",
+                lineHeight: 1.2,
               }}
             >
               {"Gestión Clientes".split("").map((char, i) => (
@@ -998,27 +1028,34 @@ const Clientes = () => {
               onClick={() => agregarCliente()}
               variant="outlined"
               color="inherit"
-              startIcon={<AddIcon sx={{ mr: mostrarTextoAgregar ? -0.5 : 0 }} />} // ðŸ‘ˆ reduce el espacio entre Ã­cono y texto
+              aria-label="Agregar cliente"
               sx={{
                 color: "white",
                 borderColor: "white",
                 fontSize: { xs: "0.7rem", sm: "0.85rem" },
-                px: { xs: mostrarTextoAgregar ? 1 : 0.9, sm: mostrarTextoAgregar ? 1.5 : 1 },
+                px: { xs: 0.9, sm: 1 },
                 py: { xs: 0.25, sm: 0.5 },
-                minWidth: mostrarTextoAgregar ? "auto" : 36,
-                transition: "all 0.2s ease",
-                "& .MuiButton-startIcon": {
-                  marginRight: mostrarTextoAgregar ? "2px" : 0, // ðŸ‘ˆ aÃºn mÃ¡s fino que el default (8px)
-                  marginLeft: mostrarTextoAgregar ? "-2px" : 0,
-                },
-                "&:hover": {
-                  backgroundColor: "#ffffff22",
-                  borderColor: "#ffffffcc",
-                },
+                minWidth: 36,
+                display: "flex",
+                alignItems: "center",
+                gap: 0,
+                overflow: "hidden",
+                "&:hover": { backgroundColor: "#ffffff22", borderColor: "#ffffffcc" },
               }}
-              aria-label="Agregar cliente"
             >
-              {mostrarTextoAgregar ? "Agregar Cliente" : ""}
+              <AddIcon sx={{ fontSize: 18, flexShrink: 0 }} />
+              <AnimatePresence>
+                {mostrarTextoAgregar && (
+                  <motion.span
+                    initial={{ maxWidth: 130, opacity: 1, marginLeft: 4 }}
+                    exit={{ maxWidth: 0, opacity: 0, marginLeft: 0 }}
+                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                    style={{ overflow: "hidden", whiteSpace: "nowrap", display: "block" }}
+                  >
+                    Agregar Cliente
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Button>
           </motion.div>
         </Box>
@@ -1029,7 +1066,7 @@ const Clientes = () => {
             width: isMobile ? "100%" : "70%",
             maxHeight: "80vh",
             borderRadius: "12px",
-            overflowX: isMobile ? "auto" : "hidden", // ðŸ‘ˆ scroll horizontal solo en mobile
+            overflowX: isMobile ? "auto" : "hidden", // ðŸ'ˆ scroll horizontal solo en mobile
             overflowY: "auto",
             boxShadow: "0 8px 25px rgba(0,0,0,0.4)",
             backgroundColor: "#fdfdfd",
@@ -1039,66 +1076,58 @@ const Clientes = () => {
             stickyHeader
             size="small"
             sx={{
-              minWidth: isMobile ? 400 : "auto",
+              minWidth: isMobile ? 340 : "auto",
               "& .MuiTableCell-root": {
                 fontFamily: "Poppins, sans-serif",
-                borderColor: "rgba(0,0,0,0.1)", // ðŸ‘ˆ bordes suaves
+                borderColor: "rgba(0,0,0,0.1)",
+              },
+              "& thead th, & thead .MuiTableCell-root, & .MuiTableCell-stickyHeader": {
+                borderColor: "#1e2d40 !important",
+                boxShadow: "none !important",
+                outline: "none !important",
               },
             }}
           >
             <TableHead>
               <TableRow>
+                {/* Clientes — ocupa todo el espacio disponible */}
                 <TableCell
                   sx={{
-                    backgroundColor: "#ffffff",
-                    fontWeight: "bold",
-                    color: "#1b263b",
+                    background: "#1e2d40",
+                    borderColor: "#1e2d40",
+                    fontWeight: 700,
+                    color: "rgba(255,255,255,0.9)",
                     fontFamily: "Poppins, sans-serif",
-                    fontSize: "0.85rem",
-                    minWidth: 160,
-                    py: 0.5,
+                    fontSize: { xs: "0.68rem", sm: "0.75rem" },
+                    letterSpacing: "0.4px",
+                    textTransform: "uppercase",
+                    py: 0.3,
                   }}
                 >
                   Clientes
                 </TableCell>
 
+                {/* Dot indicator — ancho mínimo fijo */}
                 <TableCell
-                  align="center"
+                  style={{ borderColor: "#1e2d40", borderBottom: "1px solid #1e2d40", borderRight: "1px solid #1e2d40", borderLeft: "1px solid #1e2d40", borderTop: "1px solid #1e2d40" }}
                   sx={{
-                    backgroundColor: "#ffffff",
-                    fontWeight: "bold",
-                    color: "#1b263b",
-                    fontFamily: "Poppins, sans-serif",
-                    fontSize: "0.85rem",
-                    width: isMobile ? 35 : 60,  // igual que el body
-                    minWidth: isMobile ? 35 : 60,
-                    py: 0.5,
-                    pr: 0,                     // espacio pequeÃ±o a la derecha
-                    pl: 0,                     // ðŸ‘ˆ eliminamos padding a la izquierda
-                  }}
-                >
-                  Estado
-                </TableCell>
-
-
-                {/* Boton 1 */}
-                <TableCell
-                  align="center"
-                  sx={{
-                    backgroundColor: "#ffffff",
-                    width: isMobile ? 35 : 140,
-                    px: isMobile ? 0 : 1,
+                    background: "#1e2d40",
+                    width: isMobile ? 28 : 32,
+                    minWidth: isMobile ? 28 : 32,
+                    maxWidth: isMobile ? 28 : 32,
+                    py: 0.3,
+                    px: 0,
                   }}
                 />
 
-                {/* Boton 2 */}
+                {/* Sin label — abarca las 2 columnas de botones */}
                 <TableCell
-                  align="center"
+                  colSpan={2}
                   sx={{
-                    backgroundColor: "#ffffff",
-                    width: isMobile ? 35 : 170,
-                    px: isMobile ? 0 : 1,
-                    pr: isMobile ? 0.5 : 0,
+                    background: "#1e2d40",
+                    borderColor: "#1e2d40",
+                    py: 0.3,
+                    px: 1,
                   }}
                 />
               </TableRow>
@@ -1120,7 +1149,7 @@ const Clientes = () => {
                         ? "linear-gradient(90deg, rgba(255,215,0,0.22), rgba(255,223,128,0.18))"
                         : estaAlDia
                           ? "rgba(200, 255, 200, 0.12)"
-                          : "transparent",
+                          : "rgba(239,83,80,0.07)",
                       transition: "background 0.3s ease-in-out",
 
                       "&:hover": {
@@ -1128,7 +1157,7 @@ const Clientes = () => {
                           ? "linear-gradient(90deg, rgba(255,215,0,0.32), rgba(255,223,128,0.25))"
                           : estaAlDia
                             ? "rgba(200, 255, 200, 0.22)"
-                            : "rgba(0,0,0,0.03)",
+                            : "rgba(239,83,80,0.14)",
                       },
 
                       // Efecto de brillo diagonal solo si esta suscrito
@@ -1167,8 +1196,8 @@ const Clientes = () => {
                     {/* Cliente */}
                     <TableCell
                       sx={{
-                        minWidth: isMobile ? 240 : 240, // aumentamos mÃ­nimo
-                        maxWidth: isMobile ? 300 : 400, // aumentamos mÃ¡ximo
+                        minWidth: isMobile ? 150 : 360,
+                        maxWidth: isMobile ? 200 : 700,
                         whiteSpace: "normal",
                         wordBreak: "break-word",
                         overflow: "hidden",
@@ -1205,16 +1234,14 @@ const Clientes = () => {
                         </Typography>
 
                         {/* Iconos */}
-                        <Box sx={{ display: "flex", gap: 0.5 }}>
-                          {/* BotÃ³n acciones */}
-                          <Tooltip title="Acciones Cliente" arrow>
+                        <Box sx={{ display: "flex", gap: 0.4, alignItems: "center" }}>
+                          {/* Botón editar */}
+                          <Tooltip title="Editar Cliente" arrow>
                             <IconButton
-                              onClick={() => datosCliente(cliente)}
+                              onClick={() => editarCliente(cliente)}
                               size="small"
                               sx={{
-                                background: cliente.enRevision
-                                  ? "linear-gradient(135deg, #e74c3c, #c0392b)"
-                                  : "linear-gradient(135deg, #2ecc71, #27ae60)",
+                                background: "linear-gradient(135deg, #1565C0, #1976D2)",
                                 width: 22,
                                 height: 22,
                                 p: 0.3,
@@ -1222,19 +1249,17 @@ const Clientes = () => {
                                 boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
                                 color: "#fff",
                                 "&:hover": {
-                                  background: cliente.enRevision
-                                    ? "linear-gradient(135deg, #ec7063, #e74c3c)"
-                                    : "linear-gradient(135deg, #58d68d, #2ecc71)",
+                                  background: "linear-gradient(135deg, #1976D2, #42A5F5)",
                                   transform: "scale(1.1)",
                                   transition: "all 0.2s ease",
                                 },
                               }}
                             >
-                              <ConfirmationNumberRoundedIcon fontSize="inherit" sx={{ fontSize: 14 }} />
+                              <EditRoundedIcon fontSize="inherit" sx={{ fontSize: 13 }} />
                             </IconButton>
                           </Tooltip>
 
-                          {/* BotÃ³n eliminar */}
+                          {/* Botón eliminar */}
                           <Tooltip title="Eliminar Cliente" arrow>
                             <IconButton
                               onClick={() => abrirDialog(cliente.sitioWeb)}
@@ -1247,7 +1272,6 @@ const Clientes = () => {
                                 borderRadius: "8px",
                                 boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
                                 color: "#fff",
-                                ml: 0.5,
                                 "&:hover": {
                                   background: "linear-gradient(135deg, #ef5350, #e53935)",
                                   transform: "scale(1.1)",
@@ -1255,27 +1279,23 @@ const Clientes = () => {
                                 },
                               }}
                             >
-                              <DeleteForeverRoundedIcon fontSize="inherit" sx={{ fontSize: 14 }} />
+                              <DeleteForeverRoundedIcon fontSize="inherit" sx={{ fontSize: 13 }} />
                             </IconButton>
                           </Tooltip>
 
-                          {/* ðŸŸ¢ BotÃ³n suscribir manualmente */}
+                          {/* Botón suscribir manualmente */}
                           <Tooltip
-                            title={
-                              cliente.suscripcion
-                                ? "Anular suscripciÃ³n" // ðŸ‘ˆ cambia tooltip
-                                : "Activar suscripciÃ³n manual"
-                            }
+                            title={cliente.suscripcion ? "Anular suscripción" : "Activar suscripción"}
                             arrow
                           >
                             <IconButton
                               onClick={() =>
-                                actualizarASuscrito(cliente, !cliente.suscripcion) // ðŸ‘ˆ enviamos nuevo estado
+                                actualizarASuscrito(cliente, !cliente.suscripcion) // ðŸ'ˆ enviamos nuevo estado
                               }
                               size="small"
                               sx={{
                                 background: cliente.suscripcion
-                                  ? "linear-gradient(135deg, #f44336, #d32f2f)" // ðŸ”´ rojo si estÃ¡ suscrito
+                                  ? "linear-gradient(135deg, #f44336, #d32f2f)" // ðŸ"´ rojo si estÃ¡ suscrito
                                   : "linear-gradient(135deg, #43a047, #2e7d32)", // ðŸŸ¢ verde si no
                                 width: 22,
                                 height: 22,
@@ -1283,7 +1303,6 @@ const Clientes = () => {
                                 borderRadius: "8px",
                                 boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
                                 color: "#fff",
-                                ml: 0.5,
                                 "&:hover": {
                                   background: cliente.suscripcion
                                     ? "linear-gradient(135deg, #ef5350, #e53935)"
@@ -1293,7 +1312,7 @@ const Clientes = () => {
                                 },
                               }}
                             >
-                              <HowToRegRoundedIcon fontSize="inherit" sx={{ fontSize: 14 }} />
+                              <HowToRegRoundedIcon fontSize="inherit" sx={{ fontSize: 13 }} />
                             </IconButton>
                           </Tooltip>
                         </Box>
@@ -1304,20 +1323,20 @@ const Clientes = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: isMobile ? 35 : 60,  // hacemos la celda mÃ¡s ajustada
-                        paddingLeft: 0,             // eliminamos espacio extra a la izquierda
-                        paddingRight: 0,             // un poco de espacio a la derecha para no pegarlo al borde
+                        width: isMobile ? 28 : 48,
+                        minWidth: isMobile ? 28 : 48,
+                        maxWidth: isMobile ? 28 : 48,
+                        paddingLeft: 0,
+                        paddingRight: 0,
                       }}
                     >
                       <Box
                         sx={{
                           display: "flex",
-                          justifyContent: "flex-start",
-                          paddingLeft: 1,
+                          justifyContent: "center",
                           alignItems: "center",
                           height: "100%",
                           minHeight: "50px",
-                          gap: 0.5,                    // espacio pequeÃ±o si agregas mÃ¡s elementos
                         }}
                       >
                         {estaSuscrito ? (
@@ -1345,8 +1364,8 @@ const Clientes = () => {
                     </TableCell>
 
 
-                    {/* === CELDA 1: BotÃ³n COBRAR (siempre visible) === */}
-                    <TableCell align="center">
+                    {/* === CELDA 1: Botón COBRAR (siempre visible) === */}
+                    <TableCell align="center" sx={{ width: isMobile ? 72 : 130, minWidth: isMobile ? 72 : 130, pr: isMobile ? 0.5 : 1 }}>
                       <Box
                         sx={{
                           display: "flex",
@@ -1369,8 +1388,8 @@ const Clientes = () => {
                           }
                           disabled={!estaSuscrito && (estaAlDia || botonesBloqueados.includes(index))}
                           sx={{
-                            minWidth: isMobile ? "auto" : undefined,
-                            px: isMobile ? 1.3 : 2.2,
+                            minWidth: isMobile ? "auto" : 96,
+                            px: isMobile ? 1.3 : 2,
                             py: isMobile ? 0.5 : 0.8,
                             fontSize: isMobile ? 0 : "0.8rem",
                             fontWeight: 600,
@@ -1400,15 +1419,16 @@ const Clientes = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: isMobile ? 55 : 170,
-                        pl: 0,        // ðŸ”¹ eliminar padding izquierdo
-                        pr: 1,        // ðŸ”¹ mantener un poquito de espacio a la derecha
+                        width: isMobile ? 72 : 155,
+                        minWidth: isMobile ? 72 : 155,
+                        pl: isMobile ? 0.5 : 1,
+                        pr: isMobile ? 1 : 2,
                       }}
                     >
                       <Box
                         sx={{
                           display: "flex",
-                          justifyContent: "flex-start", // ðŸ”¹ pegado a la izquierda
+                          justifyContent: "flex-start", // ðŸ"¹ pegado a la izquierda
                           alignItems: "center",
                           minHeight: "50px",
                           gap: 0.5, // espacio entre iconos y/o botÃ³n
@@ -1429,16 +1449,16 @@ const Clientes = () => {
                                   size="small"
                                   sx={{
                                     minWidth: isMobile ? "auto" : undefined,
-                                    px: isMobile ? 1.3 : 2.2,
+                                    px: isMobile ? 1.3 : 2,
                                     py: isMobile ? 0.5 : 0.8,
                                     fontSize: isMobile ? 0 : "0.8rem",
                                     fontWeight: 600,
                                     transition: "all 0.3s ease",
                                     "& .emoji": { fontSize: "1rem" },
 
-                                    // ðŸ”¹ Fondo mÃ¡s visible
+                                    // ðŸ"¹ Fondo mÃ¡s visible
                                     background: "linear-gradient(90deg, rgba(255,215,0,0.35), rgba(255,195,0,0.2))",
-                                    // ðŸ”¹ Borde mÃ¡s oscuro
+                                    // ðŸ"¹ Borde mÃ¡s oscuro
                                     border: "1px solid rgba(184,134,11,0.8)",
                                     color: "#b8860b",
                                     boxShadow: "0 0 8px rgba(184,134,11,0.5)",
@@ -1569,7 +1589,7 @@ const Clientes = () => {
             sx={{
               mt: 2,
               display: "flex",
-              justifyContent: "flex-end",
+              justifyContent: "center",
               alignItems: "center",
               width: isMobile ? "100%" : "70%",
               gap: 1,
@@ -1582,6 +1602,8 @@ const Clientes = () => {
               sx={{
                 color: "white",
                 borderColor: "white",
+                fontSize: isMobile ? "0.75rem" : "0.875rem",
+                px: isMobile ? 1.5 : 2,
                 "&:hover": {
                   borderColor: "#E95420",
                   backgroundColor: "#E95420",
@@ -1590,8 +1612,8 @@ const Clientes = () => {
             >
               Anterior
             </Button>
-            <Typography variant="body2" sx={{ color: "white" }}>
-              PÃ¡gina {paginaActual} de {totalPaginas}
+            <Typography variant="body2" sx={{ color: "white", minWidth: 90, textAlign: "center" }}>
+              Página {paginaActual} de {totalPaginas}
             </Typography>
             <Button
               variant="outlined"
@@ -1600,6 +1622,8 @@ const Clientes = () => {
               sx={{
                 color: "white",
                 borderColor: "white",
+                fontSize: isMobile ? "0.75rem" : "0.875rem",
+                px: isMobile ? 1.5 : 2,
                 "&:hover": {
                   borderColor: "#E95420",
                   backgroundColor: "#E95420",
@@ -1639,7 +1663,7 @@ const Clientes = () => {
           borderRadius: "999px",
           background: "rgba(0,0,0,0.55)",
           border: "1px solid rgba(255,255,255,0.25)",
-          display: "flex",
+          display: mostrarMenuInferior ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
@@ -1752,7 +1776,7 @@ const Clientes = () => {
               color: "#FFF",
               zIndex: 6,
               "&:hover": { backgroundColor: "rgba(255,255,255,.15)" },
-              animation: openDialogCobro ? "spinTwice 0.6s ease-in-out" : "none", // ðŸ‘ˆ depende del estado del dialog
+              animation: openDialogCobro ? "spinTwice 0.6s ease-in-out" : "none", // ðŸ'ˆ depende del estado del dialog
               animationFillMode: "forwards",
               "@keyframes spinTwice": {
                 "0%": { transform: "rotate(0deg)" },
@@ -1770,13 +1794,13 @@ const Clientes = () => {
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: { xs: 0.6, sm: 1 }, // ðŸ‘ˆ menos separaciÃ³n
-              px: { xs: 1, sm: 1.5 },  // ðŸ‘ˆ padding horizontal reducido
-              py: { xs: 0.3, sm: 0.6 }, // ðŸ‘ˆ padding vertical reducido
+              gap: { xs: 0.6, sm: 1 }, // ðŸ'ˆ menos separaciÃ³n
+              px: { xs: 1, sm: 1.5 },  // ðŸ'ˆ padding horizontal reducido
+              py: { xs: 0.3, sm: 0.6 }, // ðŸ'ˆ padding vertical reducido
               borderRadius: "999px",
               bgcolor: "rgba(0,0,0,0.55)",
               backdropFilter: "blur(4px)",
-              boxShadow: "0 3px 10px rgba(0,0,0,.3)", // ðŸ‘ˆ sombra mÃ¡s sutil
+              boxShadow: "0 3px 10px rgba(0,0,0,.3)", // ðŸ'ˆ sombra mÃ¡s sutil
             }}
           >
             <Typography
@@ -2229,11 +2253,12 @@ const Clientes = () => {
         cliente={clienteSeleccionado}
       />
 
-      {/* DIALOG Agregar Cliente */}
+      {/* DIALOG Agregar / Editar Cliente */}
       <DialogAgregarCliente
         open={openAgregarCliente}
         onClose={handleCloseAgregarCliente}
         onSave={handleSaveCliente}
+        clienteEditar={clienteAEditar}
       />
 
       {/* DIALOG CONFIRMAR ELIMINACIÓN */}

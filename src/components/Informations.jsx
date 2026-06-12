@@ -1,9 +1,9 @@
 import { Box, Typography, Container, Grid, ListItem, ListItemIcon, ListItemText, useMediaQuery, useTheme } from "@mui/material";
 import React, { useState, useEffect, memo, useMemo } from "react";
 import { motion } from "framer-motion";
-import { FaCode } from "react-icons/fa";
 import { useInView } from 'react-intersection-observer';
 import Public from '@mui/icons-material/Public';
+import Code from '@mui/icons-material/Code';
 import GroupAdd from '@mui/icons-material/GroupAdd';
 import Verified from '@mui/icons-material/Verified'
 import DashboardCustomize from '@mui/icons-material/DashboardCustomize';
@@ -354,7 +354,7 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
     `,
         backgroundSize: "50px 50px",
         backgroundPosition: "center",
-        backgroundAttachment: "fixed",
+        backgroundAttachment: "scroll",
         backgroundColor: "rgba(6,31,53,0.95)", // base oscura para contraste
 
         borderBottomLeftRadius: isMobile ? "90px" : "120px",
@@ -439,7 +439,7 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
                 height: "100%",
               }}
             >
-              <FaCode size={17} color="black" />
+              <Code sx={{ fontSize: 17, color: "black" }} />
             </motion.div>
           </Box>
 

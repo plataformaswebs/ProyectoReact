@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, IconButton, useMediaQuery } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { AnimatePresence, motion } from "framer-motion";
@@ -355,7 +355,7 @@ const DialogTrabajoEnRevision = ({ open, onClose }) => {
                         animate={{
                           scale: [0.8, 1.4, 0.8], // un poco más dramático
                           opacity: [0.3, 1, 0.3],
-                          y: [0, -4, 0], // cambio de x a y para simular “bote vertical”
+                          y: [0, -4, 0], // cambio de x a y para simular "bote vertical"
                           rotate: [0, 15, -15, 0], // pequeña rotación para dinamismo
                         }}
                         transition={{

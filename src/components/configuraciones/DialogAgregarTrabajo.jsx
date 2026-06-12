@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Snackbar, Alert, Slider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, IconButton, Slide, Box, Typography, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, } from "@mui/material";
+import { Snackbar, Alert, Slider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, IconButton, Slide, Box, Typography, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, useTheme, useMediaQuery } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,11 +18,13 @@ const getGradient = (val) => {
   return "linear-gradient(90deg,#81c784,#388e3c)"; // verde
 };
 
-export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoInicial }) {
+export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoInicial, trabajoEditar }) {
+  const modoEditar = !!trabajoEditar;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "success" });
   const [success, setSuccess] = useState(false);
-
 
   const [form, setForm] = useState({
     trabajo: "",
@@ -31,16 +33,16 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
     nombreCliente: "",
     emailCliente: "",
     telefonoCliente: "",
+    logoCliente: "",
   });
 
   useEffect(() => {
     if (success) {
       const timer = setTimeout(() => {
-        onSave(form);   // 👈 notifica al padre después de los 3 s
+        onSave(form);
         setSuccess(false);
         onClose();
       }, 3000);
-
       return () => clearTimeout(timer);
     }
   }, [success, onClose, onSave, form]);
@@ -48,17 +50,29 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
   useEffect(() => {
     if (open) {
       setSuccess(false);
-      //AUTOCOMPLETAR DESDE REVISIÓN 
-      setForm({
-        trabajo: trabajoInicial?.Negocio || "",
-        tipoApp: trabajoInicial?.tipoApp || "1",
-        progreso: trabajoInicial?.Porcentaje || 0,
-        nombreCliente: "",
-        emailCliente: trabajoInicial?.EmailCliente || "",
-        telefonoCliente: trabajoInicial?.TelefonoCliente || "",
-      });
+      if (modoEditar) {
+        setForm({
+          trabajo: trabajoEditar.SitioWeb || "",
+          tipoApp: String(trabajoEditar.TipoApp || trabajoEditar.tipoApp || "1"),
+          progreso: Number(trabajoEditar.Porcentaje) || 0,
+          nombreCliente: trabajoEditar.NombreCliente || "",
+          emailCliente: trabajoEditar.EmailCliente || "",
+          telefonoCliente: String(trabajoEditar.TelefonoCliente || ""),
+          logoCliente: trabajoEditar.LogoCliente || "",
+        });
+      } else {
+        setForm({
+          trabajo: trabajoInicial?.Negocio || "",
+          tipoApp: trabajoInicial?.tipoApp || "1",
+          progreso: trabajoInicial?.Porcentaje || 0,
+          nombreCliente: "",
+          emailCliente: trabajoInicial?.EmailCliente || "",
+          telefonoCliente: trabajoInicial?.TelefonoCliente || "",
+          logoCliente: "",
+        });
+      }
     }
-  }, [open, trabajoInicial]);
+  }, [open, trabajoInicial, trabajoEditar, modoEditar]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,22 +86,37 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
       return;
     }
 
+    const base = window.location.hostname === "localhost" ? "http://localhost:8888" : "";
+
     try {
       setLoading(true);
 
-      const url = `${window.location.hostname === "localhost"
-        ? "http://localhost:8888"
-        : ""
-        }/.netlify/functions/agregarTrabajo`;
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Error al guardar");
+      if (modoEditar) {
+        const response = await fetch(`${base}/.netlify/functions/actualizarTrabajo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            SitioWeb: trabajoEditar.SitioWeb,
+            nuevoNombre: form.trabajo,
+            nuevoTipoApp: form.tipoApp,
+            nuevoPorcentaje: Number(form.progreso),
+            nuevoNombreCliente: form.nombreCliente,
+            nuevoEmailCliente: form.emailCliente,
+            nuevoTelefonoCliente: form.telefonoCliente,
+            nuevoLogoCliente: form.logoCliente,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Error al editar");
+      } else {
+        const response = await fetch(`${base}/.netlify/functions/agregarTrabajo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Error al guardar");
+      }
 
       setLoading(false);
       setSuccess(true);
@@ -106,19 +135,18 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
     <Dialog
       open={open}
       onClose={(event, reason) => {
-        if (reason === "backdropClick" || reason === "escapeKeyDown") {
-          return;
-        }
+        if (reason === "backdropClick" || reason === "escapeKeyDown") return;
         onClose();
       }}
       maxWidth="sm"
       fullWidth
+      fullScreen={isMobile}
       scroll="body"
       TransitionComponent={Transition}
       PaperProps={{
         sx: {
           mt: { xs: 0, sm: -3 },
-          borderRadius: 2,
+          borderRadius: { xs: 0, sm: 2 },
           border: "1px solid rgba(255,167,38,.35)",
           boxShadow: "0 24px 64px rgba(0,0,0,.45)",
           overflow: "hidden",
@@ -239,7 +267,7 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
               fontSize: { xs: "1.1rem", sm: "1.25rem" },
             }}
           >
-            {success ? "¡Éxito!" : "Agregar Trabajo"}
+            {success ? "¡Éxito!" : modoEditar ? "Editar Trabajo" : "Agregar Trabajo"}
           </Typography>
 
           {/* Ícono a la derecha */}
@@ -423,22 +451,24 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
                         value={form.telefonoCliente}
                         onChange={(e) => {
                           const onlyNums = e.target.value.replace(/\D/g, "");
-                          setForm((prev) => ({
-                            ...prev,
-                            telefonoCliente: onlyNums.slice(0, 12),
-                          }));
+                          setForm((prev) => ({ ...prev, telefonoCliente: onlyNums.slice(0, 12) }));
                         }}
                         required
                         size="small"
-                        inputProps={{
-                          inputMode: "numeric",
-                          pattern: "[0-9]*",
-                          maxLength: 12,
-                        }}
+                        inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 12 }}
                         sx={{ backgroundColor: "#fff", borderRadius: 2 }}
-                        InputProps={{
-                          startAdornment: <span style={{ marginRight: 6 }}>📱</span>,
-                        }}
+                        InputProps={{ startAdornment: <span style={{ marginRight: 6 }}>📱</span> }}
+                      />
+
+                      <TextField
+                        label="URL Logo Cliente"
+                        name="logoCliente"
+                        value={form.logoCliente}
+                        onChange={handleChange}
+                        size="small"
+                        placeholder="https://ejemplo.com/logo.png"
+                        sx={{ backgroundColor: "#fff", borderRadius: 2 }}
+                        InputProps={{ startAdornment: <span style={{ marginRight: 6 }}>🖼️</span> }}
                       />
 
                     </Box>
@@ -574,7 +604,7 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
             disabled
             sx={{ fontWeight: 700, textTransform: "none" }}
           >
-            Nuevo Trabajo Registrado💰
+            {modoEditar ? "Trabajo Actualizado ✓" : "Nuevo Trabajo Registrado💰"}
           </Button>
         ) : (
           <>
@@ -587,9 +617,7 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
                 px: 3,
                 minWidth: 160,
                 border: "1px solid #E65100",
-                "&:hover": {
-                  backgroundColor: "rgba(230,81,0,0.08)",
-                },
+                "&:hover": { backgroundColor: "rgba(230,81,0,0.08)" },
               }}
             >
               Cancelar
@@ -604,15 +632,18 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
                 fontWeight: 700,
                 px: 3,
                 minWidth: 160,
-                background: "linear-gradient(90deg,#FF9800,#F57C00)",
+                background: modoEditar
+                  ? "linear-gradient(90deg,#1565C0,#0D47A1)"
+                  : "linear-gradient(90deg,#FF9800,#F57C00)",
                 "&:hover": {
-                  background: "linear-gradient(90deg,#FFA726,#FB8C00)",
+                  background: modoEditar
+                    ? "linear-gradient(90deg,#1976D2,#1565C0)"
+                    : "linear-gradient(90deg,#FFA726,#FB8C00)",
                 },
               }}
             >
-              Crear Trabajo
+              {modoEditar ? "Guardar Cambios" : "Crear Trabajo"}
             </Button>
-
           </>
         )}
       </DialogActions>

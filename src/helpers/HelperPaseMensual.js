@@ -1,5 +1,4 @@
 // 📂 helpers/HelperPaseMensual.js
-import * as XLSX from "xlsx";
 
 // 🔗 Mapeo entre IDs y columnas del Excel
 const misionMap = {
@@ -46,9 +45,13 @@ export const cargarPaseMensual = async (
   sitioOverride = null
 ) => {
   try {
-    const resp = await fetch(`${urlExcel}?t=${Date.now()}`);
+    const [xlsxMod, resp] = await Promise.all([
+      import("xlsx"),
+      fetch(`${urlExcel}?t=${Date.now()}`),
+    ]);
     if (!resp.ok) throw new Error("❌ No se pudo obtener el archivo Excel");
 
+    const XLSX = xlsxMod.default ?? xlsxMod;
     const buffer = await resp.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const hoja = workbook.Sheets[workbook.SheetNames[0]];

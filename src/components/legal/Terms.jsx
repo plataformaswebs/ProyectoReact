@@ -1,4 +1,4 @@
-export default function Terms() {
+﻿export default function Terms() {
     return (
         <div
             style={{
@@ -42,7 +42,7 @@ export default function Terms() {
 
                 <p style={pStyle}>
                     No se garantiza disponibilidad continua ni tiempos de respuesta
-                    específicos. El servicio se proporciona “tal cual”.
+                    específicos. El servicio se proporciona "tal cual".
                 </p>
 
                 <hr style={{ margin: "28px 0", borderColor: "#e5e7eb" }} />

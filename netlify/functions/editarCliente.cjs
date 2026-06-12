@@ -2,9 +2,9 @@ const AWS = require("aws-sdk");
 const XLSX = require("xlsx");
 require("dotenv").config();
 
-const BUCKET_NAME = process.env.BUCKET_NAME;
-const REGION = process.env.MY_AWS_REGION || "us-east-1";
-const FILE_KEY = "Trabajos.xlsx";
+const BUCKET_NAME = process.env.BUCKET_NAME || "plataformas-web-buckets";
+const REGION = process.env.MY_AWS_REGION || "us-east-2";
+const FILE_KEY = "Clientes.xlsx";
 
 AWS.config.update({
     accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
@@ -34,70 +34,77 @@ exports.handler = async (event) => {
     }
 
     try {
-        console.log("📦 event.body recibido:", event.body);
-
         const body = JSON.parse(event.body || "{}");
-        const { trabajo, tipoApp, progreso, nombreCliente, emailCliente, telefonoCliente, logoCliente } = body;
+        const {
+            idCliente,
+            nombreCliente,
+            sitioWeb,
+            URL,
+            telefono,
+            correo,
+            pagado,
+            valor,
+            estado,
+            logoCliente,
+            internacional,
+        } = body;
 
-        // 🔥 Validaciones básicas
-        if (!trabajo || !tipoApp || !nombreCliente || !emailCliente || !telefonoCliente) {
+        if (!idCliente) {
             return {
                 statusCode: 400,
                 headers: corsHeaders,
-                body: JSON.stringify({ message: "Faltan campos requeridos" }),
+                body: JSON.stringify({ message: "Falta idCliente" }),
             };
         }
 
-        // Leer Excel desde S3
         const s3Data = await s3.getObject({ Bucket: BUCKET_NAME, Key: FILE_KEY }).promise();
         const workbook = XLSX.read(s3Data.Body, { type: "buffer" });
         const hoja = workbook.Sheets[workbook.SheetNames[0]];
         const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
 
-        // Crear nueva fila
-        const nuevoTrabajo = {
-            SitioWeb: trabajo,
-            TipoApp: parseInt(tipoApp, 10),
-            Porcentaje: progreso ?? 0,
-            NombreCliente: nombreCliente,
-            EmailCliente: emailCliente,
-            TelefonoCliente: telefonoCliente,
-            LogoCliente: logoCliente || "",
-            Estado: 1,
-            FechaCreacion: new Date().toISOString(),
-        };
-        datos.push(nuevoTrabajo);
+        const idx = datos.findIndex((d) => String(d.idCliente) === String(idCliente));
+        if (idx === -1) {
+            return {
+                statusCode: 404,
+                headers: corsHeaders,
+                body: JSON.stringify({ message: "Cliente no encontrado" }),
+            };
+        }
 
-        console.log("🆕 Trabajo agregado:", nuevoTrabajo);
+        // Actualizar solo los campos enviados
+        if (nombreCliente !== undefined) datos[idx].cliente = nombreCliente;
+        if (sitioWeb !== undefined) datos[idx].sitioWeb = sitioWeb;
+        if (URL !== undefined) datos[idx].URL = URL;
+        if (telefono !== undefined) datos[idx].telefono = telefono;
+        if (correo !== undefined) datos[idx].correo = correo;
+        if (pagado !== undefined) datos[idx].pagado = pagado;
+        if (valor !== undefined) datos[idx].valor = valor;
+        if (estado !== undefined) datos[idx].estado = estado;
+        if (logoCliente !== undefined) datos[idx].logoCliente = logoCliente;
+        if (internacional !== undefined) datos[idx].internacional = internacional;
 
-        // Subir a S3
         const nuevaHoja = XLSX.utils.json_to_sheet(datos);
         workbook.Sheets[workbook.SheetNames[0]] = nuevaHoja;
         const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 
-        console.log("⏫ Subiendo archivo a S3...");
         await s3.putObject({
             Bucket: BUCKET_NAME,
             Key: FILE_KEY,
             Body: buffer,
             ContentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         }).promise();
-        console.log("✅ Subida completada");
 
         return {
             statusCode: 200,
             headers: corsHeaders,
-            body: JSON.stringify({
-                message: "Trabajo agregado correctamente",
-                trabajo: nuevoTrabajo,
-            }),
+            body: JSON.stringify({ message: "Cliente actualizado correctamente", idCliente }),
         };
     } catch (error) {
-        console.error("❌ Error al agregar trabajo:", error);
+        console.error("❌ Error al editar cliente:", error);
         return {
             statusCode: 500,
             headers: corsHeaders,
-            body: JSON.stringify({ message: "Error interno del servidor" }),
+            body: JSON.stringify({ message: "Error interno", error: error.message }),
         };
     }
 };

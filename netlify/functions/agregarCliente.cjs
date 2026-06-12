@@ -48,6 +48,7 @@ exports.handler = async (event) => {
             valor,
             estado,
             logoCliente,
+            internacional,
         } = body;
 
         // 🧱 Validaciones mínimas
@@ -98,6 +99,7 @@ exports.handler = async (event) => {
             fechaPago: new Date().toISOString().split("T")[0], // interno, auto generado
             estado: estado ?? 1,
             logoCliente: logoCliente || "",
+            internacional: internacional ?? 0,
         };
 
         datos.push(nuevoCliente);

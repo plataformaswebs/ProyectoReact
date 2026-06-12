@@ -37,7 +37,17 @@ exports.handler = async (event) => {
         console.log("📦 event.body recibido:", event.body);
 
         const body = JSON.parse(event.body || "{}");
-        const { SitioWeb, nuevoPorcentaje, nuevoEstado } = body;
+        const {
+            SitioWeb,
+            nuevoPorcentaje,
+            nuevoEstado,
+            nuevoNombre,
+            nuevoNombreCliente,
+            nuevoEmailCliente,
+            nuevoTelefonoCliente,
+            nuevoTipoApp,
+            nuevoLogoCliente,
+        } = body;
 
         if (!SitioWeb) {
             return {
@@ -64,8 +74,14 @@ exports.handler = async (event) => {
                 console.log("🧪 Coincidencia encontrada:", row.SitioWeb);
                 trabajoFinal = {
                     ...row,
+                    SitioWeb: nuevoNombre !== undefined ? nuevoNombre : row.SitioWeb,
                     Porcentaje: typeof nuevoPorcentaje === "number" ? nuevoPorcentaje : row.Porcentaje,
                     Estado: typeof nuevoEstado === "number" ? nuevoEstado : row.Estado,
+                    NombreCliente: nuevoNombreCliente !== undefined ? nuevoNombreCliente : row.NombreCliente,
+                    EmailCliente: nuevoEmailCliente !== undefined ? nuevoEmailCliente : row.EmailCliente,
+                    TelefonoCliente: nuevoTelefonoCliente !== undefined ? nuevoTelefonoCliente : row.TelefonoCliente,
+                    TipoApp: nuevoTipoApp !== undefined ? parseInt(nuevoTipoApp, 10) : row.TipoApp,
+                    LogoCliente: nuevoLogoCliente !== undefined ? nuevoLogoCliente : row.LogoCliente,
                     FechaCreacion: new Date().toISOString(),
                 };
                 return trabajoFinal;

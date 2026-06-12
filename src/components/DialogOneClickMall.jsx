@@ -64,7 +64,7 @@ export default function DialogOneClickMall({
 
 
 
-  // ðŸ” Validar sitio web y buscar en Excel (LOCK REAL)
+  // ðŸ" Validar sitio web y buscar en Excel (LOCK REAL)
   const handleValidateWebsite = async () => {
     if (sitioWeb.trim()) setTouched(true);
 
@@ -233,7 +233,7 @@ export default function DialogOneClickMall({
       TransitionComponent={Transition}
       sx={{
         "& .MuiDialog-container": {
-          alignItems: { xs: "flex-start", sm: "center" }, // ðŸ“± arriba, ðŸ–¥ï¸ centrado
+          alignItems: { xs: "flex-start", sm: "center" }, // ðŸ"± arriba, ðŸ–¥ï¸ centrado
         },
       }}
       PaperProps={{
@@ -392,7 +392,7 @@ export default function DialogOneClickMall({
                     display: "block",
                     fontSize: { xs: "0.75rem", sm: "0.9rem" },
                     color: "#6A1B9A",
-                    mt: 0.1, // ðŸ‘ˆ mÃ¡s junto al texto superior
+                    mt: 0.1, // ðŸ'ˆ mÃ¡s junto al texto superior
                     fontWeight: 400,
                   }}
                 >
@@ -444,7 +444,7 @@ export default function DialogOneClickMall({
                   exit={{ opacity: 0, y: -10, transition: { duration: 0.4 } }}
                   style={{ width: "100%" }}
                 >
-                  {/* ðŸ“‹ TÃ­tulo centrado */}
+                  {/* ðŸ"' TÃ­tulo centrado */}
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -460,7 +460,7 @@ export default function DialogOneClickMall({
                     Cliente - Plataformas web
                   </Typography>
 
-                  {/* ðŸ”² Contenedor del cliente */}
+                  {/* ðŸ"² Contenedor del cliente */}
                   <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{
@@ -481,7 +481,7 @@ export default function DialogOneClickMall({
                         overflow: "hidden",
                       }}
                     >
-                      {/* ðŸ”¹ Borde superior animado */}
+                      {/* ðŸ"¹ Borde superior animado */}
                       <Box
                         sx={{
                           position: "absolute",
@@ -528,7 +528,7 @@ export default function DialogOneClickMall({
                         </Box>
                       </motion.div>
 
-                      {/* ðŸ‘¤ Datos principales */}
+                      {/* ðŸ'¤ Datos principales */}
                       <Box sx={{ mt: 2 }}>
                         <Typography
                           sx={{
@@ -561,7 +561,7 @@ export default function DialogOneClickMall({
                     </Box>
                   </motion.div>
 
-                  {/* ðŸ”’ Mensaje de confianza WebPay (sin cambios, solo animado al aparecer) */}
+                  {/* ðŸ"' Mensaje de confianza WebPay (sin cambios, solo animado al aparecer) */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{
@@ -570,7 +570,7 @@ export default function DialogOneClickMall({
                       transition: { delay: 0.3, duration: 0.5 },
                     }}
                   >
-                    {/* ðŸ”’ Mensaje de confianza WebPay */}
+                    {/* ðŸ"' Mensaje de confianza WebPay */}
                     <Box
                       sx={{
                         width: "100%",
@@ -588,7 +588,7 @@ export default function DialogOneClickMall({
                         flexWrap: "wrap",
                       }}
                     >
-                      {/* ðŸ“ Texto informativo */}
+                      {/* ðŸ" Texto informativo */}
                       <Box
                         sx={{
                           flex: "1 1 65%",
@@ -636,7 +636,7 @@ export default function DialogOneClickMall({
                         </Typography>
                       </Box>
 
-                      {/* ðŸ›¡ï¸ Escudo protector animado con pulso */}
+                      {/* ðŸ'¡ï¸ Escudo protector animado con pulso */}
                       <Box
                         sx={{
                           flex: "0 0 auto",
@@ -650,7 +650,7 @@ export default function DialogOneClickMall({
                           justifyContent: "center",
                         }}
                       >
-                        {/* ðŸ”° Capa del escudo principal */}
+                        {/* ðŸ"° Capa del escudo principal */}
                         <Box
                           sx={{
                             position: "absolute",
@@ -683,7 +683,7 @@ export default function DialogOneClickMall({
                           }}
                         />
 
-                        {/* ðŸ”’ Candado central */}
+                        {/* ðŸ"' Candado central */}
                         <Typography
                           sx={{
                             position: "relative",
@@ -721,9 +721,9 @@ export default function DialogOneClickMall({
           background: "linear-gradient(90deg,#E1BEE7,#CE93D8)",
           borderTop: "1px solid rgba(106,27,154,.35)",
           display: "flex",
-          justifyContent: "center", // ðŸ‘ˆ centra horizontalmente
+          justifyContent: "center", // ðŸ'ˆ centra horizontalmente
           alignItems: "center",
-          gap: 1.5, // ðŸ‘ˆ separaciÃ³n equilibrada
+          gap: 1.5, // ðŸ'ˆ separaciÃ³n equilibrada
         }}
       >
         {/* BotÃ³n Cancelar */}

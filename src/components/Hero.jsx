@@ -190,7 +190,7 @@ function Hero({ informationsRef, setVideoReady }) {
             left: 0,
             width: "100%",
             height: "100%",
-            backgroundColor: "#000", // ðŸ‘ˆ fondo sÃ³lido
+            backgroundColor: "#000", // ðŸ'ˆ fondo sÃ³lido
             overflow: "hidden",
           }}
         >
@@ -334,7 +334,7 @@ function Hero({ informationsRef, setVideoReady }) {
                                 padding: "2px 8px",
                                 borderRadius: "10px",
                                 background:
-                                  "linear-gradient(135deg, rgba(93,188,255,0.95) 0%, rgba(120,75,209,0.95) 100%)", // ðŸ’Ž azul a violeta moderno
+                                  "linear-gradient(135deg, rgba(93,188,255,0.95) 0%, rgba(120,75,209,0.95) 100%)", // ðŸ'Ž azul a violeta moderno
                                 color: "#ffffff",
                                 boxShadow: "0 0 10px rgba(93,188,255,0.4)", // brillo sutil azulado
                                 textShadow: "0 1px 4px rgba(0,0,0,0.25)",   // mejora el contraste

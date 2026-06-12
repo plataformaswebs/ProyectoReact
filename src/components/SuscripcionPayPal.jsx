@@ -411,7 +411,7 @@ const SuscripcionPayPal = () => {
                   }}
                 />
 
-                {/* ðŸ’³ Logo PayPal */}{/* Suscripcion PayPal */}
+                {/* ðŸ'³ Logo PayPal */}{/* Suscripcion PayPal */}
                 <Typography
                   sx={{
                     mt: 1,
@@ -432,7 +432,7 @@ const SuscripcionPayPal = () => {
                   <strong>soporte técnico 24/7</strong> para mantener tu sitio siempre activo.
                 </Typography>
 
-                {/* ðŸ”¹ Contenedor centrador */}
+                {/* ðŸ"¹ Contenedor centrador */}
                 <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
                   <Button
                     component={motion.a}
@@ -448,8 +448,8 @@ const SuscripcionPayPal = () => {
                       overflow: "hidden",
                       mt: 2,
                       borderRadius: "30px",
-                      px: 2.8, // ðŸ‘ˆ padding lateral mÃ­nimo
-                      py: 1.1, // ðŸ‘ˆ mÃ¡s bajo y angosto
+                      px: 2.8, // ðŸ'ˆ padding lateral mÃ­nimo
+                      py: 1.1, // ðŸ'ˆ mÃ¡s bajo y angosto
                       fontWeight: 600,
                       fontSize: "0.74rem",
                       textTransform: "none",

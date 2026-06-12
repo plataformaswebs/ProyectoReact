@@ -61,7 +61,7 @@ const InformationsPromotions = ({
           returnUrl: isLocal
             ? "http://localhost:5173/reserva"
             : "https://plataformas-web.cl/reserva",
-          email, // ðŸ‘ˆ correo capturado
+          email, // ðŸ'ˆ correo capturado
         }),
       });
 
@@ -105,7 +105,7 @@ const InformationsPromotions = ({
       display: "flex",
       alignItems: "center",
       width: "310px",
-      minHeight: isMobile ? "78px" : "70px", // ðŸ”¥ ALTO ÃšNICO COMPARTIDO
+      minHeight: isMobile ? "78px" : "70px", // ðŸ"¥ ALTO ÃšNICO COMPARTIDO
       position: "relative",
       overflow: "hidden",
       zIndex: 3,
@@ -165,7 +165,7 @@ const InformationsPromotions = ({
   const evaluarVisitaPrecios = useCallback((swiper) => {
     const promo = promotions[swiper.activeIndex];
 
-    //console.log("ðŸ“Š Slide:", swiper.activeIndex, "| Promo ID:", promo?.id, "| Ref:", visitaPreciosEnviadaRef.current, "| Session:", sessionStorage.getItem(VISITA_PRECIOS_KEY));
+    //console.log("ðŸ"Š Slide:", swiper.activeIndex, "| Promo ID:", promo?.id, "| Ref:", visitaPreciosEnviadaRef.current, "| Session:", sessionStorage.getItem(VISITA_PRECIOS_KEY));
 
     if (promo?.id === 2 && !visitaPreciosEnviadaRef.current && !sessionStorage.getItem(VISITA_PRECIOS_KEY)) {
       visitaPreciosEnviadaRef.current = true;
@@ -301,9 +301,9 @@ const InformationsPromotions = ({
                         letterSpacing: "1.1px",
                         mb: 0,
                         position: "relative",
-                        display: "flex",          // ðŸ‘ˆ flex para alinear imagen + texto
-                        alignItems: "center",     // ðŸ‘ˆ centrado vertical
-                        gap: 0.5,                 // ðŸ‘ˆ separaciÃ³n pequeÃ±a
+                        display: "flex",          // ðŸ'ˆ flex para alinear imagen + texto
+                        alignItems: "center",     // ðŸ'ˆ centrado vertical
+                        gap: 0.5,                 // ðŸ'ˆ separaciÃ³n pequeÃ±a
                       }}
                     >
                       {promo.id === 1 && (
@@ -312,7 +312,7 @@ const InformationsPromotions = ({
                           src="/logo-sitio-web.webp"
                           alt="Logo sitio web"
                           sx={{
-                            height: "1.1em",       // ðŸ‘ˆ tamaÃ±o relativo al texto (como emoji)
+                            height: "1.1em",       // ðŸ'ˆ tamaÃ±o relativo al texto (como emoji)
                             width: "auto",
                             objectFit: "contain",
                             mt: "-2px",
@@ -330,10 +330,10 @@ const InformationsPromotions = ({
                         textAlign: "left",
                         fontSize: { xs: "0.85rem", md: "0.8rem" },
                         lineHeight: 1.6,
-                        color: promo.id === 1 ? "rgb(243, 210, 98)" : "#eee", // ðŸ‘ˆ amarillo dorado si es promo.id=1
+                        color: promo.id === 1 ? "rgb(243, 210, 98)" : "#eee", // ðŸ'ˆ amarillo dorado si es promo.id=1
                         fontFamily: "'Roboto', sans-serif",
                         opacity: 0.95,
-                        fontWeight: promo.id === 1 ? 700 : 400, // ðŸ‘ˆ mÃ¡s peso en la fuente
+                        fontWeight: promo.id === 1 ? 700 : 400, // ðŸ'ˆ mÃ¡s peso en la fuente
                         letterSpacing: promo.id === 1 ? "0.5px" : "normal",
                       }}
                     >
@@ -398,7 +398,7 @@ const InformationsPromotions = ({
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
                   >
-                    {/* ðŸ”¹ Contenedor relativo para el botÃ³n + Box principal */}
+                    {/* ðŸ"¹ Contenedor relativo para el botÃ³n + Box principal */}
                     <Box
                       sx={{
                         position: "relative",
@@ -414,17 +414,17 @@ const InformationsPromotions = ({
                           top: isMobile ? "-25px" : "-25px",
                           background:
                             currency === "USD"
-                              ? "linear-gradient(90deg, #0E35A3 0%, #1E88E5 100%)" // ðŸ’™ Azul elegante USD
-                              : "linear-gradient(90deg, #008B56 0%, #00C97C 100%)", // ðŸ’š Verde elegante CLP
+                              ? "linear-gradient(90deg, #0E35A3 0%, #1E88E5 100%)" // ðŸ'™ Azul elegante USD
+                              : "linear-gradient(90deg, #008B56 0%, #00C97C 100%)", // ðŸ'š Verde elegante CLP
                           color: "rgba(255,255,255,0.95)",
-                          fontSize: isMobile ? "0.53rem" : "0.58rem", // ðŸ“ mÃ¡s proporcionado
+                          fontSize: isMobile ? "0.53rem" : "0.58rem", // ðŸ" mÃ¡s proporcionado
                           fontFamily: "'Mukta', sans-serif",
                           fontWeight: 600,
                           borderRadius: "8px",
                           px: 0.6,
                           py: 0.2,
                           cursor: "pointer",
-                          width: isMobile ? "70px" : "65px", // ðŸ“ ancho fijo mÃ¡s natural
+                          width: isMobile ? "70px" : "65px", // ðŸ" ancho fijo mÃ¡s natural
                           textAlign: "center",
                           justifyContent: "center",
                           boxShadow:
@@ -490,7 +490,7 @@ const InformationsPromotions = ({
                               ? "0 3px 12px rgba(0, 200, 100, 0.4)"
                               : "0 3px 12px rgba(0, 0, 0, 0.3)",
                           position: "relative",
-                          overflow: "hidden", // ðŸ‘ˆ importante para contener el brillo dentro
+                          overflow: "hidden", // ðŸ'ˆ importante para contener el brillo dentro
                           zIndex: 3,
                           boxSizing: "border-box",
                           textAlign: "center",
@@ -498,7 +498,7 @@ const InformationsPromotions = ({
                           cursor: "pointer",
                           transition: "all 0.4s ease",
 
-                          /* âœ¨ BRILLO INTERNO â€” Sheen diagonal */
+                          /* âœ¨ BRILLO INTERNO â€" Sheen diagonal */
                           "&::after": {
                             content: '""',
                             position: "absolute",
@@ -510,7 +510,7 @@ const InformationsPromotions = ({
                             borderRadius: "inherit",
                             pointerEvents: "none",
                             zIndex: 2,
-                            mixBlendMode: "overlay", // ðŸ’¡ brillo mÃ¡s realista
+                            mixBlendMode: "overlay", // ðŸ'¡ brillo mÃ¡s realista
                           },
 
                           "@keyframes shineDiagonal": {
@@ -520,7 +520,7 @@ const InformationsPromotions = ({
                           },
                         }}
                       >
-                        {/* ðŸ‘‡ AquÃ­ todo tu contenido interno (precios, motion.span, etc.) */}
+                        {/* ðŸ'‡ AquÃ­ todo tu contenido interno (precios, motion.span, etc.) */}
                         {promo.id === 2 ? (
                           <Typography
                             variant="body1"
@@ -625,7 +625,7 @@ const InformationsPromotions = ({
                               fontFamily: "'Mukta', sans-serif",
                               fontWeight: promo.id === 1 ? 800 : 700,
                               fontSize: promo.id === 1
-                                ? (isMobile ? "15px" : "17px")   // ðŸ‘ˆ mÃ¡s grande
+                                ? (isMobile ? "15px" : "17px")   // ðŸ'ˆ mÃ¡s grande
                                 : (isMobile ? "13px" : "15px"),
                               textTransform: "none",
                               lineHeight: 1.3,
@@ -674,11 +674,11 @@ const InformationsPromotions = ({
                   <Box
                     sx={{
                       maxWidth: "100%",
-                      mx: "auto",       // ðŸ‘ˆ centrado
+                      mx: "auto",       // ðŸ'ˆ centrado
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
-                      gap: 1,           // ðŸ‘ˆ espacio entre precios y botÃ³n
+                      gap: 1,           // ðŸ'ˆ espacio entre precios y botÃ³n
                     }}
                   >
                     <motion.div
@@ -806,7 +806,7 @@ const InformationsPromotions = ({
                           <Box
                             sx={{
                               width: "1px",
-                              height: isMobile ? "45px" : "55px", // ðŸ‘ˆ tambiÃ©n mÃ¡s compacto
+                              height: isMobile ? "45px" : "55px", // ðŸ'ˆ tambiÃ©n mÃ¡s compacto
                               backgroundColor: "rgba(255, 255, 255, 0.35)",
                               mx: 1.5,
                             }}
@@ -881,7 +881,7 @@ const InformationsPromotions = ({
 
 
                     {modoDesarrollo && promo.id === 1 ? (
-                      // ðŸ”¹ BotÃ³n RESERVAR Transbank
+                      // ðŸ"¹ BotÃ³n RESERVAR Transbank
                       <Box
                         component="button"
                         onClick={() => setOpenDialog(true)}

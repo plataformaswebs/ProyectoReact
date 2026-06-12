@@ -106,17 +106,17 @@ const Footer = () => {
               </Typography>
 
               <Typography sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <img src="telefono-icon.png" alt="Teléfono" width={16} />
+                <img src="telefono-icon.png" alt="Teléfono" width={16} loading="lazy" decoding="async" />
                 <Link href="tel:+56946873014" color="inherit">+56 9 4687 3014</Link>
               </Typography>
 
               <Typography sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <img src="mail-icon.png" alt="Correo" width={16} />
+                <img src="mail-icon.png" alt="Correo" width={16} loading="lazy" decoding="async" />
                 <Link href="mailto:plataformas.web.cl@gmail.com" color="inherit">plataformas.web.cl@gmail.com</Link>
               </Typography>
 
               <Typography sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <img src="location-icon.png" alt="Ubicación" width={16} />
+                <img src="location-icon.png" alt="Ubicación" width={16} loading="lazy" decoding="async" />
                 Patricio Canto #6978, Santiago.
               </Typography>
             </Box>

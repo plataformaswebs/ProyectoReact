@@ -564,7 +564,7 @@ const ConfigurarTrabajos = () => {
                       }}
                     />
 
-                    <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.2, sm: 0.35 } }}>
+                    <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.1, sm: 0.2 } }}>
                       {/* Fila superior: nombre + badge + acciones */}
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0 }}>
                         {/* Tipo icono */}

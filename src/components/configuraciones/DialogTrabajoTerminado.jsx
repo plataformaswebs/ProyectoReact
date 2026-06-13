@@ -91,11 +91,11 @@ export default function DialogTrabajoTerminado({
       TransitionComponent={Transition}
       PaperProps={{
         sx: {
-          mt: { xs: 0, sm: -3 },
           borderRadius: 2,
           border: "1px solid rgba(76,175,80,.35)",
           boxShadow: "0 24px 64px rgba(0,0,0,.45)",
           overflow: "hidden",
+          mx: 2,
         },
       }}
     >

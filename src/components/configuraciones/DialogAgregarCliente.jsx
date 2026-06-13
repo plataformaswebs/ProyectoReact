@@ -12,11 +12,6 @@ import {
   Slide,
   Box,
   Typography,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   CircularProgress,
   useMediaQuery,
   useTheme,
@@ -48,8 +43,8 @@ const SectionTitle = ({ children }) => (
     sx={{
       color: "#8D6E00",
       fontWeight: 700,
-      mb: 1,
-      mt: 0.5,
+      mb: { xs: 0.5, sm: 1 },
+      mt: { xs: 0, sm: 0.5 },
       display: "flex",
       alignItems: "center",
       gap: 0.6,
@@ -164,9 +159,6 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
   };
 
   const accentColor = modoEditar ? "#1565C0" : "#B28704";
-  const headerGradient = modoEditar
-    ? "linear-gradient(135deg, #1565C0 0%, #1976D2 50%, #42A5F5 100%)"
-    : "linear-gradient(135deg, #FFD700 0%, #FFC300 30%, #FFB000 60%, #FFD54F 100%)";
 
   return (
     <Dialog
@@ -175,20 +167,21 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
         if (reason === "backdropClick" || reason === "escapeKeyDown") return;
         onClose();
       }}
-      fullScreen={isMobile}
+      fullScreen={isMobile && !success}
       maxWidth="sm"
-      fullWidth={!isMobile}
+      fullWidth={!isMobile || success}
       scroll="body"
       TransitionComponent={Transition}
       PaperProps={{
         sx: {
-          borderRadius: isMobile ? 0 : 3,
-          border: isMobile ? "none" : `1px solid ${modoEditar ? "rgba(66,165,245,.35)" : "rgba(129,245,180,.35)"}`,
+          borderRadius: isMobile && !success ? 0 : 3,
+          border: isMobile && !success ? "none" : `1px solid ${modoEditar ? "rgba(66,165,245,.35)" : "rgba(129,245,180,.35)"}`,
           boxShadow: "0 24px 64px rgba(0,0,0,.45)",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          ...(isMobile && { height: "100dvh" }),
+          ...(isMobile && !success && { height: "100dvh" }),
+          ...(success && isMobile && { mx: 2 }),
         },
       }}
     >
@@ -207,30 +200,32 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
           "&::before": {
             content: '""',
             position: "absolute",
-            inset: 0,
-            background: headerGradient,
-            backgroundSize: "250% 250%",
-            animation: "gradShift 8s ease-in-out infinite",
+            top: 0, left: 0, width: "100%", height: "100%",
+            backgroundImage: "url('/trabajo-terminado.webp')",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
             zIndex: 0,
-            "@keyframes gradShift": {
-              "0%": { backgroundPosition: "0% 50%" },
-              "50%": { backgroundPosition: "100% 50%" },
-              "100%": { backgroundPosition: "0% 50%" },
+            backgroundSize: "130%",
+            animation: "zoomInDesktop 2.5s ease-out forwards",
+            "@media (max-width:600px)": {
+              backgroundSize: "250%",
+              animation: "zoomInMobile 2.5s ease-out forwards",
+            },
+            "@keyframes zoomInDesktop": {
+              "0%": { backgroundSize: "150%" },
+              "100%": { backgroundSize: "110%" },
+            },
+            "@keyframes zoomInMobile": {
+              "0%": { backgroundSize: "270%" },
+              "100%": { backgroundSize: "140%" },
             },
           },
           "&::after": {
             content: '""',
             position: "absolute",
-            inset: 0,
-            background: "linear-gradient(130deg, transparent 40%, rgba(255,255,255,0.7) 50%, transparent 60%)",
-            transform: "translateX(-100%)",
-            animation: "shineDiagonal 4s ease-in-out infinite",
-            pointerEvents: "none",
+            top: 0, left: 0, width: "100%", height: "100%",
+            bgcolor: modoEditar ? "rgba(10,30,80,0.6)" : "rgba(80,50,0,0.55)",
             zIndex: 1,
-            "@keyframes shineDiagonal": {
-              "0%": { transform: "translateX(-120%)" },
-              "100%": { transform: "translateX(120%)" },
-            },
           },
         }}
       >
@@ -241,8 +236,14 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
             top: 8,
             right: 8,
             color: "#FFF",
-            zIndex: 5,
+            zIndex: 6,
             "&:hover": { backgroundColor: "rgba(255,255,255,.2)" },
+            animation: open ? "spinThrice 0.8s ease-in-out" : "none",
+            animationFillMode: "forwards",
+            "@keyframes spinThrice": {
+              "0%": { transform: "rotate(0deg)" },
+              "100%": { transform: "rotate(1080deg)" },
+            },
           }}
         >
           <CloseRoundedIcon sx={{ fontSize: 26 }} />
@@ -257,18 +258,17 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
             px: 2.5,
             py: 0.8,
             borderRadius: "999px",
-            bgcolor: "rgba(0,0,0,0.5)",
+            bgcolor: "rgba(0,0,0,0.55)",
             backdropFilter: "blur(4px)",
-            boxShadow: "0 4px 14px rgba(0,0,0,.3)",
+            boxShadow: "0 4px 14px rgba(0,0,0,.35)",
             position: "relative",
             zIndex: 2,
-            textShadow: "0 1px 3px rgba(0,0,0,0.6)",
           }}
         >
           <Typography
             variant="h6"
             component="span"
-            sx={{ fontWeight: 800, letterSpacing: "0.5px", fontFamily: "'Poppins', sans-serif", color: "#fff", fontSize: { xs: "1rem", sm: "1.2rem" } }}
+            sx={{ fontWeight: 800, letterSpacing: { xs: "0.3px", sm: "0.5px" }, fontFamily: "'Poppins', sans-serif", color: "#fff", fontSize: { xs: "1rem", sm: "1.2rem" } }}
           >
             {success ? "¡Éxito!" : modoEditar ? "Editar Cliente" : "Agregar Cliente"}
           </Typography>
@@ -282,8 +282,8 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
       {/* ── CONTENIDO ── */}
       <DialogContent
         sx={{
-          py: 2,
-          px: { xs: 2, sm: 3 },
+          py: { xs: 1.5, sm: 2 },
+          px: { xs: 1.5, sm: 3 },
           bgcolor: "#FAFAFA",
           backgroundImage: "linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%)",
           flexGrow: 1,
@@ -321,13 +321,13 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
             </motion.div>
           ) : (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-              <Box display="flex" flexDirection="column" gap={2.5}>
+              <Box display="flex" flexDirection="column" gap={{ xs: 1.5, sm: 2.5 }}>
 
                 {/* DATOS PERSONALES */}
                 <Box>
                   <SectionTitle>👤 Datos del Cliente</SectionTitle>
-                  <Divider sx={{ mb: 1.5, borderColor: `${accentColor}44` }} />
-                  <Box display="flex" flexDirection="column" gap={1.5}>
+                  <Divider sx={{ mb: { xs: 1, sm: 1.5 }, borderColor: `${accentColor}44` }} />
+                  <Box display="flex" flexDirection="column" gap={{ xs: 1, sm: 1.5 }}>
                     <TextField
                       label="Nombre Cliente *"
                       name="nombreCliente"
@@ -367,8 +367,8 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
                 {/* NEGOCIO */}
                 <Box>
                   <SectionTitle>🏢 Información del Negocio</SectionTitle>
-                  <Divider sx={{ mb: 1.5, borderColor: `${accentColor}44` }} />
-                  <Box display="flex" flexDirection="column" gap={1.5}>
+                  <Divider sx={{ mb: { xs: 1, sm: 1.5 }, borderColor: `${accentColor}44` }} />
+                  <Box display="flex" flexDirection="column" gap={{ xs: 1, sm: 1.5 }}>
                     <Box display="flex" gap={1.5} flexDirection={{ xs: "column", sm: "row" }}>
                       <TextField
                         label="Sitio Web *"
@@ -411,6 +411,18 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
                         fullWidth
                         placeholder="https://..."
                         sx={fieldSx}
+                        InputProps={{
+                          endAdornment: form.logoCliente ? (
+                            <Box
+                              component="img"
+                              src={form.logoCliente}
+                              alt="preview"
+                              onError={(e) => { e.target.style.display = "none"; }}
+                              onLoad={(e) => { e.target.style.display = "block"; }}
+                              sx={{ width: 30, height: 30, borderRadius: 1, objectFit: "contain", border: "1px solid #eee", bgcolor: "#fff", flexShrink: 0 }}
+                            />
+                          ) : null,
+                        }}
                       />
                     </Box>
                   </Box>
@@ -419,33 +431,55 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
                 {/* ESTADO */}
                 <Box>
                   <SectionTitle>📊 Estado</SectionTitle>
-                  <Divider sx={{ mb: 1.5, borderColor: `${accentColor}44` }} />
-                  <Box display="flex" gap={3} flexWrap="wrap">
-                    <FormControl>
-                      <FormLabel sx={{ fontWeight: 700, color: accentColor, fontSize: "0.8rem" }}>¿Pagado?</FormLabel>
-                      <RadioGroup
-                        row
-                        name="pagado"
-                        value={String(form.pagado)}
-                        onChange={(e) => setForm((p) => ({ ...p, pagado: Number(e.target.value) }))}
-                      >
-                        <FormControlLabel value="1" control={<Radio size="small" color="success" />} label="✅ Sí" />
-                        <FormControlLabel value="0" control={<Radio size="small" color="error" />} label="❌ No" />
-                      </RadioGroup>
-                    </FormControl>
+                  <Divider sx={{ mb: { xs: 1, sm: 1.5 }, borderColor: `${accentColor}44` }} />
+                  <Box display="flex" flexDirection="column" gap={1}>
+                    <Typography sx={{ fontWeight: 700, color: accentColor, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.4px" }}>¿Pagado?</Typography>
+                    <Box display="flex" gap={1}>
+                      {[
+                        { val: 1, label: "✅ Pagado",    activeColor: "#1B5E20", activeBg: "#E8F5E9", activeBorder: "#388E3C" },
+                        { val: 0, label: "❌ Sin pagar", activeColor: "#B71C1C", activeBg: "#FFEBEE", activeBorder: "#E53935" },
+                      ].map(({ val, label, activeColor, activeBg, activeBorder }) => (
+                        <Box
+                          key={val}
+                          onClick={() => setForm(p => ({ ...p, pagado: val }))}
+                          sx={{
+                            flex: 1, textAlign: "center", py: 0.9, borderRadius: 2,
+                            cursor: "pointer", fontWeight: 700, fontSize: "0.85rem",
+                            border: form.pagado === val ? `2px solid ${activeBorder}` : "2px solid #e0e0e0",
+                            bgcolor: form.pagado === val ? activeBg : "#fff",
+                            color: form.pagado === val ? activeColor : "#999",
+                            transition: "all 0.18s ease",
+                            userSelect: "none",
+                          }}
+                        >
+                          {label}
+                        </Box>
+                      ))}
+                    </Box>
 
-                    <FormControl>
-                      <FormLabel sx={{ fontWeight: 700, color: accentColor, fontSize: "0.8rem" }}>Estado</FormLabel>
-                      <RadioGroup
-                        row
-                        name="estado"
-                        value={String(form.estado)}
-                        onChange={(e) => setForm((p) => ({ ...p, estado: Number(e.target.value) }))}
-                      >
-                        <FormControlLabel value="1" control={<Radio size="small" color="success" />} label="🟢 Activo" />
-                        <FormControlLabel value="0" control={<Radio size="small" color="error" />} label="🔴 Inactivo" />
-                      </RadioGroup>
-                    </FormControl>
+                    <Typography sx={{ fontWeight: 700, color: accentColor, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.4px", mt: 0.5 }}>Estado</Typography>
+                    <Box display="flex" gap={1}>
+                      {[
+                        { val: 1, label: "🟢 Activo",   activeColor: "#1B5E20", activeBg: "#E8F5E9", activeBorder: "#388E3C" },
+                        { val: 0, label: "🔴 Inactivo",  activeColor: "#B71C1C", activeBg: "#FFEBEE", activeBorder: "#E53935" },
+                      ].map(({ val, label, activeColor, activeBg, activeBorder }) => (
+                        <Box
+                          key={val}
+                          onClick={() => setForm(p => ({ ...p, estado: val }))}
+                          sx={{
+                            flex: 1, textAlign: "center", py: 0.9, borderRadius: 2,
+                            cursor: "pointer", fontWeight: 700, fontSize: "0.85rem",
+                            border: form.estado === val ? `2px solid ${activeBorder}` : "2px solid #e0e0e0",
+                            bgcolor: form.estado === val ? activeBg : "#fff",
+                            color: form.estado === val ? activeColor : "#999",
+                            transition: "all 0.18s ease",
+                            userSelect: "none",
+                          }}
+                        >
+                          {label}
+                        </Box>
+                      ))}
+                    </Box>
                   </Box>
                 </Box>
 
@@ -459,8 +493,8 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
                     background: form.internacional
                       ? "linear-gradient(135deg, rgba(33,150,243,0.08), rgba(100,181,246,0.12))"
                       : "rgba(0,0,0,0.02)",
-                    px: 2,
-                    py: 1.2,
+                    px: { xs: 1.5, sm: 2 },
+                    py: { xs: 0.8, sm: 1.2 },
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -505,8 +539,8 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
       <DialogActions
         sx={{
           justifyContent: "stretch",
-          px: { xs: 2, sm: 3 },
-          py: 2,
+          px: { xs: 1.5, sm: 3 },
+          py: { xs: 1.2, sm: 2 },
           gap: 1.5,
           background: modoEditar
             ? "linear-gradient(90deg, #E3F2FD, #BBDEFB)"
@@ -542,7 +576,7 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
                 color: accentColor,
                 fontWeight: 700,
                 textTransform: "none",
-                py: 1.1,
+                py: { xs: 0.8, sm: 1.1 },
                 borderColor: accentColor,
                 "&:hover": { backgroundColor: "rgba(0,0,0,0.04)", borderColor: accentColor },
               }}
@@ -560,7 +594,7 @@ export default function DialogAgregarCliente({ open, onClose, onSave, clienteEdi
                 overflow: "hidden",
                 textTransform: "none",
                 fontWeight: 700,
-                py: 1.1,
+                py: { xs: 0.8, sm: 1.1 },
                 color: "#fff",
                 background: modoEditar
                   ? "linear-gradient(135deg, #1565C0, #1976D2, #42A5F5)"

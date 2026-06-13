@@ -168,6 +168,8 @@ const Clientes = () => {
   const PAGINAS_PROPIAS = ["ivelpink.cl", "plataformas-web.cl", "plataformas-web.com"];
   const esPaginaPropia = (c) => PAGINAS_PROPIAS.includes((c.sitioWeb || c.URL || "").toLowerCase().trim());
 
+  const CLIENTES_AL_FINAL_POR_COBRAR = ["investigadores-privados.cl", "masatracker.cl"];
+
   const ordenarClientes = (lista) =>
     [...lista].sort((a, b) => {
       const propiaA = esPaginaPropia(a) ? 1 : 0;
@@ -180,7 +182,16 @@ const Clientes = () => {
 
       const pagadoA = a.pagado ? 0 : 1;
       const pagadoB = b.pagado ? 0 : 1;
-      return pagadoA - pagadoB;
+      if (pagadoA !== pagadoB) return pagadoA - pagadoB;
+
+      // Dentro de los por cobrar: estos van al final
+      if (!a.pagado && !a.suscripcion && !b.pagado && !b.suscripcion) {
+        const finA = CLIENTES_AL_FINAL_POR_COBRAR.includes(a.SitioWeb) ? 1 : 0;
+        const finB = CLIENTES_AL_FINAL_POR_COBRAR.includes(b.SitioWeb) ? 1 : 0;
+        return finA - finB;
+      }
+
+      return 0;
     });
 
   //GANADO
@@ -855,116 +866,104 @@ const Clientes = () => {
       }}
     >
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "nowrap",
-          justifyContent: "center",
-          alignItems: "stretch",
-          gap: 1.5,
-          mb: 2,
-          width: "100%",
-          px: isMobile ? 1.5 : 0,
-        }}
-      >
-        {/* Tarjeta Recaudado */}
-        <MotionBox
-          variants={variantes}
-          initial={animacionTerminada ? false : "hidden"}
-          animate="visible"
-          transition={{ delay: 2, duration: 0.8, ease: "easeOut" }}
-          onAnimationComplete={() => setAnimacionTerminada(true)}
-          sx={{
-            position: "relative",
-            overflow: "hidden",
-            background: "linear-gradient(135deg, #1b5e20 0%, #2e7d32 45%, #43a047 100%)",
-            borderRadius: 2.5,
-            px: 1.5,
-            py: 0.75,
-            flex: "1 1 auto",
-            maxWidth: 175,
-            minWidth: 140,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            gap: 0.15,
-            boxShadow: "0 4px 16px rgba(27,94,32,0.45)",
-            // Shiny diagonal
-            "&::after": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: "-75%",
-              width: "50%",
-              height: "100%",
-              background: "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
-              transform: "skewX(-20deg)",
-              animation: `${shineCard} 3.5s ease-in-out infinite`,
-              pointerEvents: "none",
-            },
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
-            <Typography sx={{ fontSize: "0.62rem", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
-              Recaudado · {mesCapitalizado}
-            </Typography>
-            <Typography sx={{ fontSize: "0.85rem", lineHeight: 1 }}>💰</Typography>
-          </Box>
+      {/* ── Indicadores ── */}
+      <Box sx={{ display: "flex", gap: 1.5, mb: 2, width: "100%", px: isMobile ? 1.5 : 0, justifyContent: "center", alignItems: "stretch" }}>
+        {(() => {
+          const total = clientes.length || 1;
+          const cobrados = clientes.filter(esPagado).length;
+          const pendientes = clientes.filter(c => !esPagado(c)).length;
+          const pctCobrado = Math.round((cobrados / total) * 100);
 
-          <Box sx={{ position: "relative", zIndex: 1 }}>
-            <ContadorGanado
-              valorFinal={totalGanado}
-              valorInicial={totalGanadoAnterior}
-              tipoCambio={tipoCambioVisual}
-            />
-          </Box>
+          return (
+            <>
+              {/* Recaudado */}
+              <Box sx={{
+                flex: "1 1 0", width: 0,
+                borderRadius: 3, overflow: "hidden",
+                background: "linear-gradient(145deg, #0a3d1a 0%, #1b5e20 60%, #2e7d32 100%)",
+                boxShadow: "0 6px 24px rgba(27,94,32,0.5), inset 0 1px 0 rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                position: "relative", overflow: "hidden",
+              }}>
+                {/* Shine */}
+                <Box sx={{
+                  position: "absolute", top: 0, left: "-75%", width: "50%", height: "100%",
+                  background: "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)",
+                  transform: "skewX(-20deg)",
+                  animation: `${shineCard} 3.5s ease-in-out infinite`,
+                  pointerEvents: "none",
+                }} />
 
-          <Typography sx={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.65)", fontWeight: 500, position: "relative", zIndex: 1 }}>
-            {clientes.filter(esPagado).length} cobrados
-          </Typography>
-        </MotionBox>
+                <Box sx={{ px: 1.5, pt: 0.6, pb: 0.4, position: "relative", zIndex: 1 }}>
+                  {/* Header */}
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.3 }}>
+                    <Typography sx={{ fontSize: "0.6rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.7px" }}>
+                      Recaudado · {mesCapitalizado}
+                    </Typography>
+                    <Box sx={{ width: 22, height: 22, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem" }}>
+                      💰
+                    </Box>
+                  </Box>
 
-        {/* Tarjeta Por cobrar */}
-        <MotionBox
-          variants={variantes}
-          initial={animacionTerminada ? false : "hidden"}
-          animate="visible"
-          transition={{ delay: 2, duration: 0.8, ease: "easeOut" }}
-          onAnimationComplete={() => setAnimacionTerminada(true)}
-          sx={{
-            background: "linear-gradient(135deg, #b71c1c 0%, #c62828 45%, #e53935 100%)",
-            borderRadius: 2.5,
-            px: 1.5,
-            py: 0.75,
-            flex: "1 1 auto",
-            maxWidth: 175,
-            minWidth: 140,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            gap: 0.15,
-            boxShadow: "0 4px 16px rgba(183,28,28,0.4)",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Typography sx={{ fontSize: "0.62rem", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
-              Por cobrar
-            </Typography>
-            <Typography sx={{ fontSize: "0.85rem", lineHeight: 1 }}>⏳</Typography>
-          </Box>
+                  {/* Monto */}
+                  <ContadorGanado valorFinal={totalGanado} valorInicial={totalGanadoAnterior} tipoCambio={tipoCambioVisual} />
 
-          <Typography
-            fontWeight={700}
-            sx={{ fontSize: "1rem", lineHeight: 1.3, color: "#fff" }}
-          >
-            ${totalDeuda.toLocaleString("es-CL")} CLP
-          </Typography>
+                  {/* Barra progreso */}
+                  <Box sx={{ mt: 0.4, mb: 0.3 }}>
+                    <Box sx={{ height: 3, borderRadius: 99, bgcolor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+                      <Box sx={{ height: "100%", width: `${pctCobrado}%`, borderRadius: 99, bgcolor: "rgba(255,255,255,0.6)", transition: "width 0.6s ease" }} />
+                    </Box>
+                  </Box>
 
-          <Typography sx={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.65)", fontWeight: 500 }}>
-            {clientes.filter(c => !esPagado(c)).length} pendientes
-          </Typography>
-        </MotionBox>
+                  {/* Footer */}
+                  <Typography sx={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
+                    {cobrados} de {total} cobrados · {pctCobrado}%
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Por cobrar */}
+              <Box sx={{
+                flex: "1 1 0", width: 0,
+                borderRadius: 3,
+                background: "linear-gradient(145deg, #4a0000 0%, #7f1010 60%, #b71c1c 100%)",
+                boxShadow: "0 6px 24px rgba(183,28,28,0.5), inset 0 1px 0 rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                position: "relative", overflow: "hidden",
+              }}>
+                <Box sx={{ px: 1.5, pt: 0.6, pb: 0.4, position: "relative", zIndex: 1 }}>
+                  {/* Header */}
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.3 }}>
+                    <Typography sx={{ fontSize: "0.6rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.7px" }}>
+                      Por cobrar
+                    </Typography>
+                    <Box sx={{ width: 22, height: 22, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem" }}>
+                      ⏳
+                    </Box>
+                  </Box>
+
+                  {/* Monto */}
+                  <Typography fontWeight={800} sx={{ fontSize: "1rem", lineHeight: 1.3, color: "#fff", letterSpacing: "-0.3px" }}>
+                    ${totalDeuda.toLocaleString("es-CL")}
+                    <Typography component="span" sx={{ fontSize: "0.6rem", fontWeight: 500, color: "rgba(255,255,255,0.5)", ml: 0.5 }}>CLP</Typography>
+                  </Typography>
+
+                  {/* Barra progreso invertida */}
+                  <Box sx={{ mt: 0.4, mb: 0.3 }}>
+                    <Box sx={{ height: 3, borderRadius: 99, bgcolor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+                      <Box sx={{ height: "100%", width: `${100 - pctCobrado}%`, borderRadius: 99, bgcolor: "rgba(255,255,255,0.6)", transition: "width 0.6s ease" }} />
+                    </Box>
+                  </Box>
+
+                  {/* Footer */}
+                  <Typography sx={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
+                    {pendientes} pendiente{pendientes !== 1 ? "s" : ""} · {100 - pctCobrado}%
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          );
+        })()}
       </Box>
 
 

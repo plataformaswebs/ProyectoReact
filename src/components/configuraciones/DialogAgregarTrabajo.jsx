@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Snackbar, Alert, Slider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, IconButton, Slide, Box, Typography, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, useTheme, useMediaQuery } from "@mui/material";
+import { Snackbar, Alert, Slider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, IconButton, Slide, Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import { motion, AnimatePresence } from "framer-motion";
@@ -131,6 +131,17 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
 
 
 
+  const fieldSx = {
+    backgroundColor: "#fff",
+    borderRadius: 2,
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 2,
+      "&:hover fieldset": { borderColor: "#FB8C00" },
+      "&.Mui-focused fieldset": { borderColor: "#F57C00", borderWidth: 2 },
+    },
+    "& .MuiInputLabel-root.Mui-focused": { color: "#F57C00" },
+  };
+
   return (
     <Dialog
       open={open}
@@ -141,7 +152,7 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
       maxWidth="sm"
       fullWidth
       fullScreen={isMobile}
-      scroll="body"
+      scroll={isMobile ? "paper" : "body"}
       TransitionComponent={Transition}
       PaperProps={{
         sx: {
@@ -150,6 +161,10 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
           border: "1px solid rgba(255,167,38,.35)",
           boxShadow: "0 24px 64px rgba(0,0,0,.45)",
           overflow: "hidden",
+          height: { xs: "100dvh", sm: "auto" },
+          maxHeight: { xs: "100dvh", sm: "90vh" },
+          display: "flex",
+          flexDirection: "column",
           "& .MuiDialogContent-root": { marginTop: 0 },
         },
       }}
@@ -284,7 +299,8 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
             key="content"
             initial={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 1, ease: "easeInOut" }} // ⏱️ animación de 1s
+            transition={{ duration: 1, ease: "easeInOut" }}
+            style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
           >
             <DialogContent
               dividers
@@ -293,7 +309,8 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
                 pb: 5,
                 bgcolor: success ? "#e6f4ea" : "#FFF8EC",
                 position: "relative",
-                overflow: "visible",
+                overflow: "auto",
+                flex: 1,
               }}
             >
               <AnimatePresence mode="wait">
@@ -349,212 +366,140 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
                   </motion.div>
                 ) : (
 
-                  <Box display="flex" flexDirection="column" gap={success ? 3 : 1}>
-                    <TextField
-                      label="Nombre del Trabajo"
-                      name="trabajo"
-                      value={form.trabajo}
-                      onChange={handleChange}
-                      fullWidth
-                      required
-                      variant="outlined"
-                      size="small"
-                      InputProps={{
-                        startAdornment: <span style={{ marginRight: 6 }}>🛠️</span>, // 👈 emoji ícono
-                      }}
-                      sx={{
-                        backgroundColor: "#fff", // 👈 fondo blanco fijo
-                        borderRadius: 2.5,
-                        "& .MuiOutlinedInput-root": {
-                          backgroundColor: "#fff", // 👈 asegura fondo blanco también en input
-                          borderRadius: 2.5,
-                          transition: "all 0.25s ease",
-                          "&:hover fieldset": {
-                            borderColor: "#FB8C00",
-                            boxShadow: "0 0 0 2px rgba(251,140,0,0.15)",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#F57C00",
-                            borderWidth: 2,
-                            boxShadow: "0 0 0 2px rgba(245,124,0,0.25)",
-                          },
-                        },
-                        "& .MuiInputLabel-root": {
-                          fontSize: "0.85rem",
-                          fontWeight: 600,
-                        },
-                        "& .MuiInputLabel-root.Mui-focused": {
-                          color: "#F57C00",
-                        },
-                      }}
-                    />
-                    {/* 🔥 Datos del cliente */}
-                    <Box display="flex" flexDirection="column" gap={2}>
-                      <TextField
-                        label="Nombre Cliente"
-                        name="nombreCliente"
-                        value={form.nombreCliente}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // 👇 Solo letras (mayúsculas/minúsculas), espacios y acentos
-                          if (/^[a-zA-ZÀ-ÿ\s]*$/.test(value)) {
-                            handleChange(e); // solo actualiza si pasa la validación
-                          }
-                        }}
-                        required
-                        size="small"
-                        sx={{
-                          backgroundColor: "#fff",
-                          borderRadius: 2,
-                          "& .MuiOutlinedInput-root": {
-                            borderRadius: 2,
-                            "&:hover fieldset": { borderColor: "#FB8C00" },
-                            "&.Mui-focused fieldset": { borderColor: "#F57C00", borderWidth: 2 },
-                          },
-                          "& .MuiInputLabel-root.Mui-focused": { color: "#F57C00" },
-                        }}
-                        InputProps={{
-                          startAdornment: <span style={{ marginRight: 6 }}>👤</span>,
-                        }}
-                      />
+                  <Box display="flex" flexDirection="column" gap={2.5}>
 
-
+                    {/* ── Sección: Trabajo ── */}
+                    <Box>
+                      <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#E65100", textTransform: "uppercase", letterSpacing: "0.08em", mb: 1 }}>
+                        🛠️ Datos del trabajo
+                      </Typography>
                       <TextField
-                        label="Email Cliente"
-                        name="emailCliente"
-                        type="email"
-                        value={form.emailCliente}
+                        label="Nombre / Sitio Web"
+                        name="trabajo"
+                        value={form.trabajo}
                         onChange={handleChange}
+                        fullWidth
                         required
+                        variant="outlined"
                         size="small"
-                        error={
-                          form.emailCliente !== "" &&
-                          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailCliente) // 👈 validador simple de email
-                        }
-                        helperText={
-                          form.emailCliente !== "" &&
-                            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailCliente)
-                            ? "Ingresa un correo válido (ej: cliente@gmail.com)"
-                            : ""
-                        }
-                        sx={{ backgroundColor: "#fff", borderRadius: 2 }}
-                        InputProps={{
-                          startAdornment: <span style={{ marginRight: 6 }}>📧</span>,
-                        }}
+                        sx={fieldSx}
                       />
-
-
-                      <TextField
-                        label="Teléfono Cliente"
-                        name="telefonoCliente"
-                        type="tel"
-                        value={form.telefonoCliente}
-                        onChange={(e) => {
-                          const onlyNums = e.target.value.replace(/\D/g, "");
-                          setForm((prev) => ({ ...prev, telefonoCliente: onlyNums.slice(0, 12) }));
-                        }}
-                        required
-                        size="small"
-                        inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 12 }}
-                        sx={{ backgroundColor: "#fff", borderRadius: 2 }}
-                        InputProps={{ startAdornment: <span style={{ marginRight: 6 }}>📱</span> }}
-                      />
-
-                      <TextField
-                        label="URL Logo Cliente"
-                        name="logoCliente"
-                        value={form.logoCliente}
-                        onChange={handleChange}
-                        size="small"
-                        placeholder="https://ejemplo.com/logo.png"
-                        sx={{ backgroundColor: "#fff", borderRadius: 2 }}
-                        InputProps={{ startAdornment: <span style={{ marginRight: 6 }}>🖼️</span> }}
-                      />
-
                     </Box>
 
-                    <FormControl required>
-                      <FormLabel
-                        component="legend"
-                        sx={{ fontWeight: 700, color: "#E65100", mb: 0, display: "flex", alignItems: "center", gap: 0 }}
-                      >
-                        💻 Tipo de Aplicación
-                      </FormLabel>
-                      <RadioGroup
-                        row
-                        name="tipoApp"
-                        value={form.tipoApp}
-                        onChange={handleChange}
-                        sx={{ gap: 0 }} // 👈 separación entre opciones
-                      >
-                        <FormControlLabel
-                          value="1"
-                          control={<Radio color="warning" />}
-                          label={
-                            <Typography sx={{ fontWeight: 600, color: "#333", display: "flex", alignItems: "center", gap: 0.5 }}>
-                              🌐 Sitio Web
-                            </Typography>
-                          }
-                        />
-                        <FormControlLabel
-                          value="2"
-                          control={<Radio color="warning" />}
-                          label={
-                            <Typography sx={{ fontWeight: 600, color: "#333", display: "flex", alignItems: "center", gap: 0.5 }}>
-                              ⚙️ Sistema
-                            </Typography>
-                          }
-                        />
-                      </RadioGroup>
-                    </FormControl>
-
-
-
+                    {/* ── Sección: Cliente ── */}
                     <Box>
-                      <Typography
-                        gutterBottom
-                        sx={{ fontWeight: 600, color: "#E65100", mb: 0 }}
-                      >
-                        📊Progreso *
+                      <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#E65100", textTransform: "uppercase", letterSpacing: "0.08em", mb: 1 }}>
+                        👤 Datos del cliente
+                      </Typography>
+                      <Box display="flex" flexDirection="column" gap={1.5}>
+                        <TextField
+                          label="Nombre Cliente *"
+                          name="nombreCliente"
+                          value={form.nombreCliente}
+                          onChange={(e) => {
+                            if (/^[a-zA-ZÀ-ÿ\s]*$/.test(e.target.value)) handleChange(e);
+                          }}
+                          size="small"
+                          fullWidth
+                          sx={fieldSx}
+                        />
+
+                        <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 1.5 }}>
+                          <TextField
+                            label="Email *"
+                            name="emailCliente"
+                            type="email"
+                            value={form.emailCliente}
+                            onChange={handleChange}
+                            size="small"
+                            sx={{ ...fieldSx, flex: 1 }}
+                            error={form.emailCliente !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailCliente)}
+                            helperText={form.emailCliente !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailCliente) ? "Correo inválido" : ""}
+                          />
+                          <TextField
+                            label="Teléfono *"
+                            name="telefonoCliente"
+                            type="tel"
+                            value={form.telefonoCliente}
+                            onChange={(e) => {
+                              const onlyNums = e.target.value.replace(/\D/g, "");
+                              setForm((prev) => ({ ...prev, telefonoCliente: onlyNums.slice(0, 12) }));
+                            }}
+                            size="small"
+                            inputProps={{ inputMode: "numeric", maxLength: 12 }}
+                            sx={{ ...fieldSx, flex: 1 }}
+                          />
+                        </Box>
+
+                        <TextField
+                          label="URL Logo"
+                          name="logoCliente"
+                          value={form.logoCliente}
+                          onChange={handleChange}
+                          size="small"
+                          fullWidth
+                          placeholder="https://ejemplo.com/logo.png"
+                          sx={fieldSx}
+                          InputProps={{
+                            endAdornment: form.logoCliente ? (
+                              <Box
+                                component="img"
+                                src={form.logoCliente}
+                                alt="preview"
+                                onError={(e) => { e.target.style.display = "none"; }}
+                                onLoad={(e) => { e.target.style.display = "block"; }}
+                                sx={{ width: 30, height: 30, borderRadius: 1, objectFit: "contain", border: "1px solid #eee", bgcolor: "#fff", flexShrink: 0 }}
+                              />
+                            ) : null,
+                          }}
+                        />
+                      </Box>
+                    </Box>
+
+                    {/* ── Sección: Tipo + Progreso ── */}
+                    <Box>
+                      <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#E65100", textTransform: "uppercase", letterSpacing: "0.08em", mb: 1 }}>
+                        💻 Tipo y progreso
                       </Typography>
 
+                      {/* Tipo como chips */}
+                      <Box sx={{ display: "flex", gap: 1, mb: 2.5 }}>
+                        {[
+                          { val: "1", label: "🌐 Sitio Web", activeColor: "#1565C0", activeBg: "#E3F2FD", activeBorder: "#1976D2" },
+                          { val: "2", label: "⚙️ Sistema",   activeColor: "#6A1B9A", activeBg: "#F3E5F5", activeBorder: "#7B1FA2" },
+                        ].map(({ val, label, activeColor, activeBg, activeBorder }) => (
+                          <Box
+                            key={val}
+                            onClick={() => setForm(p => ({ ...p, tipoApp: val }))}
+                            sx={{
+                              flex: 1, textAlign: "center", py: 0.9, borderRadius: 2,
+                              cursor: "pointer", fontWeight: 700, fontSize: "0.85rem",
+                              border: form.tipoApp === val ? `2px solid ${activeBorder}` : "2px solid #e0e0e0",
+                              bgcolor: form.tipoApp === val ? activeBg : "#fff",
+                              color: form.tipoApp === val ? activeColor : "#999",
+                              transition: "all 0.18s ease",
+                              userSelect: "none",
+                            }}
+                          >
+                            {label}
+                          </Box>
+                        ))}
+                      </Box>
+
+                      <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#E65100", mb: 1 }}>
+                        📊 Progreso inicial: <strong>{form.progreso}%</strong>
+                      </Typography>
                       <Slider
                         value={form.progreso}
-                        onChange={(e, newValue) =>
-                          handleChange({ target: { name: "progreso", value: newValue } })
-                        }
-                        valueLabelDisplay="on"
+                        onChange={(e, newValue) => handleChange({ target: { name: "progreso", value: newValue } })}
+                        valueLabelDisplay="off"
                         step={5}
-                        marks
                         min={0}
                         max={100}
                         sx={{
-                          "& .MuiSlider-track": {
-                            backgroundImage: getGradient(form.progreso),
-                            border: "none",
-                          },
-                          "& .MuiSlider-rail": {
-                            opacity: 0.3,
-                            backgroundColor: "#ccc",
-                          },
-                          "& .MuiSlider-valueLabel": {
-                            position: "absolute",
-                            top: "40px",
-                            left: "50%",
-                            transform: "translateX(-50%) !important",
-                            "& *": { transform: "none" },
-                            backgroundImage: getGradient(form.progreso),
-                            borderRadius: "50%",
-                            fontWeight: 700,
-                            color: "#fff",
-                            padding: "4px 8px",
-                            boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-
-                            // 🔥 quita el diamante
-                            "&:before": {
-                              display: "none",
-                            },
-                          },
+                          "& .MuiSlider-track": { backgroundImage: getGradient(form.progreso), border: "none", height: 6 },
+                          "& .MuiSlider-rail": { opacity: 0.25, backgroundColor: "#bbb", height: 6 },
+                          "& .MuiSlider-thumb": { width: 18, height: 18, boxShadow: "0 2px 6px rgba(0,0,0,0.2)" },
                         }}
                       />
                     </Box>

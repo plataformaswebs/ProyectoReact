@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
-    "netlify": "netlify dev --no-open",
+    "netlify": "NODE_OPTIONS=--dns-result-order=ipv4first netlify dev --no-open",
     "dev:all": "concurrently -k \"npm run dev\" \"npm run netlify\" & start http://localhost:5173",
     "build": "vite build",
     "lint": "eslint .",

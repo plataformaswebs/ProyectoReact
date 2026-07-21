@@ -1,4 +1,5 @@
-const sharp = require("sharp");
+let sharp;
+try { sharp = require("sharp"); } catch (_) {}
 const { SLOT_MAP } = require("./slot-config.cjs");
 
 function extractBase64Payload(image) {

@@ -1,712 +1,470 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Grid, Typography, Box, useMediaQuery, useTheme } from "@mui/material";
 import "@fontsource/poppins";
-import CountUp from "react-countup";
-import { styled, keyframes } from "@mui/system";
 import { useInView } from "react-intersection-observer";
-import { motion, useAnimation } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-const data = [
-  { count: 20, text: "Proyectos terminados en distintas empresas", image: "ProyectoTerminado.mp4" },
-  { count: 46, text: "Proyectos a Pymes e Independientes", image: "ProyectoPymes.mp4" },
-  { count: 10, text: "Años de Experiencia como desarrolladores", image: "Experience.mp4" },
-  { count: 7, text: "Tazas de café en el día ☕", image: "Cafe.mp4" },
+const promotions = [
+  {
+    id: 1,
+    title: "📅 Suscripción Mensual",
+    subtitle: "Entrega en menos de 72 horas ⏰",
+    accent: "#0075FF",
+    badge: "Más cotizado",
+    descriptors: [
+      "🕐 Soporte y atención continua 24/7",
+      "🛠️ Mantención técnica permanente del sitio",
+      "✏️ Solicitud de mejoras y ajustes incluidos",
+      "🤝 Gestión integral de tu sitio web",
+    ],
+    price:          { CLP: "$29.990",  USD: "$32" },
+    priceSinCupos:  { CLP: "$119.990", USD: "$120" },
+    mensualSinCupos:{ CLP: "$9.990",   USD: "$11"  },
+    periodicidad:   "/mes",
+    cuotas:         { CLP: "2 cuotas: al inicio y al entregar", USD: "2 payments: start & delivery" },
+    extras: [
+      { icon: "💵", label: "$9.990 CLP/mes mensualidad" },
+      { icon: "💳", label: "Webpay / transferencia / débito" },
+    ],
+  },
+  {
+    id: 2,
+    title: "💎 Pago Único",
+    subtitle: "Entrega en menos de 3 a 7 días ⏰",
+    accent: "#FFB300",
+    badge: "Más cotizado",
+    descriptors: [
+      "💎 Pago único, sin mensualidades",
+      "🎯 Ideal para landing o web institucional",
+      "💼 Imagen profesional desde el día uno",
+      "🧾 Desarrollos se cotizan por separado",
+    ],
+    price:         { CLP: "$99.990",  USD: "$105" },
+    priceSinCupos: { CLP: "$199.990", USD: "$210" },
+    periodicidad:  " pago único",
+    cuotas:        { CLP: "2 cuotas: al inicio y al entregar", USD: "2 payments: start & delivery" },
+    cuotasSinCupos:{ CLP: "2 cuotas: al inicio y al entregar", USD: "2 payments: start & delivery" },
+    extras: [
+      { icon: "🚫", label: "Sin mensualidad posterior" },
+      { icon: "💳", label: "Webpay / transferencia / débito" },
+    ],
+  },
+  {
+    id: 3,
+    title: "🛒 Tienda Online",
+    subtitle: "eCommerce profesional",
+    accent: "#00C853",
+    badge: null,
+    descriptors: [
+      "🛍️ eCommerce profesional completo",
+      "📦 Stock y carrito de compras",
+      "💳 WebPay y pagos integrados",
+      "📊 Panel de gestión incluido",
+    ],
+    price:         { CLP: "$250.000 - $400.000", USD: "$265 - $425" },
+    priceSinCupos: null,
+    periodicidad:  " pago único",
+    cuotas:        { CLP: "Hasta 6 cuotas disponibles", USD: "Up to 6 installments" },
+    extras: [
+      { icon: "🌐", label: "Dominio + Hosting incluido" },
+      { icon: "📦", label: "Mensualidad hosting $80.000" },
+    ],
+  },
 ];
 
-const letterVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: (i) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: 0.4 + i * 0.04 }, // puedes ajustar el tiempo
-  }),
-};
-const textoAnimado = "Tecnología que integramos";
-
-const pulse = keyframes`
-  0% {
-    transform: scale(1);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
-`;
-const GreenDot = styled("div")(() => ({
-  position: "relative",
-  width: "14px",
-  height: "14px",
-  borderRadius: "50%",
-  top: -1,
-  backgroundColor: "#00e676",
-  boxShadow: "0 0 8px rgba(0,255,0,0.5)",
-  marginRight: "10px",
-  flexShrink: 0,
-  "&::after": {
-    content: '""',
-    position: "absolute",
-    left: 0,
-    width: "100%",
-    height: "100%",
-    borderRadius: "50%",
-    backgroundColor: "#00e676",
-    opacity: 0.6,
-    transform: "scale(1)",
-    animation: `${pulse} 1.4s ease-out infinite`,
+const pilares = [
+  {
+    icon: "⚡",
+    title: "Entrega Rápida",
+    desc: "Tu sitio web listo en menos de 72 horas. Sin esperas, sin excusas.",
+    color: "#0075FF",
   },
-}));
+  {
+    icon: "🛡️",
+    title: "Soporte 24/7",
+    desc: "Siempre disponibles cuando nos necesites. Tu negocio no para.",
+    color: "#7B1FA2",
+  },
+  {
+    icon: "💰",
+    title: "Precio Justo",
+    desc: "Sin costos ocultos. Transparencia total desde el primer día.",
+    color: "#00C853",
+  },
+  {
+    icon: "🏆",
+    title: "Experiencia Comprobada",
+    desc: "+46 proyectos entregados en distintas industrias.",
+    color: "#FFB300",
+  },
+];
 
-function OrbitSystem({ isMobile, orbitInViewRef, orbitInView, controls }) {
+const PricingCard = ({ promo, isMobile, currency, toggleCurrency, conCupos, inView, index, onContact }) => {
+  const isSuscripcionSinCupos = promo.id === 1 && !conCupos;
 
-  // --- Tamaños base ---
-  const S = isMobile
-    ? { xl: 150, md: 90, sm: 70 }
-    : { xl: 170, md: 100, sm: 80 };
+  const price = promo.id === 3
+    ? promo.price[currency]
+    : conCupos
+      ? promo.price[currency]
+      : promo.priceSinCupos?.[currency] ?? promo.price[currency];
 
-  // Orbitantes intercalados
-  const orbit = [
-    { idx: 0, size: S.md },
-    { idx: 1, size: S.sm },
-    { idx: 2, size: S.md },
-    { idx: 3, size: S.sm },
-    { idx: 4, size: S.md },
-    { idx: 5, size: S.sm },
-    { idx: 6, size: S.md },
-    { idx: 7, size: S.sm },
-  ];
+  const mensualSinCupos = isSuscripcionSinCupos ? promo.mensualSinCupos?.[currency] : null;
 
-  const hoverFactor = 1.05;
-  const padTangential = 5;
-  const padRadial = 6;
-  const rCenterEff = (S.xl / 2) * hoverFactor;
-  const rEff = orbit.map(o => (o.size / 2) * hoverFactor + padTangential);
-  const step = (2 * Math.PI) / orbit.length;
-  const halfStepSin = Math.sin(step / 2);
-
-  let minFromNeighbors = 0;
-  for (let i = 0; i < rEff.length; i++) {
-    const a = rEff[i];
-    const b = rEff[(i + 1) % rEff.length];
-    minFromNeighbors = Math.max(minFromNeighbors, (a + b) / (2 * halfStepSin));
-  }
-  const minFromCenter = rCenterEff + Math.max(...rEff) + padRadial;
-  const Rring = Math.ceil(Math.max(minFromNeighbors, minFromCenter)) * 0.95;
-
-
-  let theta = -Math.PI / 2;
-  const toDeg = (rad) => (rad * 180) / Math.PI;
-
-  const layout = orbit.map(o => {
-    const node = { idx: o.idx, size: o.size, ring: 1, deg: toDeg(theta) };
-    theta += step;
-    return node;
-  });
-
-  const R = { 0: 0, 1: Rring };
-
-  const imgs = [
-    "logos-productos/aws.png",
-    "logos-productos/SSL.png",
-    "logos-productos/webpay.png",
-    "logos-productos/google-ads.jpg",
-    "logos-productos/google-analytics.png",
-    "logos-productos/SEO.png",
-    "logos-productos/SQL.jpg",
-    "logos-productos/correos.jpg",
-    "logos-productos/hosting.jpg", // central
-  ];
+  const cuotas = promo.id === 2 && !conCupos
+    ? promo.cuotasSinCupos?.[currency]
+    : promo.cuotas?.[currency];
 
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 * index }}
+      style={{ height: "100%", position: "relative" }}
+    >
+      {/* Badge — sube con la card al hacer hover porque está dentro del motion.div */}
+      {promo.badge && (
+        <Box sx={{
+          position: "absolute", top: -34, right: 14,
+          display: "inline-flex", alignItems: "center", gap: 0.6,
+          background: "linear-gradient(135deg, #ff6b35, #f7431e)",
+          color: "white", borderRadius: "10px 10px 0 0",
+          px: 2.5, py: 1.1,
+          fontFamily: "'Poppins', sans-serif",
+          fontSize: "0.78rem", fontWeight: 800,
+          boxShadow: "0 -4px 14px rgba(255,80,30,0.4)",
+          border: "1.5px solid #ff6a00",
+          borderBottom: "none",
+          whiteSpace: "nowrap", letterSpacing: "0.3px",
+          zIndex: 0,
+        }}>
+          🔥 {promo.badge}
+        </Box>
+      )}
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
-          textAlign: "center",
-          mb: 0.2,
-          ml: isMobile ? 5 : 6,
-        }}
-      >
-        {/* 💚 Animación del GreenDot controlada por orbitInView */}
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={
-            orbitInView
-              ? { scale: 1, opacity: 1 }
-              : { scale: 0, opacity: 0 }
-          }
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-        >
-          <GreenDot />
-        </motion.div>
+      <Box sx={{
+        position: "relative", height: "100%",
+        minHeight: isMobile ? 400 : 440,
+        borderRadius: "20px",
+        background: "rgba(6, 20, 40, 0.8)",
+        backdropFilter: "blur(14px)",
+        border: `1.5px solid ${promo.accent}44`,
+        boxShadow: `0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)`,
+        display: "flex", flexDirection: "column",
+        overflow: "hidden", zIndex: 1,
+        transition: "box-shadow 0.25s",
+        "&:hover": { boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 0 2px ${promo.accent}55` },
+      }}>
 
-        <Typography
-          variant="h4"
-          component="div"
-          sx={{
-            fontFamily: '"Poppins", sans-serif',
-            fontSize: { xs: "1.2rem", md: "1.8rem" },
-            letterSpacing: "0.5px",
-            color: "white",
-            display: "inline-flex",
-            flexWrap: "wrap",
-            overflow: "hidden",
-          }}
-        >
-          {textoAnimado.split("").map((char, i) => (
-            <motion.span
-              key={i}
-              custom={i}
-              variants={letterVariants}
-              initial="hidden"
-              animate={orbitInView ? "visible" : "hidden"}
-              style={{ display: "inline-block", whiteSpace: "pre" }}
-            >
-              {char}
-            </motion.span>
-          ))}
-        </Typography>
-      </Box>
+        {/* Header */}
+        <Box sx={{
+          background: `linear-gradient(135deg, ${promo.accent}22 0%, ${promo.accent}08 100%)`,
+          borderBottom: `1px solid ${promo.accent}33`,
+          px: isMobile ? 2.5 : 3, pt: 2.5, pb: 2,
+          display: "flex", alignItems: "center", overflow: "hidden",
+        }}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography sx={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800, fontSize: "0.95rem", color: "white", letterSpacing: "0.2px", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {promo.title}
+            </Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: promo.accent, fontWeight: 600, mt: 0.4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {promo.subtitle}
+            </Typography>
+          </Box>
+        </Box>
 
+        <Box sx={{ p: isMobile ? 2.5 : 3, display: "flex", flexDirection: "column", flexGrow: 1, gap: 1.5 }}>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-        }}
-      >
-        <motion.div
-          ref={orbitInViewRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-            transformOrigin: "center center",
-          }}
-        >
-          {layout.map((n, i) => {
-            const rad = (n.deg * Math.PI) / 180;
-            let x = R[n.ring] * Math.cos(rad);
-            const y = R[n.ring] * Math.sin(rad);
-
-            if ([1, 3].includes(i)) {
-              x += 13;
-            }
-            return (
-              <Box
-                key={i}
-                component={motion.div}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{
-                  scale: 1,
-                  opacity: 1,
-                  y: [0, -4, 0],
-                  transition: {
-                    duration: 0.6,
-                    ease: "easeOut",
-                    delay: 0.08 + i * 0.06,
-                    y: {
-                      duration: 3.4,
-                      repeat: orbitInView ? 2 : 0,
-                      ease: "easeInOut",
-                    },
-                  },
-                }}
-                whileHover={{
-                  scale: 1.06,
-                  boxShadow: "0 0 18px rgba(255,255,255,0.35)",
-                  zIndex: 4,
-                }}
-                sx={{
-                  position: "absolute",
-                  top: `calc(50% + ${y}px)`,
-                  left: `calc(50% + ${x}px)`,
-                  transform: "translate(-50%, -50%)",
-                  width: n.size,
-                  height: n.size,
-                  borderRadius: "50%",
-                  background:
-                    "linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-                  p: "4px",
-                  zIndex: 2,
-                }}
-              >
-                <Box
-                  component="img"
-                  src={imgs[n.idx]}
-                  alt={`Orbita ${i + 1}`}
-                  sx={{
-                    background: "white",
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    objectFit: "contain",
-                    border: "2px solid black",
-                  }}
-                />
-              </Box>
-            );
-          })}
-        </motion.div>
-
-        {/* --- CENTRO --- */}
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: `translate(${isMobile ? "13%" : "10%"}, ${isMobile ? "13%" : "13%"
-              })`,
-            zIndex: 3,
-          }}
-        >
-          <Box
-            component={motion.div}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-              y: [0, -4, 0],
-              transition: {
-                duration: 0.6,
-                ease: "easeOut",
-                delay: 0.08,
-                y: {
-                  duration: 3.4,
-                  repeat: orbitInView ? 2 : 0,
-                  ease: "easeInOut",
-                },
-              },
-            }}
-            whileHover={{
-              scale: 1.06,
-              boxShadow: "0 0 18px rgba(255,255,255,0.35)",
-              zIndex: 4,
-            }}
-            sx={{
-              position: "relative", // 🔥 Necesario para posicionar el pseudo-elemento
-              width: S.xl,
-              height: S.xl,
-              borderRadius: "50%",
-              background:
-                "linear-gradient(45deg, #4f5bd5, #962fbf, #d62976, #fa7e1e, #feda75)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 0 30px rgba(255,255,255,0.5)",
-              p: "4px",
-              overflow: "hidden", // evita que el brillo se salga
-              // ✨ Brillo diagonal
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(130deg, transparent 40%, rgba(255,255,255,0.8) 50%, transparent 60%)",
-                transform: "translateX(-100%)",
-                animation: "shineDiagonal 2.4s ease-in-out 2",
-                borderRadius: "inherit",
-                pointerEvents: "none",
-                zIndex: 1,
-              },
-              "@keyframes shineDiagonal": {
-                "0%": { transform: "translateX(-100%)" },
-                "50%": { transform: "translateX(100%)" },
-                "100%": { transform: "translateX(100%)" },
-              },
-            }}
-          >
-            <Box
-              component="img"
-              src={imgs[8]}
-              alt="Centro"
-              sx={{
-                background: "white",
-                width: "100%",
-                height: "100%",
-                borderRadius: "50%",
-                objectFit: "contain",
-                border: "3px solid black",
-                zIndex: 2, // 👈 para que quede sobre el pseudo-elemento
-              }}
-            />
+          {/* Descriptors */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.6, flexGrow: 1 }}>
+            {promo.descriptors.map((d, i) => (
+              <Typography key={i} sx={{ fontSize: isMobile ? "0.8rem" : "0.84rem", color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
+                {d}
+              </Typography>
+            ))}
           </Box>
 
-        </Box>
-      </Box >
-    </>
-  );
-}
+          {/* Bloque precio */}
+          <Box sx={{ mt: 0.5 }}>
 
+            {/* Precio principal + toggle */}
+            <Box onClick={toggleCurrency} sx={{
+              background: currency === "USD"
+                ? "linear-gradient(180deg, #00B871, #007A48)"
+                : `linear-gradient(180deg, ${promo.accent}, ${promo.accent}cc)`,
+              borderRadius: "12px 12px 0 0", px: 2, pt: 1.2, pb: 0.8,
+              display: "flex", alignItems: "baseline", justifyContent: "space-between",
+              cursor: "pointer",
+              boxShadow: `0 4px 14px ${promo.accent}44`,
+              transition: "all 0.3s ease",
+            }}>
+              <AnimatePresence mode="wait">
+                <motion.div key={`price-${currency}-${conCupos}`} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.25 }}>
+                  <Box>
+                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+                      <Typography sx={{ fontFamily: "'Poppins', sans-serif", fontWeight: 900, fontSize: isMobile ? "1rem" : (price.length > 10 ? "0.95rem" : "1.25rem"), color: "white", lineHeight: 1, whiteSpace: "nowrap" }}>
+                        {price}
+                      </Typography>
+                      <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
+                        {currency}
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", mt: 0.2 }}>
+                      {isSuscripcionSinCupos ? "desarrollo" : promo.periodicidad}
+                    </Typography>
+                  </Box>
+                </motion.div>
+              </AnimatePresence>
+              <Typography sx={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.8)", fontWeight: 600, border: "1px solid rgba(255,255,255,0.3)", borderRadius: "6px", px: 0.8, py: 0.2, flexShrink: 0, ml: 1 }}>
+                {currency === "USD" ? "🪙 CLP" : "💵 USD"}
+              </Typography>
+            </Box>
+
+            {/* Cuotas / extras */}
+            <Box sx={{
+              background: "rgba(255,255,255,0.05)",
+              borderRadius: "0 0 10px 10px",
+              border: `1px solid ${promo.accent}33`,
+              borderTop: "none",
+              px: 2, py: 1,
+              display: "flex", flexDirection: "column", gap: 0.5,
+              mb: 1.5,
+            }}>
+              {cuotas && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                  <Typography sx={{ fontSize: "0.68rem" }}>💳</Typography>
+                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>
+                    {cuotas}
+                  </Typography>
+                </Box>
+              )}
+              {promo.extras.map((ex, i) => (
+                <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                  <Typography sx={{ fontSize: "0.68rem" }}>{ex.icon}</Typography>
+                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.6)" }}>
+                    {ex.label}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+
+            {/* CTA */}
+            <Box component="button" onClick={() => onContact(promo.title)} sx={{
+              all: "unset", boxSizing: "border-box", width: "100%",
+              background: "linear-gradient(90deg, #FF9800, #F57C00)",
+              color: "white", border: "2px solid #E65100",
+              borderRadius: "10px", py: 0.9,
+              fontWeight: 700, fontSize: "0.85rem", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 1,
+              transition: "box-shadow 0.2s",
+              "&:hover": { boxShadow: "0 4px 14px rgba(255,152,0,0.4)" },
+            }}>
+              Solicitar Cotización
+              <Box component="img" src="/clic.jpg" alt="clic" sx={{ filter: "invert(1) brightness(2)", width: 22, height: "auto" }} />
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </motion.div>
+  );
+};
+
+const PilarCard = ({ pilar, index, inView }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
+    transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 * index }}
+    style={{ height: "100%" }}
+  >
+    <Box sx={{
+      borderRadius: "16px",
+      background: "rgba(6, 20, 40, 0.7)",
+      backdropFilter: "blur(10px)",
+      border: `1.5px solid ${pilar.color}44`,
+      p: 3,
+      textAlign: "center",
+      height: "100%",
+      boxSizing: "border-box",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      transition: "transform 0.2s, box-shadow 0.2s",
+      "&:hover": {
+        transform: "translateY(-4px)",
+        boxShadow: `0 12px 32px rgba(0,0,0,0.4), 0 0 0 2px ${pilar.color}55`,
+      },
+    }}>
+      <Typography sx={{ fontSize: "2.8rem", mb: 1 }}>{pilar.icon}</Typography>
+      <Typography sx={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800, fontSize: "0.88rem", color: pilar.color, mb: 0.8, letterSpacing: "0.3px", whiteSpace: "nowrap" }}>
+        {pilar.title}
+      </Typography>
+      <Typography sx={{ fontSize: "0.85rem", color: "white", lineHeight: 1.6 }}>
+        {pilar.desc}
+      </Typography>
+    </Box>
+  </motion.div>
+);
 
 const Areas = () => {
-  const [currentImage, setCurrentImage] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [delayed, setDelayed] = useState(false);
-  const { ref, inView } = useInView({ threshold: 0.15, triggerOnce: true });
-  const [scrollY, setScrollY] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
-  const videosRef = useRef([]);
-  const { ref: refGrid, inView: inViewGrid } = useInView({ threshold: 0.25, triggerOnce: true });
-  const [hasEntered, setHasEntered] = useState(false);
-  const controls = useAnimation();
-  const { ref: orbitInViewRef, inView: orbitInView } = useInView({ threshold: 0.25, triggerOnce: true });
+  const [currency, setCurrency] = useState("CLP");
+  const [conCupos, setConCupos] = useState(() => localStorage.getItem("ConCupos") === "true");
 
-
-  //EVITAR ANIMACIÓN DUPLICADA
-  useEffect(() => {
-    if (inView && !hasAnimated) {
-      const timer = setTimeout(() => {
-        setHasAnimated(true); //
-      }, 1600);
-      return () => clearTimeout(timer);
-    }
-  }, [inView, hasAnimated]);
+  const { ref: pricingRef, inView: pricingInView } = useInView({ threshold: 0.1, triggerOnce: true });
+  const { ref: pilaresRef, inView: pilaresInView } = useInView({ threshold: 0.1, triggerOnce: true });
 
   useEffect(() => {
-    // Solo se activa el retraso cuando el item está en vista
-    if (inView) {
-      const timer = setTimeout(() => {
-        setDelayed(true);
-      }, 1500); // ⏳ Ahora el contador se activa después de 1.2 segundos
+    const sync = () => setConCupos(localStorage.getItem("ConCupos") === "true");
+    window.addEventListener("storage", sync);
+    window.addEventListener("conCuposChanged", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("conCuposChanged", sync);
+    };
+  }, []);
 
-      return () => clearTimeout(timer); // Limpia el temporizador al desmontarse
-    }
-  }, [inView]);
+  const toggleCurrency = () => setCurrency(prev => prev === "CLP" ? "USD" : "CLP");
 
-  useEffect(() => {
-    if (inViewGrid && !hasEntered) {
-      setHasEntered(true);
-    }
-  }, [inViewGrid, hasEntered]);
-
-  // Función para dividir el texto en palabras
-  const splitTextIntoWords = (text) => {
-    return text.split(" ").map((word, index) => (
-      <motion.span
-        key={index}
-        initial={{ opacity: 0, x: "100%" }} // Empieza invisible y desde la derecha
-        animate={{
-          opacity: delayed ? 1 : 0,
-          x: delayed ? 0 : "100%", // Aparece palabra por palabra
-        }}
-        transition={{
-          delay: 0.2 + index * 0.2, // Retraso escalonado para cada palabra
-          duration: 0.7,
-          ease: "easeOut",
-        }}
-        style={{ display: "inline-block", marginRight: "5px" }} // Espaciado entre palabras
-      >
-        {word}
-      </motion.span>
-    ));
+  const handleContactClick = (title) => {
+    const mensaje = `¡Hola! Me interesó la promoción de ${encodeURIComponent(title)} ¿Me comentas?`;
+    window.open(`https://api.whatsapp.com/send?phone=56946873014&text=${mensaje}`, "_blank");
   };
 
-
-  useEffect(() => {
-    if (isMobile) {
-      const handleScroll = () => {
-        setScrollY(window.scrollY);
-      };
-      window.addEventListener("scroll", handleScroll);
-      return () => window.removeEventListener("scroll", handleScroll);
-    }
-  }, [isMobile]);
-
-  useEffect(() => {
-    videosRef.current.forEach((video, index) => {
-      if (!video) return;
-
-      const isCafeVideo = index === 3;
-
-      if (isCafeVideo && inView && !hasAnimated) {
-        video.play().catch(() => { });
-      } else {
-        video.pause();
-      }
-    });
-  }, [inView, hasAnimated]);
-
-
-  useEffect(() => {
-    if (orbitInView) {
-      // Reiniciamos la animación desde 0 grados para evitar que se dispare antes
-      controls.set({ rotate: 0 });
-
-      // Le damos un pequeño delay para que se vea al entrar
-      const timer = setTimeout(() => {
-        controls.start({
-          rotate: [0, 360],
-          transition: {
-            duration: 2.8,
-            ease: [0.33, 1, 0.68, 1],
-          },
-        });
-      }, 300);
-
-      return () => clearTimeout(timer);
-    }
-  }, [orbitInView, controls]);
-
   return (
+    <Box sx={{
+      position: "relative",
+      backgroundImage: isMobile
+        ? "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url(/fondo-areas2.webp)"
+        : "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url(/fondo-areas1.webp)",
+      backgroundRepeat: "no-repeat",
+      backgroundSize: "100% 100%",
+      backgroundPosition: "center top",
+      backgroundAttachment: "scroll",
+      paddingTop: "10px !important",
+      padding: { xs: 3, md: 10 },
+      paddingBottom: { xs: 10, md: 4 },
+      mt: "-160px",
+      overflow: "visible",
+    }}>
 
-    <Box
-      sx={{
-        position: 'relative', // 👈 necesario para que el degradado se posicione correctamente
-        backgroundImage: isMobile ? 'url(/fondo-areas2.webp)' : 'url(/fondo-areas1.webp)',
-        backgroundRepeat: "no-repeat",
-        backgroundSize: isMobile ? "100% 100%" : "100% auto",
-        backgroundPosition: isMobile ? "center" : "",
-        backgroundAttachment: "scroll",
-        minHeight: isMobile ? "85vh" : "auto",
-        paddingTop: "10px !important",
-        padding: { xs: 4, md: 16 },
-        paddingBottom: { xs: 16, md: 5 },
-        zIndex: 0, // 👈 se mantiene por debajo del borde del componente anterior
-        mt: "-100px", // 👈 puedes ajustar entre -80px y -120px para encaje perfecto
-        overflow: "visible",  // 👈 permite que el borde de arriba se vea
-      }}
-    >
-      <Grid
-        container
-        spacing={4}
-        alignItems="center"
-        justifyContent="center"
-        pt={10}
-      >
-        {/* 🪐 Columna izquierda: OrbitSystem */}
-        <Grid
-          item
-          xs={12}
-          md={5}
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          position="relative"
-          sx={{
-            height: { xs: 500, md: 560 },
-            overflow: "visible",
-            order: { xs: 2, md: 1 }, // 👉 en móvil va abajo
-          }}
+      {/* ── Sección 1: Nuestros Precios ── */}
+      <Box id="nuestras-ofertas" ref={pricingRef} sx={{ pt: { xs: 22, md: 26 }, pb: { xs: 6, md: 8 } }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={pricingInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7 }}
         >
-          <Box
-            sx={{
-              position: "relative",
-              width: isMobile ? 350 : 480,
-              height: isMobile ? 360 : 420,
-              left: { xs: "-13%", md: 0 },
-              transition: "left 0.3s ease",
-            }}
-          >
-            <OrbitSystem
-              isMobile={isMobile}
-              orbitInViewRef={orbitInViewRef}
-              orbitInView={orbitInView}
-              controls={controls}
-            />
+          {/* Chip superior */}
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <Box sx={{
+              display: "inline-flex", alignItems: "center", gap: 1,
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: "100px", px: 2.5, py: 0.7,
+              backdropFilter: "blur(10px)",
+            }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: "50%", background: "#00e676", boxShadow: "0 0 8px #00e676", flexShrink: 0 }} />
+              <Typography sx={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.9)", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase" }}>
+                Planes disponibles
+              </Typography>
+            </Box>
           </Box>
-        </Grid>
 
+          {/* Título principal */}
+          <Typography sx={{
+            fontFamily: "'Poppins', sans-serif", fontWeight: 800, textAlign: "center",
+            fontSize: { xs: "1.6rem", md: "2rem" },
+            color: "white",
+            letterSpacing: "0px", lineHeight: 1.2, mb: 1,
+          }}>
+            Nuestras Ofertas
+          </Typography>
 
-        {/* 📊 Columna derecha: tarjetas de datos */}
-        <Grid
-          item
-          xs={12}
-          md={5}
-          sx={{
-            order: { xs: 3, md: 3 },
-          }}
-        >
-          <motion.div
-            ref={refGrid}
-            initial={{ opacity: 0, scale: 0.95, y: 40 }}
-            animate={{
-              opacity: inViewGrid ? 1 : 0,
-              scale: inViewGrid ? 1 : 0.95,
-              y: inViewGrid ? 0 : 40,
-            }}
-            transition={{
-              duration: 0.5,
-              ease: "easeOut",
-            }}
-          >
-            <Grid container spacing={4} mt={isMobile ? -4 : 6}>
-              {data.map((item, index) => (
-                <Grid item xs={6} sm={6} md={6} key={index}>
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{
-                      scale: hasEntered ? 1 : 0,
-                      opacity: hasEntered ? 1 : 0,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      ease: "easeOut",
-                      delay: 0.1 * index,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        textAlign: "center",
-                        color: "white",
-                        borderRadius: 2,
-                        width: "100%",
-                        height: 150,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        fontFamily: "'Poppins', sans-serif",
-                        perspective: "1000px",
-                        cursor: "pointer",
-                        position: "relative",
-                      }}
-                      ref={ref}
-                    >
-                      {/* Caja rotatoria */}
-                      <Box
-                        sx={{
-                          width: "100%",
-                          height: "100%",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          transformStyle: "preserve-3d",
-                          transition: "transform 1.4s",
-                          transitionDelay: inView ? "0.8s" : "0s",
-                          transform: inView || hasAnimated
-                            ? "rotateY(180deg)"
-                            : "rotateY(0deg)",
-                          position: "relative",
-                        }}
-                      >
-                        {/* Cara trasera */}
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            backfaceVisibility: "hidden",
-                            width: isMobile ? "115%" : "100%",
-                            height: "100%",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            flexDirection: "column",
-                            backgroundColor: "rgba(24, 26, 27, 0.9)",
-                            borderRadius: 2,
-                            boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",
-                            zIndex: 2,
-                            transform: "rotateY(180deg)",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              minWidth: "100px",
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Typography
-                              variant="h3"
-                              gutterBottom
-                              sx={{
-                                fontFamily: "'Saira', Sans-serif",
-                                fontWeight: "700",
-                                textAlign: "center",
-                                mb: 0.5,
-                                fontSize: isMobile ? "2.6rem" : "2.2rem",
-                              }}
-                            >
-                              +{delayed ? (
-                                <CountUp start={0} end={item.count} duration={3.1} />
-                              ) : (
-                                "0"
-                              )}
-                            </Typography>
-                            <Box
-                              sx={{
-                                textAlign: "center",
-                                maxWidth: isMobile ? "100%" : "90%",
-                                fontSize: isMobile ? "0.93rem" : "1.1rem",
-                                fontFamily: "'Oswald', sans-serif",
-                              }}
-                            >
-                              {splitTextIntoWords(item.text)}
-                            </Box>
-                          </Box>
-                        </Box>
+          {/* Subtítulo */}
+          <Typography sx={{
+            textAlign: "center", fontSize: { xs: "0.85rem", md: "0.95rem" },
+            color: "rgba(255,255,255,0.75)", mb: 9,
+            maxWidth: 480, mx: "auto", lineHeight: 1.6,
+          }}>
+            Elige el plan que mejor se adapta a tu negocio
+          </Typography>
+        </motion.div>
 
-                        {/* Cara delantera */}
-                        <video
-                          ref={(el) => (videosRef.current[index] = el)}
-                          src={item.image}
-                          muted
-                          playsInline
-                          preload={isMobile ? "auto" : "metadata"}
-                          onLoadedData={(e) => {
-                            if (index !== 3) {
-                              try {
-                                e.currentTarget.currentTime = 0.05;
-                                e.currentTarget.pause();
-                              } catch (_) {
-                                // no-op
-                              }
-                            }
-                          }}
-                          style={{
-                            position: "absolute",
-                            backfaceVisibility: "hidden",
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            borderRadius: 8,
-                            boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",
-                          }}
-                        />
-                      </Box>
-                    </Box>
-                  </motion.div>
-                </Grid>
-              ))}
+        <Grid container spacing={3} rowSpacing={{ xs: 6, md: 3 }} justifyContent="center" alignItems="stretch">
+          {promotions.map((promo, index) => (
+            <Grid item xs={12} sm={6} md={4} key={promo.id} sx={{ display: "flex" }}>
+              <Box sx={{ width: "100%" }}>
+                <PricingCard
+                  promo={promo}
+                  isMobile={isMobile}
+                  currency={currency}
+                  toggleCurrency={toggleCurrency}
+                  conCupos={conCupos}
+                  inView={pricingInView}
+                  index={index}
+                  onContact={handleContactClick}
+                />
+              </Box>
             </Grid>
-          </motion.div>
+          ))}
         </Grid>
-      </Grid>
+      </Box>
 
+      {/* ── Sección 2: ¿Por qué elegirnos? ── */}
+      <Box ref={pilaresRef} sx={{ pb: { xs: 4, md: 3 } }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={pilaresInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7 }}
+        >
+          {/* Chip superior */}
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <Box sx={{
+              display: "inline-flex", alignItems: "center", gap: 1,
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: "100px", px: 2.5, py: 0.7,
+              backdropFilter: "blur(10px)",
+            }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: "50%", background: "#00e676", boxShadow: "0 0 8px #00e676", flexShrink: 0 }} />
+              <Typography sx={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.9)", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase" }}>
+                Nuestra propuesta de valor
+              </Typography>
+            </Box>
+          </Box>
 
-      {
-        !isMobile && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              width: '100%',
-              height: '120px',
-              background: 'linear-gradient(to bottom, transparent, white)',
-              pointerEvents: 'none',
-              zIndex: 10,
-            }}
-          />
-        )
-      }
+          {/* Título */}
+          <Typography sx={{
+            fontFamily: "'Poppins', sans-serif", fontWeight: 800, textAlign: "center",
+            fontSize: { xs: "1.6rem", md: "2rem" },
+            color: "white",
+            letterSpacing: "0px", lineHeight: 1.2, mb: 1,
+          }}>
+            ¿Por qué elegirnos?
+          </Typography>
 
-    </Box >
+          {/* Subtítulo */}
+          <Typography sx={{
+            textAlign: "center", fontSize: { xs: "0.85rem", md: "0.95rem" },
+            color: "rgba(255,255,255,0.75)", mb: 5,
+            maxWidth: 480, mx: "auto", lineHeight: 1.6,
+          }}>
+            Más de 10 años de experiencia respaldan cada proyecto
+          </Typography>
+        </motion.div>
 
+        <Grid container spacing={3} justifyContent="center" alignItems="stretch">
+          {pilares.map((pilar, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index} sx={{ display: "flex" }}>
+              <PilarCard pilar={pilar} index={index} inView={pilaresInView} />
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+
+    </Box>
   );
 };
 

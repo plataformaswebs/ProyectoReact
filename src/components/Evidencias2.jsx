@@ -1,487 +1,287 @@
-﻿import React, { useRef, useState, useEffect } from 'react';
-import { Box, Typography, CardMedia, useTheme, useMediaQuery, keyframes } from '@mui/material';
+import React, { useRef, useState, useEffect } from 'react';
+import { Box, Typography, CardMedia, useTheme, useMediaQuery } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useInView } from "react-intersection-observer";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 
-const scrollLeft = keyframes`
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-1798px); }
-`;
-
-const letterVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: (i) => ({
-        opacity: 1,
-        x: 0,
-        transition: { delay: 0.4 + i * 0.04 }, // puedes ajustar el tiempo
-    }),
-};
-const textoAnimado = "Trabajos recientes";
 const evidencias = [
-    {
-        url: "https://www.ivelpink.cl",
-        label: "www.ivelpink.cl",
-        video: "/evidencia1.mp4",
-        logo: "/logos/logo-ivelpink.jpg"
-    },
-    {
-        url: "https://www.ingsnt.cl",
-        label: "www.ingsnt.cl",
-        video: "/evidencia2.mp4",
-        logo: "/logos/logo-ingsnt.png"
-    },
-    {
-        url: "https://www.masatracker.cl",
-        label: "www.masatracker.cl",
-        video: "/evidencia3.mp4",
-        logo: "/logos/logo-mastracker.png"
-    },
-    {
-        url: "https://www.investigadores-privados.cl",
-        label: "investigadores-privados.cl",
-        video: "/evidencia4.mp4",
-        logo: "/logos/logo-investigadores-privados.png"
-    },
-    {
-        url: "https://www.sifg.cl",
-        label: "www.sifg.cl",
-        video: "/evidencia6.mp4",
-        logo: "/logos/logo-sifg.png"
-    },
+  { url: "https://www.ivelpink.cl",                label: "ivelpink.cl",               video: "/evidencia1.mp4", logo: "/logos/logo-ivelpink.jpg" },
+  { url: "https://www.ingsnt.cl",                  label: "ingsnt.cl",                 video: "/evidencia2.mp4", logo: "/logos/logo-ingsnt.png" },
+  { url: "https://www.masatracker.cl",             label: "masatracker.cl",            video: "/evidencia3.mp4", logo: "/logos/logo-mastracker.png" },
+  { url: "https://www.investigadores-privados.cl", label: "investigadores-privados.cl",video: "/evidencia4.mp4", logo: "/logos/logo-investigadores-privados.png" },
+  { url: "https://www.masautomatizacion.cl",       label: "masautomatizacion.cl",      video: "/evidencia5.mp4", logo: "/logos/logo-masautomatizacion.png" },
+  { url: "https://www.sifg.cl",                    label: "sifg.cl",                   video: "/evidencia6.mp4", logo: "/logos/logo-sifg.png" },
+  { url: null,                                     label: "autoges-web.cl",            video: "/evidencia7.mp4", logo: "/logos/logo-autoges.png" },
 ];
 
 const SeccionDestacada = () => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const videosRef = useRef([]);
-    const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-    const { ref, inView } = useInView({ threshold: 0.3, triggerOnce: true, rootMargin: '0px 0px -30% 0px' });
-    const { ref: scrollRef, inView: scrollVisible } = useInView({ threshold: 0, rootMargin: '200px 0px 200px 0px' });
-    const [hasAnimated, setHasAnimated] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const thumbRefs = useRef([]);
+  const [active, setActive] = useState(0);
+  const [hovered, setHovered] = useState(null);
+  const [paused, setPaused] = useState(false);
 
+  const { ref, inView } = useInView({ threshold: 0.15, triggerOnce: true });
+  const { ref: sectionRef, inView: sectionInView } = useInView({ threshold: 0.05 });
 
-    //EVITAR ANIMACIÃ"N DUPLICADA
-    useEffect(() => {
-        if (inView && !hasAnimated) {
-            setHasAnimated(true);
-        }
-    }, [inView, hasAnimated]);
+  // Auto-cycle
+  useEffect(() => {
+    if (!sectionInView || paused) return;
+    const interval = setInterval(() => {
+      setActive(prev => (prev + 1) % evidencias.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [sectionInView, paused]);
 
-    const handleVideoClick = (e) => {
-        const video = e.target;
-        if (video.requestFullscreen) video.requestFullscreen();
-        else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-        else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
-        else if (video.msRequestFullscreen) video.msRequestFullscreen();
+  // Pause thumbs, play active
+  useEffect(() => {
+    thumbRefs.current.forEach((v, i) => {
+      if (!v) return;
+      i === active ? v.play().catch(() => {}) : v.pause();
+    });
+  }, [active, sectionInView]);
 
-        if (video.paused) video.play();
-    };
+  const handleSelect = (i) => {
+    setActive(i);
+    setPaused(true);
+    setTimeout(() => setPaused(false), 8000);
+  };
 
-    useEffect(() => {
-        if (!inView) return;
+  return (
+    <Box ref={sectionRef} sx={{
+      width: "100%",
+      background: "linear-gradient(160deg, rgba(6,12,28,0.98) 0%, rgba(10,20,45,0.98) 100%)",
+      py: { xs: 6, md: 8 },
+      px: { xs: 2, md: 6 },
+      boxSizing: "border-box",
+    }}>
+      <Box sx={{ maxWidth: 1280, mx: "auto" }}>
 
-        const interval = setInterval(() => {
-            setActiveVideoIndex((prev) => (prev + 1) % evidencias.length);
-        }, 2000);
-
-        return () => clearInterval(interval);
-    }, [inView]);
-
-    useEffect(() => {
-        videosRef.current.forEach((video, index) => {
-            if (!video) return;
-
-            if (inView && index === activeVideoIndex) {
-                video.play().catch(() => { });
-            } else {
-                video.pause();
-            }
-        });
-    }, [activeVideoIndex, inView]);
-
-    const renderScrollRow = (delay = '0s') => (
-        <Box
-            sx={{
-                width: '3596px',
-                height: '336px',
-                display: 'flex',
-                animation: `${scrollLeft} 80s linear infinite`,
-                animationDelay: delay,
-                animationPlayState: scrollVisible ? 'running' : 'paused',
-                willChange: 'transform',
-            }}
-        >
-            <Box
-                component="img"
-                src="/fondo-mongodb.svg"
-                alt="fondo"
-                loading="lazy"
-                decoding="async"
-                sx={{ width: '1776px', height: '336px', objectFit: 'cover', display: 'block', mr: '22px' }}
-            />
-            <Box
-                component="img"
-                src="/fondo-mongodb.svg"
-                alt="fondo"
-                loading="lazy"
-                decoding="async"
-                sx={{ width: '1776px', height: '336px', objectFit: 'cover', display: 'block', mr: '22px' }}
-            />
+        {/* Título */}
+        <Box ref={ref} sx={{ mb: 5, textAlign: "center" }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
+              <Box sx={{
+                display: "inline-flex", alignItems: "center", gap: 1,
+                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: "100px", px: 2.5, py: 0.6, backdropFilter: "blur(10px)",
+              }}>
+                <Box sx={{ width: 7, height: 7, borderRadius: "50%", background: "#00e676", boxShadow: "0 0 8px #00e676" }} />
+                <Typography sx={{ fontSize: "0.74rem", color: "rgba(255,255,255,0.85)", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase" }}>
+                  Proyectos entregados
+                </Typography>
+              </Box>
+            </Box>
+            <Typography sx={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800, fontSize: { xs: "1.6rem", md: "2rem" }, color: "white" }}>
+              Trabajos Recientes
+            </Typography>
+            <Typography sx={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.45)", mt: 0.5 }}>
+              Cada sitio, una historia de confianza
+            </Typography>
+          </motion.div>
         </Box>
-    );
 
-    useEffect(() => {
-        if (inView && !hasAnimated) {
-            setHasAnimated(true);
-        }
-    }, [inView, hasAnimated]);
-
-    return (
-        <Box
-            ref={scrollRef}
-            sx={{
-                position: 'relative',
-                width: '100%',
-                height: isMobile ? '100vh' : '600px',
-                overflow: 'hidden',
-            }}
+        {/* Layout principal */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.2 }}
         >
-            {/* Fondo animado */}
-            <Box
-                sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    bgcolor: 'rgb(0 30 43)',
-                    zIndex: 0,
-                    display: { xs: 'none', md: 'block' }, // Solo desktop
-                }}
-            >
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 13,
-                        left: 0,
-                        height: '336px',
-                        width: '100%',
-                        overflow: 'hidden',
-                    }}
-                >
-                    {renderScrollRow('0s')}
+          <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
+
+            {/* Video destacado (izquierda) */}
+            <Box sx={{ flex: "0 0 62%", position: "relative" }}>
+              <Box sx={{
+                borderRadius: "20px", overflow: "hidden",
+                border: "2px solid rgba(0,220,255,0.5)",
+                boxShadow: "0 0 40px rgba(0,200,255,0.2), 0 20px 60px rgba(0,0,0,0.6)",
+                background: "#000",
+                position: "relative",
+              }}>
+                {/* Badge EN VIVO */}
+                <Box sx={{
+                  position: "absolute", top: 14, left: 14, zIndex: 3,
+                  display: "flex", alignItems: "center", gap: 0.6,
+                  background: "rgba(0,200,255,0.12)", backdropFilter: "blur(8px)",
+                  border: "1px solid rgba(0,220,255,0.4)",
+                  borderRadius: "100px", px: 1.4, py: 0.4,
+                }}>
+                  <Box sx={{ width: 7, height: 7, borderRadius: "50%", background: "#00e676", boxShadow: "0 0 6px #00e676" }} />
+                  <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.9)", fontWeight: 700, letterSpacing: "0.5px" }}>
+                    EN VIVO
+                  </Typography>
                 </Box>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: -110,
-                        left: 0,
-                        height: '336px',
-                        width: '100%',
-                        overflow: 'hidden',
-                    }}
-                >
-                    {renderScrollRow('-20s')}
-                </Box>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '35%',
-                        background: 'linear-gradient(to bottom, transparent, rgb(0 30 43 / 1))',
-                        zIndex: 1,
-                    }}
+
+                <motion.video
+                  key={active}
+                  src={evidencias[active].video}
+                  autoPlay playsInline muted loop
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4 }}
+                  style={{ width: "100%", height: "420px", objectFit: "cover", display: "block" }}
                 />
+
+                {/* Info overlay bottom */}
+                <Box sx={{
+                  position: "absolute", bottom: 0, left: 0, right: 0,
+                  background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)",
+                  px: 2.5, py: 2, display: "flex", alignItems: "center", justifyContent: "space-between",
+                }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    {evidencias[active].logo && (
+                      <Box sx={{
+                        width: 40, height: 40, borderRadius: "50%",
+                        background: "linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)",
+                        p: "3px", flexShrink: 0,
+                      }}>
+                        <Box component="img" src={evidencias[active].logo} alt={evidencias[active].label}
+                          sx={{ width: "100%", height: "100%", borderRadius: "50%", backgroundColor: "#fff", objectFit: "contain" }} />
+                      </Box>
+                    )}
+                    {evidencias[active].url ? (
+                      <Typography component="a" href={evidencias[active].url} target="_blank" rel="noopener noreferrer"
+                        sx={{ color: "#38bdf8", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none", "&:hover": { color: "#7dd3fc" } }}>
+                        {evidencias[active].label}
+                      </Typography>
+                    ) : (
+                      <Typography sx={{ color: "rgba(255,255,255,0.6)", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: "0.9rem" }}>
+                        {evidencias[active].label}
+                      </Typography>
+                    )}
+                  </Box>
+                  {evidencias[active].url && (
+                    <Box component="a" href={evidencias[active].url} target="_blank" rel="noopener noreferrer"
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5, background: "rgba(56,189,248,0.15)", border: "1px solid rgba(56,189,248,0.3)", borderRadius: "8px", px: 1.2, py: 0.5, textDecoration: "none", transition: "background 0.2s", "&:hover": { background: "rgba(56,189,248,0.25)" } }}>
+                      <Typography sx={{ fontSize: "0.72rem", color: "#38bdf8", fontWeight: 600 }}>Ver sitio</Typography>
+                      <OpenInNewRoundedIcon sx={{ fontSize: "0.8rem", color: "#38bdf8" }} />
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Indicadores de progreso */}
+              <Box sx={{ display: "flex", gap: 0.8, mt: 1.5, justifyContent: "center" }}>
+                {evidencias.map((_, i) => (
+                  <Box key={i} onClick={() => handleSelect(i)} sx={{
+                    height: 3, borderRadius: "2px", cursor: "pointer",
+                    width: i === active ? 24 : 8,
+                    background: i === active ? "#38bdf8" : "rgba(255,255,255,0.2)",
+                    transition: "all 0.3s ease",
+                  }} />
+                ))}
+              </Box>
             </Box>
 
-            {/* Contenido */}
-            <Box
-                sx={{
-                    position: 'relative',
-                    display: 'flex',
-                    width: '100%',
-                    height: '100%',
-                    zIndex: 2,
-                }}
-            >
-                {/* Panel blanco con tÃ­tulo y videos */}
-                <Box
-                    ref={ref}
-                    sx={{
-                        width: '55%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'flex-start',
-                        px: 2,
-                        py: 3,
-                        gap: 0,
-                        overflowY: 'auto',
-                        scrollbarWidth: 'none', // Firefox
-                        '&::-webkit-scrollbar': {
-                            display: 'none', // Chrome, Safari, Edge
-                        },
-                    }}
-                    style={{ backgroundColor: 'white', color: 'black' }}
+            {/* Lista de thumbnails (derecha) */}
+            <Box sx={{
+              flex: 1, position: "relative",
+              maxHeight: 450,
+              "&::after": {
+                content: '""', position: "absolute", bottom: 0, left: 0, right: 8,
+                height: 60, pointerEvents: "none", zIndex: 1,
+                background: "linear-gradient(to bottom, transparent, rgba(6,12,28,0.95))",
+                borderRadius: "0 0 12px 12px",
+              },
+            }}>
+            <Box sx={{
+              display: "flex", flexDirection: "column", gap: 1.5,
+              maxHeight: 450, overflowY: "auto", pr: 1,
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(56,189,248,0.3) rgba(255,255,255,0.04)",
+              "&::-webkit-scrollbar": { width: 4 },
+              "&::-webkit-scrollbar-track": { background: "rgba(255,255,255,0.04)", borderRadius: 4 },
+              "&::-webkit-scrollbar-thumb": { background: "rgba(56,189,248,0.35)", borderRadius: 4, "&:hover": { background: "rgba(56,189,248,0.6)" } },
+            }}>
+              {evidencias.map((ev, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={inView ? { opacity: 1, x: 0 } : {}}
+                  transition={{ duration: 0.5, delay: 0.1 + i * 0.07 }}
                 >
+                  <Box
+                    onClick={() => handleSelect(i)}
+                    onMouseEnter={() => setHovered(i)}
+                    onMouseLeave={() => setHovered(null)}
+                    sx={{
+                      display: "flex", alignItems: "center", gap: 1.5,
+                      borderRadius: "12px", p: 1, cursor: "pointer",
+                      border: i === active ? "1.5px solid rgba(0,220,255,0.6)" : "1.5px solid rgba(255,255,255,0.06)",
+                      background: i === active ? "rgba(0,200,255,0.08)" : "rgba(255,255,255,0.02)",
+                      boxShadow: i === active ? "0 0 16px rgba(0,200,255,0.15)" : "none",
+                      transition: "all 0.25s ease",
+                      "&:hover": { background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.15)" },
+                    }}
+                  >
+                    {/* Thumbnail video */}
+                    <Box sx={{ position: "relative", width: 80, height: 56, borderRadius: "8px", overflow: "hidden", flexShrink: 0, background: "#000" }}>
+                      <CardMedia
+                        component="video"
+                        ref={(el) => (thumbRefs.current[i] = el)}
+                        src={ev.video}
+                        playsInline muted loop preload="metadata"
+                        controls={false}
+                        sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      />
+                      {i !== active && (
+                        <Box sx={{
+                          position: "absolute", inset: 0,
+                          background: "rgba(0,0,0,0.45)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          opacity: hovered === i ? 1 : 0.7, transition: "opacity 0.2s",
+                        }}>
+                          <PlayArrowRoundedIcon sx={{ color: "white", fontSize: "1.4rem" }} />
+                        </Box>
+                      )}
+                    </Box>
 
-                    <Box>
-                        <Typography
-                            variant="h4"
-                            gutterBottom
-                            component="div"
-                            sx={{
-                                fontFamily: "'Montserrat', Helvetica, Arial, sans-serif",
-                                fontSize: { xs: "1.5rem", md: "2rem" },
-                                paddingLeft: { xs: "100px", md: "10px" },
-                                paddingRight: { xs: "100px", md: "10px" },
-                                letterSpacing: "3px",
-                                my: 0,
-                                display: "flex",
-                                flexWrap: "wrap",
-                                alignItems: "center",
-                                position: "relative",
-                                zIndex: 1,
-                                backgroundColor: "transparent",
-                            }}
-                            style={{ color: 'black' }}
-                        >
-
-                            {/* Barra | cafÃ© al inicio */}
-                            <motion.span
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={inView || hasAnimated ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                                transition={{ delay: 0.3 }}
-                                style={{
-                                    color: "#8B4513",           // CafÃ©
-                                    fontWeight: "bold",
-                                    marginRight: "1px",         // ðŸ"¸ MÃ¡s pegado a la 'N'
-                                    marginTop: "-6px",
-                                    fontSize: "0.8em",          // ðŸ"¸ Un poco mÃ¡s bajo que el texto
-                                    lineHeight: 1,              // ðŸ"¸ AlineaciÃ³n vertical mÃ¡s precisa
-                                    display: "inline-block",
-                                    transform: "translateY(2px)" // ðŸ"¸ Ligero ajuste vertical si lo ves muy arriba/abajo
-                                }}
-                            >
-                                |
-                            </motion.span>
-
-
-                            {/* Texto animado letra por letra */}
-                            {textoAnimado.split("").map((char, i) => (
-                                <motion.span
-                                    key={i}
-                                    custom={i}
-                                    variants={letterVariants}
-                                    initial="hidden"
-                                    animate={inView || hasAnimated ? "visible" : "hidden"}
-                                    style={{
-                                        display: "inline-block",
-                                        whiteSpace: "pre",
-                                    }}
-                                >
-                                    {char}
-                                </motion.span>
-                            ))}
+                    {/* Info */}
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, mb: 0.3 }}>
+                        {ev.logo && (
+                          <Box component="img" src={ev.logo} alt={ev.label}
+                            sx={{ width: 20, height: 20, borderRadius: "50%", objectFit: "contain", background: "white", flexShrink: 0 }} />
+                        )}
+                        <Typography sx={{
+                          fontSize: "0.78rem", fontFamily: "Poppins, sans-serif", fontWeight: 700,
+                          color: i === active ? "#38bdf8" : "rgba(255,255,255,0.85)",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>
+                          {ev.label}
                         </Typography>
+                      </Box>
+                      {i === active && (
+                        <Typography sx={{ fontSize: "0.65rem", color: "rgba(0,220,255,0.7)", fontWeight: 600 }}>
+                          ▶ Reproduciendo
+                        </Typography>
+                      )}
                     </Box>
 
-
-                    {/* Video 1 - primera fila */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            gap: 1.5,
-                            justifyContent: 'center',
-                            ml: 2,
-                            alignItems: 'flex-end', // Alinea los videos abajo
-                            mt: 4,
-                            // mr: '10px', // Elimina este margen para que todos estÃ©n alineados
-                        }}
-                    >
-                        {evidencias.map((evidencia, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, x: 100 }}
-                                animate={inView || hasAnimated ? { opacity: 1, x: 0 } : { opacity: 0, x: 100 }}
-                                transition={{ duration: 0.6, delay: i * 0.2 }}
-                                style={{ display: 'flex' }}
-                            >
-                                <Box
-                                    sx={{
-                                        width: 140,
-                                        height: 300,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        justifyContent: "flex-end",
-                                    }}
-                                >
-                                    {/* ðŸ"¹ Contenedor relativo para video + logo */}
-                                    <Box
-                                        sx={{
-                                            position: "relative",   // âœ… necesario para el overlay
-                                            width: "100%",
-                                            height: 270,
-                                            borderRadius: 2,
-                                            overflow: "hidden",
-                                            background: "#000",
-                                        }}
-                                    >
-                                        <CardMedia
-                                            component="video"
-                                            ref={(el) => (videosRef.current[i] = el)}
-                                            src={evidencia.video}
-                                            playsInline
-                                            muted
-                                            loop
-                                            preload="metadata"
-                                            controls={false}
-                                            disablePictureInPicture
-                                            controlsList="nodownload nofullscreen noremoteplayback"
-                                            onClick={handleVideoClick}
-                                            onCanPlay={(e) => e.target.play()}
-                                            sx={{
-                                                width: "100%",
-                                                height: "100%",
-                                                objectFit: "cover",
-                                                cursor: "pointer",
-                                                borderRadius: 2,
-                                                display: "block",
-                                            }}
-                                        />
-
-                                        {/* ðŸ"¹ Logo dentro del video */}
-                                        {evidencia.logo && (
-                                            <Box
-                                                component={motion.div}
-                                                initial={{ scale: 0, opacity: 0 }}
-                                                animate={inView ? { scale: 1, opacity: 1 } : {}}
-                                                transition={{
-                                                    duration: 0.6,
-                                                    ease: "easeOut",
-                                                    delay: 1,
-                                                }}
-                                                sx={{
-                                                    position: "absolute",
-                                                    bottom: 8,           // ðŸ"¹ mitad de 70px para que sobresalga justo la mitad
-                                                    left: "28%",           // ðŸ"¹ centro exacto
-                                                    width: 60,
-                                                    height: 60,
-                                                    borderRadius: "50%",
-                                                    background:
-                                                        "linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-                                                    p: "4px",
-                                                    zIndex: 2,
-                                                }}
-                                            >
-                                                <Box
-                                                    component="img"
-                                                    src={evidencia.logo}
-                                                    alt={`${evidencia.label} logo`}
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                    sx={{
-                                                        width: "100%",
-                                                        height: "100%",
-                                                        borderRadius: "50%",
-                                                        backgroundColor: "#fff",
-                                                        objectFit: "contain",
-                                                    }}
-                                                />
-                                            </Box>
-                                        )}
-                                    </Box>
-
-                                    {/* ðŸ"¹ Texto debajo del video */}
-                                    <Typography
-                                        variant="body2"
-                                        align="center"
-                                        component="a"
-                                        href={evidencia.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        sx={{
-                                            display: "block",
-                                            mt: 1,
-                                            color: "#00bcd4",
-                                            fontFamily: "Poppins, sans-serif",
-                                            textDecoration: "none",
-                                            fontSize: "0.60rem",
-                                            "&:hover": {
-                                                textDecoration: "underline",
-                                                color: "#26c6da",
-                                            },
-                                        }}
-                                    >
-                                        {evidencia.label}
-                                    </Typography>
-                                </Box>
-
-                            </motion.div>
-                        ))}
-                    </Box>
-                    {/* Texto "y más..." un poco más abajo de los videos */}
-                    <Typography
-                        variant="body1"
-                        align="center"
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontStyle: 'italic',
-                            color: '#00bcd4',
-                            fontWeight: 700,
-                            fontFamily: 'Poppins, sans-serif',
-                            fontSize: '1.2rem',
-                            mt: 5, // MÃ¡s separaciÃ³n respecto a los videos
-                            letterSpacing: 1,
-                            textShadow: '0 1px 8px #b2ebf2',
-                        }}
-                    >
-                        y más...
+                    {/* Número */}
+                    <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.2)", fontWeight: 700, flexShrink: 0 }}>
+                      {String(i + 1).padStart(2, "0")}
                     </Typography>
+                  </Box>
+                </motion.div>
+              ))}
 
-
-                </Box>
-
-                {/* Imagen mongodb.svg al lado derecho */}
-                <Box
-                    sx={{
-                        width: 'auto',
-                        height: '100%',
-                        display: 'flex',
-                        left: '0%',
-                        alignItems: 'center',
-                        backgroundColor: 'transparent',
-                        marginLeft: 0,
-                    }}
-                >
-                    <Box
-                        component="img"
-                        src="/mongodb.svg"
-                        alt="mongodb"
-                        loading="lazy"
-                        decoding="async"
-                        sx={{
-                            left: '-1%',
-                            height: '100%',
-                            objectFit: 'contain',
-                            display: 'block',
-                            position: "relative", // o absolute si lo necesitas fijo
-                            zIndex: -1,            // ðŸ'ˆ asegura que quede detrÃ¡s
-                        }}
-                    />
-
-                </Box>
+              {/* y muchos más */}
+              <Box sx={{ textAlign: "center", mt: 1, mb: 1 }}>
+                <Typography sx={{ fontStyle: "italic", color: "white", fontWeight: 700, fontFamily: "Poppins, sans-serif", fontSize: "0.85rem", letterSpacing: 1 }}>
+                  y muchos más...
+                </Typography>
+              </Box>
             </Box>
-        </Box >
-    );
+            </Box>
+
+          </Box>
+        </motion.div>
+      </Box>
+    </Box>
+  );
 };
 
 export default SeccionDestacada;
-
-

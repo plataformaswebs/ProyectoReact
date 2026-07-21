@@ -273,6 +273,7 @@ function Hero({ informationsRef, setVideoReady }) {
                   alignItems: "center",
                   justifyContent: "center",
                   textAlign: "center",
+                  mt: 2,
                 }}
               >
                 <AnimatePresence mode="wait">
@@ -354,41 +355,58 @@ function Hero({ informationsRef, setVideoReady }) {
 
               </Box>
 
-              {/* Boton debajo */}
+              {/* Pills */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut", delay: 0.7 }}
+              >
+                <Box sx={{
+                  display: "flex", justifyContent: "center",
+                  flexWrap: "wrap", gap: 0.8, mb: 2, mt: isMobile ? -0.5 : 0,
+                }}>
+                  {[
+                    { dot: "#facc15", text: "Entrega en 72h" },
+                    { dot: "#00e676", text: "+46 proyectos" },
+                    { dot: "#38bdf8", text: "100% Responsive" },
+                    { dot: "#a78bfa", text: "Soporte real" },
+                  ].map((pill, i) => (
+                    <Box key={i} sx={{
+                      display: "inline-flex", alignItems: "center", gap: 0.7,
+                      background: "rgba(255,255,255,0.07)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      borderRadius: "100px", px: 1.4, py: 0.45,
+                      backdropFilter: "blur(10px)",
+                    }}>
+                      <Box sx={{ width: 6, height: 6, borderRadius: "50%", background: pill.dot, boxShadow: `0 0 6px ${pill.dot}`, flexShrink: 0 }} />
+                      <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontFamily: "'Poppins', sans-serif", letterSpacing: "0.2px" }}>
+                        {pill.text}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </motion.div>
+
+              {/* Botón */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut", delay: 1 }}
               >
-                <Box sx={{ mt: isMobile ? -1.5 : 0 }}>
-
-                  <button
-                    className="btn-3"
-                    onClick={() => {
-                      setOpenAlert(true);
-
-                      const isMobile = window.innerWidth < 768;
-                      const offset = isMobile ? 490 : -50;
-
-                      if (informationsRef?.current) {
-                        const y =
-                          informationsRef.current.getBoundingClientRect().top +
-                          window.scrollY +
-                          offset;
-
-                        window.scrollTo({ top: y, behavior: "smooth" });
-                      }
-
-                      // Notificacion interna
-                      notificarVisitaPrecios();
-                    }}
-                  >
-                    <span>Nuestros Precios</span>
-                  </button>
-
-
-
-                </Box>
+                <button
+                  className="btn-3"
+                  onClick={() => {
+                    setOpenAlert(true);
+                    const el = document.getElementById("nuestras-ofertas");
+                    if (el) {
+                      const y = el.getBoundingClientRect().top + window.scrollY + 120;
+                      window.scrollTo({ top: y, behavior: "smooth" });
+                    }
+                    notificarVisitaPrecios();
+                  }}
+                >
+                  <span>Ver nuestros planes</span>
+                </button>
               </motion.div>
             </Box>
 

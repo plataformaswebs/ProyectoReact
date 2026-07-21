@@ -1,98 +1,13 @@
 import { Box, Typography, Container, Grid, ListItem, ListItemIcon, ListItemText, useMediaQuery, useTheme } from "@mui/material";
-import React, { useState, useEffect, memo, useMemo } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { motion } from "framer-motion";
 import { useInView } from 'react-intersection-observer';
 import Public from '@mui/icons-material/Public';
-import Code from '@mui/icons-material/Code';
 import GroupAdd from '@mui/icons-material/GroupAdd';
 import Verified from '@mui/icons-material/Verified'
 import DashboardCustomize from '@mui/icons-material/DashboardCustomize';
 import "./css/Informations.css";
-import "swiper/css";
-import InformationsPromotions from './InformationsPromotions';
-
-const promotionsBase = [
-  {
-    id: 1,
-    title: "📅 Suscripción Mensual",
-    description: "Tu presencia digital activa mes a mes.",
-    image: "/promocion-1.avif",
-    price: "$29.990 CLP",
-    priceUSD: "$32 USD",
-    extraPrices: [
-      { label: "Soporte continuo", price: "$9.990 CLP", priceUSD: "10 USD" },
-      { label: "Actualizaciones", price: "$9.990 CLP", priceUSD: "10 USD" }
-    ],
-    bgColor: "linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.3))",
-    textColor: "white",
-    descriptors: [
-      "🕐 Soporte y atención continua 24/7",
-      "🛠️ Mantención técnica permanente del sitio",
-      "✏️ Solicitud de mejoras y ajustes incluidos",
-      "🤝 Gestión integral de tu sitio web"
-    ]
-  },
-  {
-    id: 2,
-    title: "💎 Pago Único",
-    description: "Sitio web sin mensualidades.",
-    image: "/promocion-1.avif",
-    price: "$99.990 CLP",
-    priceUSD: "$105 USD",
-    extraPrices: [
-      { label: "Entrega rápida", price: "Incluido", priceUSD: "Included" },
-      { label: "Soporte inicial", price: "Incluido", priceUSD: "Included" }
-    ],
-    bgColor: "linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2))",
-    textColor: "white",
-    descriptors: [
-      "💎 Pago único, sin mensualidades",
-      "🎯 Ideal para landing o web institucional",
-      "💼 Imagen profesional desde el día uno",
-      "🧾 Desarrollos se cotizan por separado"
-    ]
-  },
-  {
-    id: 3,
-    title: "🛒 Tienda Online",
-    description: "Vende tus productos online de forma segura.",
-    image: "/Informations-2.avif",
-    price: "$250.000 a $400.000 CLP",
-    priceUSD: "$265 a $425 USD",
-    extraPrices: [
-      { label: "Dominio anual", price: "$15.000 CLP", priceUSD: "$16 USD" },
-      { label: "Hosting mensual", price: "$80.000 CLP", priceUSD: "$85 USD" }
-    ],
-    bgColor: "linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2))",
-    textColor: "white",
-    descriptors: [
-      "🛍️ eCommerce profesional",
-      "📦 Stock y carrito",
-      "💳 WebPay y pagos",
-      "📊 Panel de gestión"
-    ]
-  },
-  {
-    id: 4,
-    title: "🖥️ Sistemas a la Medida",
-    description: "Desarrollo adaptado a tu negocio.",
-    image: "/Informations-3.avif",
-    price: "$600.000 a $4.000.000 CLP",
-    priceUSD: "$635 a $4.200 USD",
-    extraPrices: [
-      { label: "Dominio anual", price: "$30.000 CLP", priceUSD: "$32 USD" },
-      { label: "Hosting mensual", price: "$600.000 CLP", priceUSD: "$635 USD" }
-    ],
-    bgColor: "linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2))",
-    textColor: "white",
-    descriptors: [
-      "⚙️ Sistemas web o apps",
-      "🧩 100% personalizado",
-      "📊 Panel + base de datos",
-      "🛠️ Soporte continuo"
-    ]
-  }
-];
+import OrbitSystem from './OrbitSystem';
 
 const iconItems = [
   {
@@ -243,80 +158,14 @@ const AnimatedIconItem = memo(function AnimatedIconItem({ item, index, isMobile 
 
 
 function Informations({ informationsRef, triggerInformations, setHasSeenInformations }) {
-
-  // Controla la vista del componente
-  const [isGrabbing, setIsGrabbing] = useState(false);
-  const [conCupos, setConCupos] = useState(() => {
-    const savedValue = localStorage.getItem("ConCupos");
-    return savedValue === "true";
-  });
-  const { ref, inView } = useInView({ threshold: 0.15, triggerOnce: false, });
+  const { ref, inView } = useInView({ threshold: 0.15, triggerOnce: false });
+  const { ref: orbitInViewRef, inView: orbitInView } = useInView({ threshold: 0.2, triggerOnce: true });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [showArrow, setShowArrow] = useState(true);
-  const [swiperInstance, setSwiperInstance] = useState(null);
-  const [showPopularBadge, setShowPopularBadge] = useState(false);
 
-  const { ref: swiperRef, inView: swiperInView } = useInView({ threshold: 0.2, triggerOnce: true, });
-
-  //CANCELAR PRIMERA ANIMACIÓN
-  const [hasAnimated, setHasAnimated] = useState(false);
   const [hasAnimated2, setHasAnimated2] = useState(false);
 
-  //ANIMACIÓN DESCRIPTORES
-  useEffect(() => {
-    const syncConCupos = () => {
-      const savedValue = localStorage.getItem("ConCupos");
-      setConCupos(savedValue === "true");
-    };
-
-    window.addEventListener("storage", syncConCupos);
-    window.addEventListener("conCuposChanged", syncConCupos);
-
-    return () => {
-      window.removeEventListener("storage", syncConCupos);
-      window.removeEventListener("conCuposChanged", syncConCupos);
-    };
-  }, []);
-
-  const promotions = useMemo(
-    () =>
-      promotionsBase.map((promo) =>
-        promo.id === 1
-          ? {
-            ...promo,
-            price: conCupos ? "$29.990 CLP" : "$119.990 CLP",
-            priceUSD: conCupos ? "$32 USD" : "$120 USD",
-          }
-          : promo.id === 2
-            ? {
-              ...promo,
-              price: conCupos ? "$99.990 CLP" : "$199.990 CLP",
-            }
-            : promo
-      ),
-    [conCupos]
-  );
-
-  useEffect(() => {
-    if (swiperInView && swiperInstance && !hasAnimated) {
-      swiperInstance.slideTo(0, 1500); // mueve del último al primero
-      setHasAnimated(true);
-    }
-  }, [swiperInView, swiperInstance, hasAnimated]);
-
-  useEffect(() => {
-    if (hasAnimated) {
-      const timeout = setTimeout(() => {
-        setShowPopularBadge(true);
-      }, 1000); // Delay
-      return () => clearTimeout(timeout);
-    }
-  }, [hasAnimated]);
-
-
-  //EVITAR ANIMACIÓN DUPLICADA
   useEffect(() => {
     if (inView && !hasAnimated2) {
       const timer = setTimeout(() => {
@@ -326,17 +175,6 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
     }
   }, [inView, hasAnimated2]);
 
-  const handleContactClick = (title) => {
-    let mensaje = '';
-    if (title == "CREAMOS") {
-      mensaje = `¡Hola! Me interesaría una DEMO para mi negocio. ¿Me comentas?`;
-    }
-    else {
-      mensaje = `¡Hola! Me interesó la promoción de ${encodeURIComponent(title)} ¿Me comentas?`;
-    }
-    window.open(`https://api.whatsapp.com/send?phone=56946873014&text=${mensaje}`, "_blank");
-  };
-
   return (
     <Box
       ref={informationsRef}
@@ -344,10 +182,10 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
         position: "relative",
         zIndex: 3,
         py: isMobile ? 8 : 3,
-        pt: 3,
+        pb: { xs: 0, md: 1 },
+        pt: { xs: 2, md: 3 },
         color: "white",
 
-        // 🌌 Fondo cuadriculado tipo "cyber-grid"
         backgroundImage: `
       linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px)
@@ -355,20 +193,18 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
         backgroundSize: "50px 50px",
         backgroundPosition: "center",
         backgroundAttachment: "scroll",
-        backgroundColor: "rgba(6,31,53,0.95)", // base oscura para contraste
+        backgroundColor: "rgba(6,31,53,0.95)",
 
         borderBottomLeftRadius: isMobile ? "90px" : "120px",
         borderBottomRightRadius: isMobile ? "90px" : "120px",
         overflow: "hidden",
         isolation: "isolate",
 
-        // 💎 Contenido sobre el fondo
         "& > *": {
           position: "relative",
           zIndex: 3,
         },
 
-        // 🌈 Borde inferior con degradado y brillo
         "&::after": {
           content: '""',
           position: "absolute",
@@ -379,15 +215,12 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
           borderBottomLeftRadius: isMobile ? "90px" : "120px",
           borderBottomRightRadius: isMobile ? "90px" : "120px",
           borderBottom: "3px solid rgba(0,255,255,0.85)",
-
-          // ✨ Degradado para fundirse con el fondo
           background:
             "linear-gradient(to bottom, rgba(6,31,53,0) 0%, rgba(0,40,80,0.9) 100%)",
           zIndex: 2,
           pointerEvents: "none",
         },
 
-        // 🌫️ Suaviza el borde exterior
         "&::before": {
           content: '""',
           position: "absolute",
@@ -406,101 +239,49 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
     >
       <Container sx={{ textAlign: "center", color: "white", maxWidth: "1400px !important", paddingLeft: isMobile ? "0" : "24px", paddingRight: isMobile ? "0" : "24px" }}>
 
-        <Box sx={{ position: "relative", textAlign: "center", mb: 2 }} ref={ref}>
-
-          <Box
-            sx={{
-              width: 25,
-              height: 25,
-              borderRadius: "50%",
-              backgroundColor: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "2px solid white",
-              mx: "auto",
-              mb: 0.5,
-            }}
-          >
-            <motion.div
-              initial={{ rotate: 0 }}
-              animate={inView || hasAnimated2 ? { rotate: 360 } : {}} // 🔹 Solo se activa cuando `shouldAnimate` es `true`
-              transition={{
-                duration: 0.3,
-                delay: 0.3,
-                repeat: 1, // Se repite una vez más (total: dos veces)
-                ease: "linear", // Movimiento fluido
-              }}
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-                height: "100%",
-              }}
-            >
-              <Code sx={{ fontSize: 17, color: "black" }} />
-            </motion.div>
-          </Box>
-
+        <Box sx={{ textAlign: "center", mb: 3 }} ref={ref}>
           <motion.div
-            initial={{ opacity: 0, y: 80 }} // ⬇️ Aparece más abajo
-            animate={inView || hasAnimated2 ? { opacity: 1, y: 0 } : { opacity: 0, y: 80 }}
-            transition={{ duration: 1, ease: 'easeOut' }}
+            initial={{ opacity: 0, y: 24 }}
+            animate={inView || hasAnimated2 ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
           >
-            <Typography
-              variant="h3"
-              gutterBottom
-              sx={{
-                fontFamily: "'Montserrat', Helvetica, Arial, sans-serif !important",
-                fontSize: { xs: "1.5rem", md: "2rem" },
-                paddingLeft: { xs: "100px", md: "30px" },
-                paddingRight: { xs: "100px", md: "30px" },
-                letterSpacing: "3px",
-                my: 0,
-                display: "inline-block",
-                position: "relative",
-                zIndex: 1,
-                backgroundColor: "transparent",
-                color: "white",
-                "::after": {
-                  content: '""',
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: "-5px",
-                  height: "10px",
-                  backgroundColor: "transparent",
-                  zIndex: 2,
-                },
-              }}
-            >
+            {/* Label con líneas */}
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2, mb: 1.5 }}>
+              <Box sx={{ flex: 1, maxWidth: 80, height: "1px", background: "linear-gradient(90deg, transparent, rgba(0,212,255,0.5))" }} />
+              <Typography sx={{
+                fontSize: "0.7rem", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase",
+                fontFamily: "'Poppins', sans-serif",
+                background: "linear-gradient(90deg, #38bdf8, #00e5ff)",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              }}>
+                Tecnología que integramos
+              </Typography>
+              <Box sx={{ flex: 1, maxWidth: 80, height: "1px", background: "linear-gradient(90deg, rgba(0,212,255,0.5), transparent)" }} />
+            </Box>
+
+            {/* Título */}
+            <Typography sx={{
+              fontFamily: "'Poppins', sans-serif", fontWeight: 800,
+              fontSize: { xs: "1.6rem", md: "2rem" },
+              color: "white", lineHeight: 1.2, mb: 1,
+            }}>
               Impulsa tu negocio con tecnología
             </Typography>
+
+            {/* Subtítulo */}
+            <Typography sx={{
+              fontSize: { xs: "0.85rem", md: "0.95rem" },
+              color: "rgba(255,255,255,0.6)",
+              maxWidth: 460, mx: "auto", lineHeight: 1.6,
+            }}>
+              Herramientas modernas para que tu sitio crezca, rinda y destaque
+            </Typography>
           </motion.div>
-
-
-          {/* Línea debajo del título con animación (con retraso de 2 segundos) */}
-          <motion.hr
-            initial={{ opacity: 0 }} // Comienza invisible
-            animate={inView || hasAnimated2 ? { opacity: 1 } : {}} // Aparece completamente
-            transition={{ duration: 0.8, delay: 1 }} // Aparece después de 1s y dura 1s
-            style={{
-              position: "absolute",
-              top: isMobile ? "calc(80% - 30px)" : "calc(100% - 30px)", // Ajusta la posición
-              left: "5%",
-              width: "90%", // Mantiene su tamaño desde el inicio
-              border: "1px solid white",
-              zIndex: 0,
-              background: "white",
-              clipPath: "polygon(0% 0%, 0% 0%, 19% 100%, 0% 100%, 0% 0%, 100% 0%, 80% 100%, 100% 100%, 100% 0%)",
-            }}
-          />
-
         </Box>
+
         <Grid container spacing={3} sx={{ mt: 2 }}>
 
-          {/* Columna de los íconos */}
+          {/* Columna izquierda: íconos animados */}
           <Grid item xs={12} md={6}>
             {iconItems.map((item, index) => (
               <AnimatedIconItem
@@ -512,66 +293,30 @@ function Informations({ informationsRef, triggerInformations, setHasSeenInformat
             ))}
           </Grid>
 
-
-          {/* Informations Promotions */}
-          <Grid item xs={12} md={6} sx={{ mt: isMobile ? -1 : -4 }}>
-            <Typography
-              component={motion.h5}
-              initial={{ opacity: 0, y: 20 }}
-              animate={showPopularBadge ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              sx={{
-                fontFamily: "'Poppins', sans-serif",
-                fontWeight: 800,
-                mb: isMobile ? 2 : 0,
-                textAlign: isMobile ? "center" : "left",
-                textTransform: "uppercase",
-                letterSpacing: "2px",
-                fontSize: { xs: "1.2rem", md: "1.4rem" },
-                background: "linear-gradient(90deg, #ffffff, #f5f5f5)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                textShadow: "0 2px 10px rgba(0,0,0,0.35)",
-                position: "relative",
-                display: "inline-block",
-                "&::after": {
-                  content: '""',
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  width: showPopularBadge ? "100%" : "0%", // 👈 cambiamos solo el width dinámico
-                  height: "2px",
-                  borderRadius: "3px",
-                  background: "linear-gradient(90deg, #7B1FA2, #9C27B0)",
-                  transition: "width 0.6s ease-out",
-                },
-              }}
-            >
-              Nuestros Precios
-            </Typography>
-
-            <InformationsPromotions
-              isMobile={isMobile}
-              promotions={promotions}
-              conCupos={conCupos}
-              swiperRef={swiperRef}
-              showArrow={showArrow}
-              swiperInstance={swiperInstance}
-              setSwiperInstance={setSwiperInstance}
-              setShowArrow={setShowArrow}
-              handleContactClick={handleContactClick}
-              showPopularBadge={showPopularBadge}
-            />
+          {/* Columna derecha: OrbitSystem */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{
+              position: "relative",
+              width: "100%",
+              height: isMobile ? 480 : 460,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              mt: { xs: 6, md: 4 },
+            }}>
+              <OrbitSystem
+                isMobile={isMobile}
+                orbitInViewRef={orbitInViewRef}
+                orbitInView={orbitInView}
+              />
+            </Box>
           </Grid>
-
-
 
         </Grid>
 
-
-
       </Container>
-    </Box >
+    </Box>
   );
 };
 

@@ -314,7 +314,7 @@ const Administracion = () => {
               color: isError ? "rgba(255,255,255,0.5)" : "#6a82aa",
               mt: 0.3, transition: "color 0.35s ease",
             }}>
-              Panel de administración
+              Panel de Administracion
             </Typography>
           </Box>
 

@@ -40,12 +40,11 @@ function Contacto() {
     if (inView) {
       const timer = setTimeout(() => {
         setStartAnimation(true);
-        // Después de la animación, restauramos la altura
         setContainerHeight("auto");
-      }, 1300); // Ajusta el tiempo de animación según lo necesites
+      }, isMobile ? 0 : 1300);
       return () => clearTimeout(timer);
     }
-  }, [inView]);
+  }, [inView, isMobile]);
 
 
   // Componente que maneja los clics en el mapa
@@ -150,7 +149,7 @@ function Contacto() {
         overflow: "hidden",
         paddingTop: 0,
         paddingBottom: "20px",
-        minHeight: isMobile ? containerHeight : containerHeight, // 👈 Cambia esto
+        minHeight: "auto",
         backgroundImage: isMobile ? 'url(/fondo-mundo-mobile.png)' : 'url(/fondo-mundo.png)',
         backgroundColor: "rgb(0 30 43/var(--tw-bg-opacity,1))",
         backgroundSize: "cover",
@@ -160,36 +159,58 @@ function Contacto() {
       }}
       ref={ref}
     >
-      {/* Divs con imágenes */}
-      <div
-        className={`image image-left ${startAnimation ? "animate-left" : ""}`}
-        style={{
-          width: "50%",
-          height: isMobile ? "50vh" : "76vh",
-          backgroundImage: isMobile ? "url('/mapa-left.jpg')" : "url('/mapa.webp')",
-          backgroundSize: isMobile ? "cover" : "contain",   // 👈 Mostrar completa en escritorio
-          backgroundPosition: isMobile ? "center" : "top",  // 👈 Alinear arriba para escritorio
-          backgroundRepeat: "no-repeat",
-          backgroundColor: "#000" // para evitar espacios blancos si sobra
-        }}
-      ></div>
+      {/* Paneles — solo desktop */}
+      {!isMobile && <div className={`image image-left ${startAnimation ? "animate-left" : ""}`} style={{
+        width: "50%", height: "100%",
+        background: "linear-gradient(160deg, #000d1a 0%, #001f4d 50%, #003080 100%)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "linear-gradient(rgba(0,180,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,255,0.08) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
+        <div style={{ position: "relative", textAlign: "center", padding: "0 32px", zIndex: 10 }}>
+          <div style={{ fontSize: "3rem", marginBottom: "20px", filter: "drop-shadow(0 0 20px rgba(0,220,255,0.9)) brightness(1.3)" }}>✉️</div>
+          <div style={{ fontSize: "0.65rem", fontFamily: "Poppins, sans-serif", fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", color: "#00e5ff", marginBottom: "10px", textShadow: "0 0 16px rgba(0,229,255,0.8)" }}>
+            HABLEMOS
+          </div>
+          <div style={{ fontFamily: "Poppins, sans-serif", fontWeight: 800, fontSize: "2rem", lineHeight: 1.15, marginBottom: "6px", color: "#ffffff", textShadow: "0 0 24px rgba(0,200,255,0.6), 0 2px 4px rgba(0,0,0,0.9)" }}>
+            Contáctanos
+          </div>
+          <div style={{ width: "40px", height: "2px", background: "linear-gradient(90deg, #00dcff, transparent)", margin: "0 auto 14px auto", borderRadius: "2px" }} />
+          <div style={{ color: "#e0f7ff", fontFamily: "Poppins, sans-serif", fontSize: "0.85rem", maxWidth: "190px", lineHeight: 1.65, margin: "0 auto", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
+            Cuéntanos tu proyecto y te respondemos en minutos
+          </div>
+        </div>
+      </div>}
 
-      <div
-        className={`image image-right ${startAnimation ? "animate-right" : ""}`}
-        style={{
-          width: "50%",
-          height: isMobile ? "50vh" : "76vh",
-          backgroundImage: isMobile ? "url('/mapa-right.jpg')" : "url('/contactar.webp')",
-          backgroundSize: isMobile ? "cover" : "contain",   // 👈 Mostrar completa en escritorio
-          backgroundPosition: isMobile ? "center" : "top",  // 👈 Alinear arriba para escritorio
-          backgroundRepeat: "no-repeat",
-          backgroundColor: "#000"
-        }}
-      ></div>
+      {!isMobile && <div className={`image image-right ${startAnimation ? "animate-right" : ""}`} style={{
+        width: "50%", height: "100%",
+        background: "linear-gradient(200deg, #000d1a 0%, #001a3d 50%, #002d70 100%)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "radial-gradient(circle, rgba(0,200,255,0.12) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }} />
+        <div style={{ position: "relative", textAlign: "center", padding: "0 32px", zIndex: 10 }}>
+          <div style={{ fontSize: "3rem", marginBottom: "20px", filter: "drop-shadow(0 0 20px rgba(0,220,255,0.9)) brightness(1.3)" }}>🚀</div>
+          <div style={{ fontSize: "0.65rem", fontFamily: "Poppins, sans-serif", fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", color: "#00e5ff", marginBottom: "10px", textShadow: "0 0 16px rgba(0,229,255,0.8)" }}>
+            JUNTOS
+          </div>
+          <div style={{ fontFamily: "Poppins, sans-serif", fontWeight: 800, fontSize: "2rem", lineHeight: 1.15, marginBottom: "6px", color: "#ffffff", textShadow: "0 0 24px rgba(0,200,255,0.6), 0 2px 4px rgba(0,0,0,0.9)" }}>
+            Trabajemos juntos
+          </div>
+          <div style={{ width: "40px", height: "2px", background: "linear-gradient(90deg, #00dcff, transparent)", margin: "0 auto 14px auto", borderRadius: "2px" }} />
+          <div style={{ color: "#e0f7ff", fontFamily: "Poppins, sans-serif", fontSize: "0.85rem", maxWidth: "190px", lineHeight: 1.65, margin: "0 auto", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
+            Sitios web modernos con entrega en 72 horas
+          </div>
+        </div>
+      </div>}
 
-
-
-      {!startAnimation && (
+      {!isMobile && !startAnimation && (
         <Box
           sx={{
             position: "absolute", // clave para que se ancle al Container
@@ -211,10 +232,10 @@ function Contacto() {
 
 
 
-      {startAnimation && (
-        <Box
+      <Box
           sx={{
             opacity: startAnimation ? 1 : 0,
+            pointerEvents: startAnimation ? "auto" : "none",
             transition: "opacity 0.8s ease-in-out, transform 0.8s ease-in-out",
             transform: startAnimation ? "translateY(0)" : "translateY(40px)",
           }}
@@ -222,58 +243,46 @@ function Contacto() {
           < Box sx={{ position: "relative", zIndex: 2, paddingTop: "20px", display: "flex", flexDirection: "column", height: "100%" }}>
 
             {!formSubmitted && (
-              <Typography
-                variant={isMobile ? "h5" : "h4"}
-                align="left"
-                gutterBottom
-                sx={{
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center", // 🔹 asegura que todos los elementos hijos estén alineados verticalmente
-                  fontFamily: "'Montserrat', Helvetica, Arial, sans-serif !important",
-                  lineHeight: 1.2,
-                }}
-              >
-                {/* Barra | verde al inicio */}
-                <motion.span
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                  transition={{ delay: 0.3 }}
-                  style={{
-                    color: "green",
-                    fontWeight: "bold",
-                    fontSize: isMobile ? "1.3rem" : "1.3rem",
-                    display: "inline-block",
-                    verticalAlign: "middle", // ✅ mantiene alineado con el texto
-                    marginRight: "2px",
-                    marginBottom: isMobile ? "3px" : "5px"
-                  }}
-                >
-                  |
-                </motion.span>
+              <Box sx={{ mb: 3, textAlign: "center" }}>
+                {/* Label con líneas — estilo "Tecnología que integramos" */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2, mb: 1.2 }}>
+                  <Box sx={{ flex: 1, maxWidth: 60, height: "1px", background: "linear-gradient(90deg, transparent, rgba(0,212,255,0.5))" }} />
+                  <Typography sx={{
+                    fontSize: "0.65rem", fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase",
+                    fontFamily: "'Poppins', sans-serif",
+                    background: "linear-gradient(90deg, #38bdf8, #00e5ff)",
+                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                  }}>
+                    Contáctanos
+                  </Typography>
+                  <Box sx={{ flex: 1, maxWidth: 60, height: "1px", background: "linear-gradient(90deg, rgba(0,212,255,0.5), transparent)" }} />
+                </Box>
 
-                {"Contáctanos".split("").map((char, index) => (
-                  <motion.span
-                    key={index}
-                    custom={index}
-                    variants={letterVariants}
-                    initial="hidden"
-                    animate={inView ? "visible" : "hidden"}
-                    style={{
-                      display: "inline-block",
-                      whiteSpace: "pre",
-                    }}
-                  >
-                    {char}
-                  </motion.span>
-                ))}
-              </Typography>
+                {/* Título principal */}
+                <Typography sx={{
+                  fontFamily: "'Poppins', sans-serif", fontWeight: 800,
+                  fontSize: { xs: "1.6rem", md: "2rem" },
+                  color: "white", lineHeight: 1.2, mb: 0.5,
+                }}>
+                  Cuéntanos tu proyecto
+                </Typography>
+
+                {/* Subtítulo */}
+                <Typography sx={{
+                  fontSize: { xs: "0.82rem", md: "0.9rem" },
+                  color: "rgba(255,255,255,0.6)",
+                  fontFamily: "'Poppins', sans-serif",
+                  lineHeight: 1.5,
+                }}>
+                  Te respondemos en menos de 24 horas
+                </Typography>
+              </Box>
             )}
 
             {!formSubmitted ? (
-              <Grid container spacing={4} sx={{ height: "auto" }}>
+              <Grid container spacing={4} alignItems="stretch">
                 {/* Mapa */}
-                <Grid item xs={12} md={6} sx={{ height: "auto" }}>
+                <Grid item xs={12} md={6} sx={{ display: "flex", flexDirection: "column" }}>
                   <motion.div
                     ref={ref}
                     initial={{ rotateY: 0 }}
@@ -284,10 +293,10 @@ function Contacto() {
                     style={{
                       position: "relative",
                       width: "100%",
-                      minHeight: "40vh", // 🔹 Asegura que en móviles no desaparezca
-                      height: isMobile ? "40vh" : "100%",
-                      perspective: 1200, // 🔹 Mantiene el efecto 3D
-                      transformStyle: "preserve-3d", // Necesario para la rotación 3D
+                      flex: 1,
+                      minHeight: isMobile ? "40vh" : "300px",
+                      perspective: 1200,
+                      transformStyle: "preserve-3d",
                     }}
                   >
                     {/* ✅ Cara frontal: Mapa */}
@@ -307,15 +316,15 @@ function Contacto() {
                         backfaceVisibility: "hidden",
                       }}
                     >
-                      <Box sx={{ flexGrow: 1, height: "100%" }}>
-                        <Box sx={{ width: "100%", height: isMobile ? "40vh" : "100%", overflow: "hidden" }}>
+                      <Box sx={{ width: "100%", height: "100%" }}>
+                        <Box sx={{ width: "100%", height: "100%", overflow: "hidden" }}>
                           {inView && (
                             <MapContainer
                               center={sucursales[activeSucursal].coords}
                               zoom={16}
                               style={{
                                 width: "100%",
-                                height: isMobile ? "40vh" : "60vh", // 👈 altura clara en desktop
+                                height: "100%",
                                 position: "relative",
                               }}
                               dragging={false}
@@ -351,42 +360,45 @@ function Contacto() {
                                 {showBanner && (
                                   <motion.div
                                     key={activeSucursal}
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.6 }}
+                                    initial={{ opacity: 0, scale: 0.85, y: -8 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.85, y: -8 }}
+                                    transition={{ duration: 0.45, ease: "easeOut" }}
                                     style={{
                                       position: "absolute",
-                                      top: isMobile ? "18%" : "24%", // un poco más arriba en mobile
-                                      left: isMobile ? "27%" : "35%",                   // 👈 siempre al 50%
-                                      transform: "translateX(-50%)", // 👈 corrección exacta
-                                      backgroundColor: "black",
-                                      color: "white",
-                                      padding: "10px 20px",
+                                      top: isMobile ? "14%" : "18%",
+                                      left: 0,
+                                      right: 0,
+                                      margin: "0 auto",
+                                      width: isMobile ? "190px" : "230px",
+                                      background: "linear-gradient(135deg, rgba(0,10,30,0.92) 0%, rgba(0,30,70,0.92) 100%)",
+                                      backdropFilter: "blur(12px)",
+                                      border: "1px solid rgba(0,200,255,0.35)",
+                                      borderRadius: "12px",
+                                      padding: "10px 16px 12px",
                                       textAlign: "center",
-                                      width: isMobile ? "180px" : "220px", // 👈 más angosto en mobile
-                                      borderRadius: "5px",
-                                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.5)",
-                                      fontSize: isMobile ? "12px" : "14px", // 👈 ajuste de tipografía
-                                      fontWeight: "bold",
+                                      boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 16px rgba(0,180,255,0.15)",
                                       zIndex: 1000,
                                       pointerEvents: "none",
                                     }}
                                   >
-                                    {sucursales[activeSucursal].text}
-                                    <div
-                                      style={{
-                                        position: "absolute",
-                                        bottom: "-8px",
-                                        left: "50%",
-                                        transform: "translateX(-50%)",
-                                        width: 0,
-                                        height: 0,
-                                        borderLeft: "10px solid transparent",
-                                        borderRight: "10px solid transparent",
-                                        borderTop: "10px solid black",
-                                      }}
-                                    />
+                                    {/* Dot indicador */}
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "5px" }}>
+                                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#00e5ff", boxShadow: "0 0 8px #00e5ff", animation: "pulse 1.5s infinite" }} />
+                                      <span style={{ fontSize: "0.6rem", fontFamily: "Poppins, sans-serif", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#00e5ff" }}>
+                                        En vivo
+                                      </span>
+                                    </div>
+                                    <div style={{ color: "#ffffff", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: isMobile ? "0.8rem" : "0.88rem", lineHeight: 1.3 }}>
+                                      {sucursales[activeSucursal].text}
+                                    </div>
+                                    {/* Flecha */}
+                                    <div style={{
+                                      position: "absolute", bottom: "-8px", left: "50%", transform: "translateX(-50%)",
+                                      width: 0, height: 0,
+                                      borderLeft: "8px solid transparent", borderRight: "8px solid transparent",
+                                      borderTop: "8px solid rgba(0,30,70,0.92)",
+                                    }} />
                                   </motion.div>
                                 )}
                               </AnimatePresence>
@@ -464,8 +476,6 @@ function Contacto() {
             </Snackbar>
           </Box>
         </Box>
-      )
-      }
     </Container >
   );
 }

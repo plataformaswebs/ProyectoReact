@@ -230,6 +230,7 @@ export default function DialogOneClickMall({
       onClose={loading ? undefined : onClose}
       maxWidth="xs"
       fullWidth
+      disableScrollLock
       TransitionComponent={Transition}
       sx={{
         "& .MuiDialog-container": {

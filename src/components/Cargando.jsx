@@ -38,8 +38,8 @@ const Cargando = () => {
         const timerGlow = setTimeout(() => {
             setGlow(true);
             setShowElectricEffect(true);
-            setTimeout(() => setShowElectricEffect(false), 1000);
-        }, 2000);
+            setTimeout(() => setShowElectricEffect(false), 800);
+        }, 1200);
         return () => clearTimeout(timerGlow);
     }, []);
 
@@ -47,9 +47,9 @@ const Cargando = () => {
     useEffect(() => {
         const showImageTimer = setTimeout(() => {
             setShowImage(true);
-            const hideStripsTimer = setTimeout(() => setShowStrips(false), 2000);
+            const hideStripsTimer = setTimeout(() => setShowStrips(false), 1200);
             return () => clearTimeout(hideStripsTimer);
-        }, 800);
+        }, 300);
         return () => clearTimeout(showImageTimer);
     }, []);
 
@@ -112,7 +112,7 @@ const Cargando = () => {
                     filter: 'brightness(0.7) contrast(1.2)',
                     zIndex: 2,
                     opacity: showImage ? 1 : 0,
-                    transition: 'opacity 2s ease-in',
+                    transition: 'opacity 1.4s ease-in',
                 }}
             />
 
@@ -126,7 +126,7 @@ const Cargando = () => {
                     top: isMobile ? '32%' : '36%',
                     zIndex: 3,
                     opacity: showImage ? 1 : 0,
-                    transition: 'opacity 2s ease-in',
+                    transition: 'opacity 1.4s ease-in',
                 }}
             >
                 {/* Imágenes + Efecto eléctrico */}

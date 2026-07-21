@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -66,21 +66,16 @@ const itemVariants = {
 
 
 
-const SocialButton = ({ href, Icon, bgColor, hoverStyles }) => (
+const SocialButton = ({ href, Icon, bgColor }) => (
   <Box component="a" href={href} target="_blank" rel="noopener" sx={{
-    width: 55, height: 55, borderRadius: "50%", position: "relative", display: "flex",
-    alignItems: "center", justifyContent: "center", overflow: "hidden",
-    "&:hover .circle": { animation: `${shrinkCircle} 300ms forwards` },
-    "&:hover .icon": { animation: `${expandIcon} 300ms forwards`, ...hoverStyles },
+    width: 52, height: 52, borderRadius: "14px", display: "flex", flexDirection: "column",
+    alignItems: "center", justifyContent: "center", overflow: "hidden", textDecoration: "none",
+    background: bgColor, border: "1px solid rgba(255,255,255,0.12)",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    transition: "transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease",
+    "&:hover": { transform: "translateY(-3px)", boxShadow: "0 8px 20px rgba(0,0,0,0.4)", opacity: 0.9 },
   }}>
-    <Box className="circle" sx={{
-      position: "absolute", width: "100%", height: "100%", borderRadius: "50%",
-      background: bgColor, transition: "transform 300ms ease-out",
-    }} />
-    <Icon className="icon" sx={{
-      color: "white", fontSize: 37, position: "absolute",
-      transition: "color 300ms ease-in, transform 300ms ease-in",
-    }} />
+    <Icon sx={{ color: "white", fontSize: 26 }} />
   </Box>
 );
 
@@ -178,6 +173,20 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [open]);
 
   const LogoInicio = () => (navigate("/"), scrollToTop());
 
@@ -425,15 +434,18 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
           borderRadius: "50px",
           overflow: "hidden",
           marginTop: showTopBanner ? `${Math.max(40 - translateY, 15)}px` : "12px",
+          transition: "box-shadow 0.4s ease, border-color 0.4s ease",
+          border: isScrolled ? "1px solid rgba(0,180,255,0.18)" : "1px solid transparent",
+          boxShadow: isScrolled ? "0 8px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,180,255,0.08), inset 0 1px 0 rgba(255,255,255,0.06)" : "none",
         }}
       >
         <AppBar
           position="relative"
           sx={{
-            backgroundColor: isScrolled ? "rgba(0,0,0,0.8)" : "transparent",
-            backdropFilter: isScrolled ? "blur(10px)" : "none",
+            backgroundColor: isScrolled ? "rgba(4,12,30,0.82)" : "transparent",
+            backdropFilter: isScrolled ? "blur(20px) saturate(160%)" : "none",
             boxShadow: "none",
-            transition: "all 0.3s ease",
+            transition: "all 0.4s ease",
             borderRadius: "50px",
             overflow: "hidden",
           }}
@@ -479,7 +491,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
 
               <Box sx={{ flexGrow: 1 }} />
 
-              <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
+              <Box sx={{ display: { xs: "none", md: "flex" }, gap: 0 }}>
                 {menuItems
                   .map((item, index) => {
                     const isInicioActive = item.name === "Inicio" && location.pathname === "/";
@@ -501,7 +513,8 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
                       sx={{
                         color: "#fff",
                         fontFamily: "Poppins, sans-serif",
-                        padding: "10px 14px",
+                        padding: "8px 10px",
+                        fontSize: "0.85rem",
                         background: "transparent",
                         border: "none",
                         borderRadius: "6px",
@@ -558,42 +571,45 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
+        disableScrollLock
         ModalProps={{ keepMounted: true }}
         sx={{
           "& .MuiDrawer-paper": {
             display: "flex",
             flexDirection: "column",
-            height: "100dvh",// ✅ Dinámico y confiable
-            width: { xs: '80vw', sm: '60vw', md: '50vw' },
-            maxWidth: '700px',
-            minWidth: '300px',
-            background: `linear-gradient(135deg, rgba(18, 22, 35, 0.92), rgba(24, 29, 47, 0.95)),
-                        radial-gradient(circle at 25% 20%, rgba(63,141,245,0.3) 0%, transparent 40%),
-                        radial-gradient(circle at 80% 80%, rgba(160,64,255,0.15) 0%, transparent 50%)`,
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
+            height: "100dvh",
+            width: { xs: '82vw', sm: '55vw', md: '45vw' },
+            maxWidth: '420px',
+            minWidth: '280px',
+            backgroundColor: "#040e20",
+            background: "linear-gradient(160deg, #040e20 0%, #071a34 50%, #0a2240 100%)",
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
             color: '#ffffff',
-            boxShadow: '0 0 30px rgba(0, 0, 0, 0.6)',
-            borderLeft: '1px solid rgba(255,255,255,0.05)',
+            boxShadow: '-4px 0 40px rgba(0,0,0,0.7)',
+            borderLeft: '1px solid rgba(0,180,255,0.12)',
             p: 0,
+            overflowX: "hidden",
+          },
+          "& .MuiBackdrop-root": {
+            backgroundColor: "rgba(0,0,0,0.75)",
           },
         }}
       >
         <Box sx={{ overflowY: 'auto', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", p: 0.5 }}>
+          {/* ── Header ── */}
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2.5, pt: 2.5, pb: 2, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <Box component="img" src="/logo-plataformas-web.png" alt="Logo" sx={{ height: 42, objectFit: "contain" }} />
             <IconButton
-              aria-label="Abrir menú"
               onClick={() => setOpen(false)}
-              sx={{
-                animation: open ? `${rotateTwice} 1s ease-in-out` : "none",
-              }}
+              sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "#fff", backgroundColor: "rgba(255,255,255,0.08)" }, animation: open ? `${rotateTwice} 0.8s ease-in-out` : "none" }}
             >
-              <Close sx={{ fontSize: 32, color: "white" }} />
+              <Close sx={{ fontSize: 24 }} />
             </IconButton>
           </Box>
 
 
-          {/* 📋 Menú navegación */}
+          {/* ── Nav items ── */}
           <AnimatePresence mode="wait">
             {open && (
               <motion.ul
@@ -601,71 +617,38 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
                 animate="visible"
                 exit="hidden"
                 variants={listVariants}
-                style={{ listStyle: "none", padding: 0, margin: 0, width: "100%" }}
+                style={{ listStyle: "none", padding: "12px 16px", margin: 0, width: "100%", boxSizing: "border-box" }}
               >
-                {menuItems.map((item, index) => {
-                  const isDisabled = item.name === "MenuBloqueado"; // 🔒 detecta el ítem a bloquear
-
+                {menuItems.map((item) => {
+                  const isDisabled = item.name === "MenuBloqueado";
                   return (
-                    <ListItem
-                      key={item.name}
-                      component={motion.li}
-                      variants={itemVariants}
-                      disablePadding
-                    >
+                    <ListItem key={item.name} component={motion.li} variants={itemVariants} disablePadding sx={{ mb: 0.5 }}>
                       <ListItemButton
-                        onClick={() => !isDisabled && handleClick(item)} // 🚫 no hace nada si está bloqueado
-                        disabled={isDisabled} // desactiva visualmente
+                        onClick={() => !isDisabled && handleClick(item)}
+                        disabled={isDisabled}
                         sx={{
-                          px: 2,
-                          py: 0.5,
-                          borderBottom: "1px solid rgba(255,255,255,0.1)",
-                          borderTop:
-                            index === 0 ? "1px solid rgba(255,255,255,0.2)" : "none",
-                          backgroundColor: isDisabled
-                            ? "rgba(255,0,0,0.1)" // 🔴 leve fondo rojo desactivado
-                            : "transparent",
+                          px: 1.5, py: 1.1,
+                          borderRadius: "12px",
+                          backgroundColor: "transparent",
+                          border: "1px solid transparent",
+                          transition: "all 0.22s ease",
                           "&:hover": {
-                            backgroundColor: isDisabled
-                              ? "rgba(255,0,0,0.15)" // hover rojo apagado
-                              : "rgba(255,255,255,0.05)",
-                            cursor: isDisabled ? "not-allowed" : "pointer",
+                            backgroundColor: "rgba(0,160,255,0.08)",
+                            border: "1px solid rgba(0,180,255,0.2)",
+                            "& .nav-arrow": { opacity: 1, transform: "translateX(0)" },
+                            "& .nav-icon": { color: "#38bdf8" },
                           },
-                          opacity: isDisabled ? 0.6 : 1,
+                          opacity: isDisabled ? 0.45 : 1,
                           pointerEvents: isDisabled ? "none" : "auto",
                         }}
                       >
-                        <ListItemText
-                          primary={
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  color: isDisabled ? "#ff5252" : "#7ab7ff", // rojo si está bloqueado
-                                  fontSize: "1.7rem",
-                                  marginBottom: "-5px",
-                                }}
-                              >
-                                {item.icon}
-                              </Box>
-                              <span
-                                style={{
-                                  color: isDisabled ? "#ffb3b3" : "#fff",
-                                  fontWeight: "500",
-                                  fontSize: "1.05rem",
-                                }}
-                              >
-                                {item.name}
-                                {isDisabled && " (Próximamente)"} {/* 👈 mensaje opcional */}
-                              </span>
-                            </Box>
-                          }
-                        />
+                        <Box className="nav-icon" sx={{ color: "rgba(255,255,255,0.45)", fontSize: "1.25rem", display: "flex", mr: 1.5, transition: "color 0.22s ease" }}>
+                          {item.icon}
+                        </Box>
+                        <Typography sx={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, fontSize: "0.95rem", color: "#fff", flexGrow: 1 }}>
+                          {item.name}
+                        </Typography>
+                        <ArrowForwardIosRoundedIcon className="nav-arrow" sx={{ fontSize: 13, color: "#38bdf8", opacity: 0, transform: "translateX(-6px)", transition: "all 0.22s ease" }} />
                       </ListItemButton>
                     </ListItem>
                   );
@@ -677,7 +660,7 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
           {/* 🧱 Espacio flexible para empujar bienvenida y redes al fondo */}
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* 🌟 Tarjeta bienvenida */}
+          {/* ── Footer ── */}
           <AnimatePresence mode="wait">
             {open && (
               <motion.div
@@ -688,226 +671,59 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
               >
                 <Box
                   sx={{
-                    background: `
-        radial-gradient(circle at top left, rgba(144,202,249,0.1), transparent 70%),
-        linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))
-      `,
-                    borderRadius: 3,
+                    background: "linear-gradient(135deg, rgba(0,100,200,0.18) 0%, rgba(0,40,100,0.12) 100%)",
+                    borderRadius: "16px",
                     px: 2,
-                    py: 1,
+                    py: 2,
                     mx: 2,
-                    mb: 0,
-                    pt: 0,
+                    mb: 1.5,
                     color: "#ffffff",
                     backdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    boxShadow: "0 0 12px rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(0,180,255,0.18)",
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 0 }}>
-                    <Box
-                      component="img"
-                      src="/logo-plataformas-web.png"
-                      alt="Bienvenidos"
-                      sx={{
-                        width: 110,
-                        height: 70,
-                        objectFit: "contain",
-                        borderRadius: 2,
-                        mr: 1,
-                      }}
-                    />
-                    <Typography
-                      fontSize="0.8rem"
-                      fontWeight={600}
-                      sx={{
-                        fontFamily: 'Poppins, sans-serif',
-                        letterSpacing: 0.3,
-                      }}
-                    >
-                      Bienvenid@ a plataformas.web
-                    </Typography>
-                  </Box>
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      opacity: 0.85,
-                      fontSize: "0.85rem",
-                      mb: 1.1,
-                      fontFamily: 'Poppins, sans-serif',
-                    }}
-                  >
-                    Conecta y trabaja con nosotros.
+                  <Typography sx={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: "0.88rem", color: "#fff", mb: 0.4 }}>
+                    ¿Necesitas una web?
+                  </Typography>
+                  <Typography sx={{ fontFamily: "Poppins, sans-serif", fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", mb: 1.2, lineHeight: 1.5 }}>
+                    Entrega en 72h · Soporte incluido
                   </Typography>
 
 
                   <Button
-                    variant="text"
                     size="small"
-                    endIcon={
-                      <ArrowForwardIosRoundedIcon
-                        sx={{
-                          fontSize: 16,
-                          transition: 'transform 0.3s ease',
-                        }}
-                      />
-                    }
                     onClick={() => {
                       if (informationsRef?.current) {
-                        const offset = -80;
-                        const y = informationsRef.current.getBoundingClientRect().top + window.scrollY + offset;
+                        const y = informationsRef.current.getBoundingClientRect().top + window.scrollY - 80;
                         window.scrollTo({ top: y, behavior: 'smooth' });
                         setOpen(false);
                       }
                     }}
-                    sx={{
-                      mt: 1,
-                      minHeight: 'unset',
-                      color: "#90caf9",
-                      fontWeight: 600,
-                      fontSize: "0.8rem",
-                      textTransform: "none",
-                      fontFamily: 'Poppins, sans-serif',
-                      pl: 0,
-                      py: 0,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        color: "#ffffff",
-                        textDecoration: "underline",
-                        backgroundColor: "transparent",
-                        "& .MuiSvgIcon-root": {
-                          transform: "translateX(3px)",
-                        },
-                      },
-                    }}
+                    sx={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "none", color: "#38bdf8", p: 0, "&:hover": { color: "#fff", backgroundColor: "transparent" } }}
+                    endIcon={<ArrowForwardIosRoundedIcon sx={{ fontSize: "11px !important" }} />}
                   >
                     Empezar ahora
                   </Button>
-
                 </Box>
-              </motion.div>
 
-            )}
-          </AnimatePresence>
+                {/* Admin */}
+                <Box onClick={() => navigate("/administracion")} sx={{ mx: 2, mb: 1.5, px: 2, py: 1.2, borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.22s ease", "&:hover": { backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)" } }}>
+                  <Typography sx={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>⚙️ Administración</Typography>
+                </Box>
 
-          {/* Administración */}
-          {open && (
-            <motion.div
-              variants={bienvenidaVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              <Box
-                onClick={() => navigate("/administracion")}
-                sx={{
-                  background: `
-          radial-gradient(circle at top left, rgba(144,202,249,0.1), transparent 70%),
-          linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))
-        `,
-                  borderRadius: 3,
-                  px: 2,
-                  py: 2,
-                  mx: 2,
-                  mt: 1,
-                  color: "#ffffff",
-                  backdropFilter: "blur(8px)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  boxShadow: "0 0 12px rgba(255,255,255,0.05)",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  maxHeight: 45,
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    boxShadow: "0 0 16px rgba(144,202,249,0.2)",
-                  },
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontFamily: 'Poppins, sans-serif',
-                    fontWeight: 600,
-                    fontSize: "1rem",
-                    letterSpacing: 0.5,
-                    textAlign: "center",
-                  }}
-                >
-                  ⚙️ Administración
-                </Typography>
-              </Box>
-            </motion.div>
-          )}
-
-
-
-
-
-          {/* Redes sociales al final del menú móvil */}
-          <AnimatePresence mode="wait">
-            {open && (
-              <>
-                {/* Redes sociales animadas */}
-
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  variants={{
-                    hidden: {},
-                    visible: {
-                      transition: {
-                        staggerChildren: 0.12,
-                        delayChildren: 0.3,
-                      },
-                    },
-                  }}
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "24px",
-                    marginBottom: isMobile ? 0 : 90,
-                    padding: "20px 0",
-                  }}
-                >
-                  {["Instagram", "Facebook", "LinkedIn"].map((social, index) => {
+                {/* Redes */}
+                <Box sx={{ display: "flex", justifyContent: "center", gap: 2, pb: 3 }}>
+                  {["Instagram", "Facebook", "LinkedIn"].map((social) => {
                     const info = socialData[social];
-
                     return (
-                      <motion.div
-                        key={social}
-                        variants={{
-                          hidden: { opacity: 0, x: 40 },
-                          visible: {
-                            opacity: 1,
-                            x: 0,
-                            transition: { duration: 0.5, ease: "easeOut" },
-                          },
-                          exit: { opacity: 0, x: 30, transition: { duration: 0.3 } },
-                        }}
-                      >
-                        <SocialButton
-                          href={info.href}
-                          Icon={info.Icon}
-                          bgColor={info.bgColor}
-                          hoverStyles={{
-                            color: info.hoverColor,
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                          }}
-                        />
-                      </motion.div>
+                      <SocialButton key={social} href={info.href} Icon={info.Icon} bgColor={info.bgColor}
+                        hoverStyles={{ color: info.hoverColor, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+                      />
                     );
                   })}
-                </motion.div>
-              </>
+                </Box>
+
+              </motion.div>
             )}
           </AnimatePresence>
         </Box>
@@ -973,4 +789,6 @@ function Navbar({ contactoRef, informationsRef, videoReady }) {
 }
 
 export default Navbar;
+
+
 

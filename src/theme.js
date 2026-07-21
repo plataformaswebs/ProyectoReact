@@ -9,6 +9,18 @@ const theme = createTheme({
   typography: {
     fontFamily: "Roboto, Arial, sans-serif",
   },
+  components: {
+    MuiDialog: {
+      defaultProps: {
+        disableScrollLock: true,
+      },
+    },
+    MuiDrawer: {
+      defaultProps: {
+        disableScrollLock: true,
+      },
+    },
+  },
 });
 
 export default theme;

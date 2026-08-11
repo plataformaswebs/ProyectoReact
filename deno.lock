@@ -19,6 +19,7 @@
         "npm:@google-analytics/data@^5.1.0",
         "npm:@mui/icons-material@^6.4.5",
         "npm:@mui/material@^6.4.5",
+        "npm:@supabase/supabase-js@^2.112.3",
         "npm:@types/react-dom@^19.0.3",
         "npm:@types/react@^19.0.8",
         "npm:@vitejs/plugin-react@^4.3.4",

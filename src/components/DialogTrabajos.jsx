@@ -8,7 +8,7 @@ import {
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import Trabajos from "./Trabajos";
-import { cargarTrabajos } from "../helpers/HelperTrabajos";
+import { supabase } from "../supabase/client";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -105,8 +105,8 @@ export default function DialogTrabajos({
   const [armed, setArmed] = React.useState(false);
   const [localTrabajos, setLocalTrabajos] = useState(trabajos);
 
-  const sitiosWeb = localTrabajos.filter(t => t.TipoApp === 1).length;
-  const sistemas = localTrabajos.filter(t => t.TipoApp === 2).length;
+  const sitiosWeb = localTrabajos.filter(t => t.tipo_app === 1).length;
+  const sistemas = localTrabajos.filter(t => t.tipo_app === 2).length;
   const [showContent, setShowContent] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -114,7 +114,7 @@ export default function DialogTrabajos({
     if (!localTrabajos.length) return null;
 
     const ultimaFechaReal = new Date(
-      Math.max(...localTrabajos.map(t => new Date(t.FechaCreacion).getTime()))
+      Math.max(...localTrabajos.map(t => new Date(t.created_at).getTime()))
     );
 
     const hoy = new Date();
@@ -149,17 +149,15 @@ export default function DialogTrabajos({
     return () => clearTimeout(t);
   }, [open]);
 
-  // ACTUALIZAR TRABAJOS S3
   useEffect(() => {
     if (open) {
-      const timestamp = Date.now();
-      cargarTrabajos(
-        `https://plataformas-web-buckets.s3.us-east-2.amazonaws.com/Trabajos.xlsx?t=${timestamp}`
-      ).then((data) => {
-        // 🔹 Filtrar solo los trabajos activos (Estado = 1)
-        const activos = data.filter(t => Number(t.Estado) === 1);
-        setLocalTrabajos(activos);
-      });
+      supabase
+        .from('trabajos')
+        .select('*')
+        .eq('estado', true)
+        .then(({ data, error }) => {
+          if (!error && data) setLocalTrabajos(data);
+        });
     }
   }, [open]);
 
@@ -420,12 +418,12 @@ export default function DialogTrabajos({
             <DialogContent sx={{ background: "linear-gradient(180deg,#FFF8E1 0%,#FFF3E0 100%)", py: 0, px: 1.5, mb: 0 }}>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 1.3 }}>
                 {localTrabajos.map((t) => {
-                  const porcentaje = Math.min(100, Math.max(0, t.Porcentaje || 0));
+                  const porcentaje = Math.min(100, Math.max(0, t.porcentaje || 0));
                   const completado = porcentaje === 100;
 
                   return (
                     <Box
-                      key={`${t.SitioWeb}-${t.Id}`}
+                      key={`${t.sitio_web}-${t.id}`}
                       sx={{
                         border: "1px solid rgba(230,81,0,0.25)",
                         borderRadius: 1,

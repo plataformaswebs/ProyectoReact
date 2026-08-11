@@ -4,15 +4,19 @@ import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
 import { motion, AnimatePresence } from "framer-motion";
-import MenuInferior from './MenuInferior';
+import NavbarAdmin from './NavbarAdmin';
+import SidebarAdmin from './SidebarAdmin';
 import AddIcon from "@mui/icons-material/Add";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DialogAgregarTrabajo from "./DialogAgregarTrabajo";
 import DialogTrabajoTerminado from "./DialogTrabajoTerminado";
 import { CircularProgress } from "@mui/material";
 import emailjs from "emailjs-com";
+import { supabase } from "../../supabase/client";
+
+const devStatus = (msg) => window.dispatchEvent(new CustomEvent("devtools-status", { detail: { message: msg } }));
 
 const ActionButton = ({ title, color, onClick, icon, compact = false }) => (
   <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
@@ -32,7 +36,17 @@ const ActionButton = ({ title, color, onClick, icon, compact = false }) => (
   </motion.div>
 );
 const ConfigurarTrabajos = () => {
+  const nombreUsuario = React.useMemo(() => {
+    try {
+      const u = JSON.parse(sessionStorage.getItem("usuario") || "{}");
+      const n = u.nombre;
+      if (!n || n.includes("@")) return "Administrador";
+      return n;
+    } catch { return "Administrador"; }
+  }, []);
   const [trabajos, setTrabajos] = useState([]);
+  const [dbStatus, setDbStatus] = useState("loading");
+  const [dbDetail, setDbDetail] = useState("conectando...");
   const [pendingChanges, setPendingChanges] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "success" });
   const theme = useTheme();
@@ -44,9 +58,10 @@ const ConfigurarTrabajos = () => {
   const [loadingDialog, setLoadingDialog] = useState(false);
   const [loadingSaveAll, setLoadingSaveAll] = useState(false);
   const [loadingDialogAction, setLoadingDialogAction] = useState(null);
-  const [mostrarMenuInferior, setMostrarMenuInferior] = useState(false);
-  const menuInferiorTimeoutRef = useRef(null);
-  const touchStartYRef = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [temaOscuro, setTemaOscuro] = useState(() => localStorage.getItem("pw-tema") !== "claro");
+  const handleTema = (oscuro) => { setTemaOscuro(oscuro); localStorage.setItem("pw-tema", oscuro ? "oscuro" : "claro"); };
+  const [forzarPrd, setForzarPrd] = useState(false);
   const [mostrarTextoAgregarTrabajo, setMostrarTextoAgregarTrabajo] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
   const [dialogFinalizar, setDialogFinalizar] = useState({
@@ -153,7 +168,8 @@ const ConfigurarTrabajos = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Clientes cargados en ConfigurarTrabajos:", trabajos);
+    if (trabajos.length > 0)
+      console.log("✅ Conectado a Supabase — trabajos:", JSON.stringify(trabajos, null, 2));
   }, [trabajos]);
 
   const trabajosOrdenados = [...trabajos].sort((a, b) => {
@@ -185,17 +201,14 @@ const ConfigurarTrabajos = () => {
         disabled={paginaActual === 1}
         onClick={() => setPaginaActual((p) => p - 1)}
         sx={{
-          color: "white",
-          borderColor: "white",
-          "&:hover": {
-            borderColor: "#E95420",
-            backgroundColor: "#E95420",
-          },
+          color: temaOscuro ? "white" : "#111",
+          borderColor: temaOscuro ? "white" : "#111",
+          "&:hover": { borderColor: "#E95420", backgroundColor: "#E95420", color: "#fff" },
         }}
       >
         Anterior
       </Button>
-      <Typography variant="body2" sx={{ color: "white" }}>
+      <Typography variant="body2" sx={{ color: temaOscuro ? "white" : "#111" }}>
         Página {paginaActual} de {totalPaginas}
       </Typography>
       <Button
@@ -203,12 +216,9 @@ const ConfigurarTrabajos = () => {
         disabled={paginaActual === totalPaginas}
         onClick={() => setPaginaActual((p) => p + 1)}
         sx={{
-          color: "white",
-          borderColor: "white",
-          "&:hover": {
-            borderColor: "#E95420",
-            backgroundColor: "#E95420",
-          },
+          color: temaOscuro ? "white" : "#111",
+          borderColor: temaOscuro ? "white" : "#111",
+          "&:hover": { borderColor: "#E95420", backgroundColor: "#E95420", color: "#fff" },
         }}
       >
         Siguiente
@@ -229,41 +239,9 @@ const ConfigurarTrabajos = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
-    };
-  }, []);
 
-  const handleAbrirMenuInferior = () => {
-    if (mostrarMenuInferior) {
-      setMostrarMenuInferior(false);
-      if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
-      return;
-    }
-    setMostrarMenuInferior(true);
-    if (menuInferiorTimeoutRef.current) clearTimeout(menuInferiorTimeoutRef.current);
-    menuInferiorTimeoutRef.current = setTimeout(() => {
-      setMostrarMenuInferior(false);
-    }, 4000);
-  };
-
-  const handleTouchStart = (e) => {
-    touchStartYRef.current = e.touches?.[0]?.clientY ?? null;
-  };
-
-  const handleTouchEnd = (e) => {
-    if (touchStartYRef.current == null) return;
-    const endY = e.changedTouches?.[0]?.clientY ?? touchStartYRef.current;
-    const delta = touchStartYRef.current - endY;
-    touchStartYRef.current = null;
-    if (delta > 30) {
-      handleAbrirMenuInferior();
-    }
-  };
 
   const handleSaveTrabajo = async (nuevoTrabajo) => {
-    console.log("Nuevo trabajo agregado:", nuevoTrabajo);
 
     await fetchTrabajos();  // 🔄 ahora sí carga versión fresca del Excel
 
@@ -283,8 +261,12 @@ const ConfigurarTrabajos = () => {
       const hoja = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(hoja, { defval: "" });
       setTrabajos(data);
+      setDbStatus("ok");
+      setDbDetail(`${data.length} registros · ${new Date().toLocaleTimeString()}`);
     } catch (error) {
       console.error("❌ Error cargando trabajos:", error);
+      setDbStatus("error");
+      setDbDetail(error.message || "Error desconocido");
     }
   };
 
@@ -307,32 +289,23 @@ const ConfigurarTrabajos = () => {
   const guardarCambios = async (trabajo) => {
     try {
       setLoadingSaveAll(true);
+      devStatus("Guardando trabajo...");
 
-      const payload = {
-        SitioWeb: trabajo.SitioWeb,
-        nuevoPorcentaje: Number(trabajo.Porcentaje),
-        nuevoEstado: Number(trabajo.Estado),
-        fechaCreacion: trabajo.FechaCreacion,
-      };
+      const { error } = await supabase
+        .from("trabajos")
+        .update({
+          porcentaje: Number(trabajo.Porcentaje),
+          estado: Number(trabajo.Estado),
+        })
+        .eq("sitio_web", trabajo.SitioWeb);
 
-      const url = `${window.location.hostname === "localhost"
-        ? "http://localhost:8888"
-        : ""
-        }/.netlify/functions/actualizarTrabajo`;
+      if (error) throw new Error(error.message);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Error al guardar");
-
-      // Aplicar cambios al estado guardado (triggers reorder) y limpiar pending
       setTrabajos((prev) =>
         prev.map((t) =>
-          t.SitioWeb === trabajo.SitioWeb ? { ...t, ...payload, Porcentaje: payload.nuevoPorcentaje, Estado: payload.nuevoEstado } : t
+          t.SitioWeb === trabajo.SitioWeb
+            ? { ...t, Porcentaje: Number(trabajo.Porcentaje), Estado: Number(trabajo.Estado) }
+            : t
         )
       );
       setPendingChanges((prev) => {
@@ -340,20 +313,13 @@ const ConfigurarTrabajos = () => {
         delete next[trabajo.SitioWeb];
         return next;
       });
-      setSnackbar({
-        open: true,
-        type: "success",
-        message: "Trabajo actualizado correctamente.",
-      });
+      setSnackbar({ open: true, type: "success", message: "Trabajo actualizado correctamente." });
     } catch (error) {
       console.error("❌ Error al guardar:", error);
-      setSnackbar({
-        open: true,
-        type: "error",
-        message: "Error al guardar cambios",
-      });
+      setSnackbar({ open: true, type: "error", message: "Error al guardar cambios" });
     } finally {
       setLoadingSaveAll(false);
+      devStatus("");
     }
   };
 
@@ -427,83 +393,89 @@ const ConfigurarTrabajos = () => {
   };
 
   return (
-    <Container
-      maxWidth={false}
-      disableGutters
-      sx={{
-        minHeight: "100vh",
-        width: "100vw",
-        overflowX: "hidden",
-        py: 1,
-        backgroundImage: "url(fondo-blizz.avif)",
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
-        backgroundPosition: "center",
-      }}
-    >
-      <Box sx={{ pt: 10, pb: 4, px: { xs: 1, md: 4 } }}>
-        {/* Título */}
-        <Box display="flex" alignItems="center" justifyContent="space-between" pb={2}>
-          {/* Título */}
-          <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 1 }}>
-            <SettingsSuggestIcon
-              sx={{
-                color: "white",
-                fontSize: { xs: 22, sm: 28 },
-                mt: "-2px",
-                mr: { xs: "-2px", sm: 0 }, // 👈 corrige separación en mobile
-              }}
-            />
-            <Typography
-              variant="h6"
-              sx={{
-                color: "white",
-                fontWeight: 700,
-                fontSize: { xs: "0.9rem", sm: "1.15rem" },
-                whiteSpace: "nowrap",
-              }}
-            >
-              Configuración Trabajos
-            </Typography>
-          </Box>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", bgcolor: temaOscuro ? "#0a0a0a" : "#f0f0f0" }}>
+      {/* Navbar — full width arriba */}
+      <NavbarAdmin
+        titulo="Configurar Trabajos"
+        temaOscuro={temaOscuro}
+        onMenuClick={() => setSidebarOpen(prev => !prev)}
+        forzarPrd={forzarPrd}
+        onForzarPrd={setForzarPrd}
+      />
+      {/* Sidebar + contenido en fila */}
+      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <SidebarAdmin open={sidebarOpen} temaOscuro={temaOscuro} onTemaChange={handleTema} onClose={() => setSidebarOpen(false)} esPrd={forzarPrd} />
+        <Box sx={{ flex: 1, minWidth: 0, overflowY: "auto", pb: 4, px: { xs: 1, md: 4 }, pt: 2 }}>
 
-          {/* Botón agregar trabajo */}
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              onClick={() => agregarTrabajo()}
-              variant="outlined"
-              color="inherit"
-              sx={{
-                color: "white",
-                borderColor: "white",
-                fontSize: { xs: "0.7rem", sm: "0.85rem" },
-                px: { xs: 0.9, sm: 1 },
-                py: { xs: 0.25, sm: 0.5 },
-                minWidth: 36,
-                display: "flex",
-                alignItems: "center",
-                gap: 0,
-                overflow: "hidden",
-                "&:hover": { backgroundColor: "#ffffff22", borderColor: "#ffffffcc" },
-              }}
-            >
-              <AddIcon sx={{ fontSize: 18, flexShrink: 0 }} />
-              <AnimatePresence>
-                {mostrarTextoAgregarTrabajo && (
-                  <motion.span
-                    initial={{ maxWidth: 140, opacity: 1, marginLeft: 4 }}
-                    exit={{ maxWidth: 0, opacity: 0, marginLeft: 0 }}
-                    transition={{ duration: 0.35, ease: "easeInOut" }}
-                    style={{ overflow: "hidden", whiteSpace: "nowrap", display: "block" }}
-                  >
-                    Agregar Trabajo
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Button>
-          </motion.div>
-        </Box>
+        {/* ── Hero Banner — solo desktop ── */}
+        {(() => {
+          const iconBoxSx = {
+            width: 64, height: 64,
+            border: "1px solid rgba(255,255,255,0.35)",
+            bgcolor: "rgba(255,255,255,0.08)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            position: "relative",
+          };
+          const dashedLines = [
+            { top: -40, bottom: -40, left: "-0.5px", borderLeft: "1px dashed rgba(255,255,255,0.55)", maskImage: "linear-gradient(to bottom, transparent, white 30%, white 70%, transparent)" },
+            { top: -40, bottom: -40, right: "-0.5px", borderRight: "1px dashed rgba(255,255,255,0.55)", maskImage: "linear-gradient(to bottom, transparent, white 30%, white 70%, transparent)" },
+            { left: -40, right: -40, top: "-0.5px", borderTop: "1px dashed rgba(255,255,255,0.7)", maskImage: "linear-gradient(to right, transparent, white 30%, white 70%, transparent)" },
+            { left: -40, right: -40, bottom: "-0.5px", borderBottom: "1px dashed rgba(255,255,255,0.7)", maskImage: "linear-gradient(to right, transparent, white 30%, white 70%, transparent)" },
+          ];
+          const icons = [
+            <path key="bolt" d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/>,
+            <g key="pkg"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5"/><path d="M12 12l8 -4.5"/><path d="M12 12l0 9"/><path d="M12 12l-8 -4.5"/><path d="M16 5.25l-8 4.5"/></g>,
+            <g key="grid"><path d="M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M14 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/><path d="M4 15a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M14 15a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/></g>,
+            <g key="cpu"><path d="M5 6a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M9 9h6v6H9z"/><path d="M3 10h2"/><path d="M3 14h2"/><path d="M10 3v2"/><path d="M14 3v2"/><path d="M21 10h-2"/><path d="M21 14h-2"/><path d="M14 21v-2"/><path d="M10 21v-2"/></g>,
+          ];
+          return (
+            <Box sx={{ display: { xs: "none", md: "block" }, mb: 3 }}>
+              <Box sx={{ position: "relative", borderRadius: 3, border: "1px solid rgba(255,255,255,0.15)", overflow: "hidden", px: { md: 5, lg: 6 }, py: { md: 5, lg: 6 } }}>
+                {/* Fondo */}
+                <Box sx={{ position: "absolute", inset: 0, zIndex: 0, background: import.meta.env.PROD
+                  ? "linear-gradient(135deg, #0a0a0a 0%, #160505 30%, rgba(120,10,10,0.55) 58%, rgba(150,10,10,0.85) 78%, #8B0000 100%)"
+                  : "linear-gradient(135deg, #0a0a0a 0%, #161616 28%, rgba(17,31,17,1) 52%, rgba(25,60,27,1) 75%, #2e7d32 100%)"
+                }} />
+                {/* Cuadrícula */}
+                <Box sx={{ position: "absolute", inset: 0, zIndex: 0, opacity: 0.6, backgroundImage: ["repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(255,255,255,0.05) 19px, rgba(255,255,255,0.05) 20px, transparent 20px, transparent 39px, rgba(255,255,255,0.05) 39px, rgba(255,255,255,0.05) 40px)", "repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(255,255,255,0.05) 19px, rgba(255,255,255,0.05) 20px, transparent 20px, transparent 39px, rgba(255,255,255,0.05) 39px, rgba(255,255,255,0.05) 40px)", "radial-gradient(circle at 20px 20px, rgba(255,255,255,0.08) 2px, transparent 2px)", "radial-gradient(circle at 40px 40px, rgba(255,255,255,0.08) 2px, transparent 2px)"].join(", "), backgroundSize: "40px 40px, 40px 40px, 40px 40px, 40px 40px" }} />
+
+                {/* Íconos — grupo principal (bolt, package con -translateX, grid) */}
+                <Box sx={{ position: "absolute", top: "50%", right: 104, transform: "translateY(-50%)", zIndex: 1, pointerEvents: "none" }}>
+                  {[{ icon: icons[0], tx: 0 }, { icon: icons[1], tx: -64 }, { icon: icons[2], tx: 0 }].map(({ icon, tx }, i) => (
+                    <Box key={i} sx={{ ...iconBoxSx, transform: tx ? `translateX(${tx}px)` : "none" }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.8)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+                      {dashedLines.map((style, j) => <Box key={j} sx={{ position: "absolute", ...style }} />)}
+                    </Box>
+                  ))}
+                </Box>
+
+                {/* Ícono CPU — translate-x-full, se desvanece a la derecha */}
+                <Box sx={{ position: "absolute", top: "50%", right: 104, transform: "translateY(-50%)", zIndex: 1, pointerEvents: "none" }}>
+                  <Box sx={{ ...iconBoxSx, transform: "translateX(64px)", maskImage: "linear-gradient(to right, white 75%, transparent 100%)" }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.8)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">{icons[3]}</svg>
+                    {dashedLines.map((style, j) => <Box key={j} sx={{ position: "absolute", ...style }} />)}
+                  </Box>
+                </Box>
+
+                {/* Contenido */}
+                <Box sx={{ position: "relative", zIndex: 2, maxWidth: 520 }}>
+                  <Typography sx={{ fontSize: { md: "1.75rem", lg: "2.25rem" }, fontWeight: 500, color: "#fff", letterSpacing: "-0.035em", lineHeight: 1.2, fontFamily: "'Poppins', sans-serif" }}>
+                    Hola, {nombreUsuario}
+                  </Typography>
+                  <Typography sx={{ mt: 1.5, fontSize: { md: "0.875rem", lg: "1rem" }, color: "rgba(255,255,255,0.78)", lineHeight: 1.6, maxWidth: 430 }}>
+                    Panel de gestión de trabajos en desarrollo. Configura el avance, estados y detalles de cada proyecto activo.
+                  </Typography>
+                  <Box sx={{ mt: 3 }}>
+                    <Button onClick={() => setOpenDialogAgregar(true)} sx={{ bgcolor: "#fff", color: "#0a0a0a", fontWeight: 600, fontSize: "0.82rem", borderRadius: 99, px: 2.5, py: 0.9, textTransform: "none", "&:hover": { bgcolor: "rgba(255,255,255,0.88)" } }}>
+                      + Agregar trabajo
+                    </Button>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          );
+        })()}
+
 
 
 
@@ -513,9 +485,10 @@ const ConfigurarTrabajos = () => {
 
           <Box
             sx={{
-              display: "flex",
+              display: { xs: "flex", md: "grid" },
               flexDirection: "column",
-              gap: { xs: 0.5, sm: 0.75 },
+              gridTemplateColumns: { md: "repeat(2, 1fr)", xl: "repeat(3, 1fr)" },
+              gap: { xs: 0.5, sm: 0.75, md: 1.5 },
               mt: mostrarPaginacion ? 1 : 0,
               opacity: loadingSaveAll ? 0.5 : 1,
               pointerEvents: loadingSaveAll ? "none" : "auto",
@@ -537,131 +510,127 @@ const ConfigurarTrabajos = () => {
                   <Paper
                     elevation={0}
                     sx={{
-                      borderRadius: 2.5,
+                      borderRadius: 3,
                       overflow: "hidden",
                       border: listo
-                        ? "1px solid rgba(76,175,80,0.4)"
+                        ? "1px solid rgba(76,175,80,0.3)"
                         : activo
-                        ? "1px solid rgba(255,255,255,0.12)"
-                        : "1px solid rgba(239,83,80,0.3)",
-                      background: listo
-                        ? "linear-gradient(135deg,#f1f8f1 0%,#e8f5e9 100%)"
-                        : activo
-                        ? "linear-gradient(135deg,#ffffff 0%,#f8fafd 100%)"
-                        : "linear-gradient(135deg,#fff8f8 0%,#fef2f2 100%)",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
-                      transition: "box-shadow 0.2s",
-                      "&:hover": { boxShadow: "0 4px 16px rgba(0,0,0,0.12)" },
+                        ? "1px solid rgba(255,255,255,0.08)"
+                        : "1px solid rgba(239,83,80,0.2)",
+                      bgcolor: temaOscuro ? "#1a1a1a" : "#fff",
+                      position: "relative",
+                      p: { xs: 1.75, md: 2 },
+                      display: "flex",
+                      flexDirection: { xs: "column", md: "row" },
+                      alignItems: { xs: "stretch", md: "center" },
+                      gap: { xs: 1.25, md: 2 },
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        borderTopLeftRadius: 0,
+                        borderBottomLeftRadius: 0,
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+                        "& .accent-bar": { transform: "scaleY(1)" },
+                        "& .arrow-icon": { color: "#c62828" },
+                      },
                     }}
                   >
-                    {/* Barra de color superior según progreso */}
-                    <Box
-                      sx={{
-                        height: 3,
-                        backgroundImage: getGradient(pct),
-                        width: `${pct}%`,
-                        transition: "width 0.4s ease",
-                      }}
-                    />
+                    {/* Accent bar izquierda */}
+                    <Box className="accent-bar" sx={{ position: "absolute", inset: "0 auto 0 0", width: 3.5, bgcolor: listo ? "#4caf50" : "#8B0000", transform: "scaleY(0)", transformOrigin: "center", transition: "transform 0.2s", zIndex: 1 }} />
 
-                    <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.1, sm: 0.2 } }}>
-                      {/* Fila superior: nombre + badge + acciones */}
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0 }}>
-                        {/* Tipo icono */}
-                        <Typography sx={{ fontSize: { xs: "0.85rem", sm: "1rem" }, lineHeight: 1, flexShrink: 0 }}>
+                    {/* Fila superior en mobile: ícono + título + badges */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, zIndex: 2 }}>
+                      {/* Caja ícono */}
+                      <Box sx={{ width: { xs: 44, md: 48 }, height: { xs: 44, md: 48 }, borderRadius: 2, bgcolor: listo ? "rgba(56,142,60,0.15)" : activo ? "rgba(139,0,0,0.18)" : "rgba(80,0,0,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Typography sx={{ fontSize: { xs: "1.5rem", md: "1.4rem" }, lineHeight: 1 }}>
                           {Number(trabajo.TipoApp || trabajo.tipoApp) === 1 ? "🌐" : "⚙️"}
                         </Typography>
-
-                        {/* Nombre */}
-                        <Typography
-                          sx={{
-                            flex: 1,
-                            fontWeight: 700,
-                            fontSize: { xs: "0.78rem", sm: "0.875rem" },
-                            color: Number(trabajo.TipoApp || trabajo.tipoApp) === 1 ? "#0277bd" : "#1b263b",
-                            fontFamily: "Poppins, sans-serif",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                          component={Number(trabajo.TipoApp || trabajo.tipoApp) === 1 ? "a" : "span"}
-                          href={Number(trabajo.TipoApp || trabajo.tipoApp) === 1 ? `https://${trabajo.SitioWeb}` : undefined}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ textDecoration: "none" }}
-                        >
-                          {trabajo.SitioWeb}
-                        </Typography>
-
-                        {/* Badge % */}
-                        <Box
-                          sx={{
-                            px: 0.9,
-                            py: 0.1,
-                            borderRadius: "999px",
-                            backgroundImage: getGradient(pct),
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Typography sx={{ fontSize: "0.68rem", fontWeight: 800, color: "#fff", lineHeight: 1.6 }}>
-                            {pct}%
-                          </Typography>
-                        </Box>
-
-                        {/* Acciones */}
-                        <Box sx={{ display: "flex", gap: 0, flexShrink: 0 }}>
-                          <ActionButton compact title="Editar" color="info" onClick={() => editarTrabajo(trabajo)} icon={<EditRoundedIcon />} />
-                          <ActionButton
-                            compact
-                            title={activo ? "Guardar" : "Eliminar"}
-                            color={activo ? "primary" : "error"}
-                            onClick={() => activo ? handleGuardarClick({ ...trabajo, ...pending }) : abrirDialog(trabajo)}
-                            icon={activo
-                              ? loadingSave === trabajo.SitioWeb ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />
-                              : <DeleteIcon />}
-                          />
-                          <ActionButton
-                            compact
-                            title={activo ? "Eliminar" : "Restaurar"}
-                            color={activo ? "error" : "success"}
-                            onClick={() => activo ? abrirDialog(trabajo) : restaurarTrabajo(trabajo)}
-                            icon={activo ? <DeleteIcon /> : <RestoreIcon />}
-                          />
-                        </Box>
                       </Box>
 
-                      {/* Slider */}
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.25 }}>
-                        <Box sx={{ flex: 1 }}>
+                      {/* Título + badges */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: { xs: 0.4, md: 0.75 } }}>
+                          <Typography sx={{ fontWeight: 600, fontSize: { xs: "1rem", md: "0.9rem" }, color: temaOscuro ? "#fff" : "#111", fontFamily: "Poppins, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                            {trabajo.SitioWeb}
+                          </Typography>
+                          <Box sx={{ px: 0.9, py: 0.1, borderRadius: "999px", backgroundImage: getGradient(pct), flexShrink: 0 }}>
+                            <Typography sx={{ fontSize: { xs: "0.7rem", md: "0.6rem" }, fontWeight: 800, color: "#fff", lineHeight: 1.7 }}>{pct}%</Typography>
+                          </Box>
+                          {!activo && <Typography sx={{ fontSize: { xs: "0.68rem", md: "0.6rem" }, color: "#ef5350", fontWeight: 700, flexShrink: 0 }}>INACTIVO</Typography>}
+                          {listo && activo && <Typography sx={{ fontSize: { xs: "0.68rem", md: "0.6rem" }, color: "#66bb6a", fontWeight: 700, flexShrink: 0 }}>✓ LISTO</Typography>}
+                        </Box>
+                        {/* Slider — solo en desktop dentro de este bloque */}
+                        <Box sx={{ display: { xs: "none", md: "block" } }}>
                           <Slider
                             value={pct}
                             onChange={(_, v) => handleChange(trabajo.SitioWeb, "Porcentaje", v)}
-                            step={5}
-                            min={0}
-                            max={100}
-                            size="small"
+                            step={5} min={0} max={100} size="small"
                             sx={{
-                              py: "1px",
-                              "& .MuiSlider-track": { backgroundImage: getGradient(pct), border: "none", height: 5 },
-                              "& .MuiSlider-rail": { height: 5, opacity: 0.2, backgroundColor: "#90a4ae" },
-                              "& .MuiSlider-thumb": {
-                                width: 13, height: 13,
-                                "&:hover, &.Mui-focusVisible": { boxShadow: "0 0 0 6px rgba(0,0,0,0.08)" },
-                              },
+                              py: "2px",
+                              "& .MuiSlider-track": { backgroundImage: getGradient(pct), border: "none", height: 4 },
+                              "& .MuiSlider-rail": { height: 4, opacity: temaOscuro ? 0.12 : 0.2, backgroundColor: temaOscuro ? "#fff" : "#000" },
+                              "& .MuiSlider-thumb": { width: 12, height: 12, "&:hover, &.Mui-focusVisible": { boxShadow: "0 0 0 6px rgba(255,255,255,0.1)" } },
                             }}
                           />
                         </Box>
-                        {!activo && (
-                          <Typography sx={{ fontSize: "0.65rem", color: "#ef5350", fontWeight: 700, flexShrink: 0 }}>
-                            INACTIVO
-                          </Typography>
-                        )}
-                        {listo && activo && (
-                          <Typography sx={{ fontSize: "0.65rem", color: "#388e3c", fontWeight: 700, flexShrink: 0 }}>
-                            ✓ PRD
-                          </Typography>
-                        )}
                       </Box>
+
+                      {/* Botones + flecha en desktop */}
+                      <Box sx={{ display: { xs: "none", md: "flex" }, gap: 0, flexShrink: 0, zIndex: 2 }}>
+                        <ActionButton compact title="Editar" color="info" onClick={() => editarTrabajo(trabajo)} icon={<EditRoundedIcon />} />
+                        <ActionButton compact title={activo ? "Guardar" : "Eliminar"} color={activo ? "primary" : "error"}
+                          onClick={() => activo ? handleGuardarClick({ ...trabajo, ...pending }) : abrirDialog(trabajo)}
+                          icon={activo ? (loadingSave === trabajo.SitioWeb ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />) : <DeleteIcon />}
+                        />
+                        <ActionButton compact title={activo ? "Eliminar" : "Restaurar"} color={activo ? "error" : "success"}
+                          onClick={() => activo ? abrirDialog(trabajo) : restaurarTrabajo(trabajo)}
+                          icon={activo ? <DeleteIcon /> : <RestoreIcon />}
+                        />
+                      </Box>
+                      {Number(trabajo.TipoApp || trabajo.tipoApp) === 1 && (
+                        <Box sx={{ display: { xs: "none", md: "flex" } }}
+                          className="arrow-icon" component="a" href={`https://${trabajo.SitioWeb}`} target="_blank" rel="noopener noreferrer"
+                          style={{ color: temaOscuro ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.25)", transition: "color 0.2s", textDecoration: "none", alignItems: "center", flexShrink: 0 }}
+                        >
+                          <ArrowForwardIcon sx={{ fontSize: "1.1rem" }} />
+                        </Box>
+                      )}
+                    </Box>
+
+                    {/* Slider mobile */}
+                    <Box sx={{ display: { xs: "block", md: "none" }, px: 0.5, zIndex: 2 }}>
+                      <Slider
+                        value={pct}
+                        onChange={(_, v) => handleChange(trabajo.SitioWeb, "Porcentaje", v)}
+                        step={5} min={0} max={100}
+                        sx={{
+                          py: "4px",
+                          "& .MuiSlider-track": { backgroundImage: getGradient(pct), border: "none", height: 6 },
+                          "& .MuiSlider-rail": { height: 6, opacity: temaOscuro ? 0.15 : 0.22, backgroundColor: temaOscuro ? "#fff" : "#000" },
+                          "& .MuiSlider-thumb": { width: 22, height: 22, "&:hover, &.Mui-focusVisible": { boxShadow: "0 0 0 8px rgba(255,255,255,0.1)" } },
+                        }}
+                      />
+                    </Box>
+
+                    {/* Botones + flecha en mobile */}
+                    <Box sx={{ display: { xs: "flex", md: "none" }, alignItems: "center", justifyContent: "space-between", zIndex: 2 }}>
+                      <Box sx={{ display: "flex", gap: 0.5 }}>
+                        <ActionButton title="Editar" color="info" onClick={() => editarTrabajo(trabajo)} icon={<EditRoundedIcon />} />
+                        <ActionButton title={activo ? "Guardar" : "Eliminar"} color={activo ? "primary" : "error"}
+                          onClick={() => activo ? handleGuardarClick({ ...trabajo, ...pending }) : abrirDialog(trabajo)}
+                          icon={activo ? (loadingSave === trabajo.SitioWeb ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />) : <DeleteIcon />}
+                        />
+                        <ActionButton title={activo ? "Eliminar" : "Restaurar"} color={activo ? "error" : "success"}
+                          onClick={() => activo ? abrirDialog(trabajo) : restaurarTrabajo(trabajo)}
+                          icon={activo ? <DeleteIcon /> : <RestoreIcon />}
+                        />
+                      </Box>
+                      {Number(trabajo.TipoApp || trabajo.tipoApp) === 1 && (
+                        <Box component="a" href={`https://${trabajo.SitioWeb}`} target="_blank" rel="noopener noreferrer"
+                          sx={{ color: temaOscuro ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", textDecoration: "none", p: 0.5 }}
+                        >
+                          <ArrowForwardIcon sx={{ fontSize: "1.4rem" }} />
+                        </Box>
+                      )}
                     </Box>
                   </Paper>
                 </motion.div>
@@ -769,49 +738,9 @@ const ConfigurarTrabajos = () => {
         />
 
 
-        {/* MenuInferior: se abre manualmente y se minimiza solo */}
-        <AnimatePresence>
-          {mostrarMenuInferior && (
-            <MenuInferior cardSize={cardSize} modo="trabajos" enterDuration={1} exitDuration={1} />
-          )}
-        </AnimatePresence>
-
-        {/* Flecha inferior para abrir menu */}
-        <Box
-          onClick={handleAbrirMenuInferior}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          sx={{
-            position: "fixed",
-            left: "50%",
-            transform: "translateX(-50%)",
-            bottom: 10,
-            zIndex: 1200,
-            width: 56,
-            height: 30,
-            borderRadius: "999px",
-            background: "rgba(0,0,0,0.55)",
-            border: "1px solid rgba(255,255,255,0.25)",
-            display: mostrarMenuInferior ? "none" : "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            backdropFilter: "blur(6px)",
-            boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
-            "&:active": { transform: "translateX(-50%) scale(0.98)" },
-          }}
-        >
-          <KeyboardArrowUpIcon
-            sx={{
-              color: "#fff",
-              fontSize: 22,
-              transform: mostrarMenuInferior ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.25s ease",
-            }}
-          />
         </Box>
       </Box>
-    </Container >
+    </Box>
   );
 };
 

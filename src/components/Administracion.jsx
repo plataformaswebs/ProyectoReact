@@ -99,17 +99,20 @@ const Administracion = () => {
 
     if (usuarioValido) {
       setLogoAnimacion("success");
-      sessionStorage.setItem("credenciales", JSON.stringify({ email, password }));
+      const nombre = usuarioValido.user_metadata?.nombre
+        || usuarioValido.user_metadata?.full_name
+        || usuarioValido.email?.split("@")[0] || "Administrador";
+      sessionStorage.setItem("credenciales", JSON.stringify({ email }));
       if (recordarme) {
-        localStorage.setItem("credenciales", JSON.stringify({ email, password }));
+        localStorage.setItem("credenciales", JSON.stringify({ email }));
       } else {
         localStorage.removeItem("credenciales");
       }
       sessionStorage.setItem("snackbar", JSON.stringify({
         open: true, type: "success",
-        message: `Bienvenido ${usuarioValido.nombre} 😎`
+        message: `Bienvenido ${nombre} 😎`
       }));
-      sessionStorage.setItem("usuario", JSON.stringify(usuarioValido));
+      sessionStorage.setItem("usuario", JSON.stringify({ nombre, email }));
       setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
     } else {
       setLogoAnimacion("error");
@@ -154,15 +157,25 @@ const Administracion = () => {
   }, []);
 
   useEffect(() => {
-    const creds = JSON.parse(localStorage.getItem("credenciales"));
-    if (creds) {
-      setEmail(creds.email);
-      setPassword(creds.password);
-      setRecordarme(true);
-      if (creds.email?.toLowerCase() === "msanchez") {
-        sessionStorage.setItem("mostrarAdmin", "1");
-      }
-    }
+    // Si hay sesión activa en Supabase, redirigir directo
+    import("../supabase/client").then(({ supabase }) => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          const nombre = session.user.user_metadata?.nombre || session.user.email;
+          sessionStorage.setItem("credenciales", JSON.stringify({ email: session.user.email }));
+          sessionStorage.setItem("usuario", JSON.stringify({ nombre, email: session.user.email }));
+          setLogoAnimacion("success");
+          setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
+        } else {
+          // Pre-llenar email si tenía "Recordarme"
+          const creds = JSON.parse(localStorage.getItem("credenciales"));
+          if (creds?.email) {
+            setEmail(creds.email);
+            setRecordarme(true);
+          }
+        }
+      });
+    });
   }, []);
 
   useEffect(() => {

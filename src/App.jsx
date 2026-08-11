@@ -18,13 +18,16 @@ import Cargando from './components/Cargando';
 import { AnimatePresence, motion } from 'framer-motion';
 import "./components/css/App.css";
 import { initGoogleAnalytics, trackPageView } from "./helpers/HelperAnalytics.js"; //GOOGLE ANALYTICS
+import { supabase } from "./supabase/client";
 import { obtenerConCuposDesdeSeguridad } from "./helpers/HelperSeguridad.js";
 import DialogTrabajoEnRevision from "./components/DialogTrabajoEnRevision";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Chat from "./components/PWBot/Chat";
+import DevTools from "./components/configuraciones/DevTools";
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
   const [showContacto, setShowContacto] = useState(false);
   const [showArrow, setShowArrow] = useState(false);
   const [openBubble, setOpenBubble] = useState(false);
@@ -46,6 +49,8 @@ function App() {
   const [openChat, setOpenChat] = useState(false);
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
   const isMmansouletRoute = location.pathname === "/mmansoulet";
+  const ADMIN_ROUTES = ["/configurar-trabajos", "/dashboard", "/clientes", "/reservas", "/configurar-servicios", "/configurar-en-revision"];
+  const isAdminRoute = ADMIN_ROUTES.includes(location.pathname);
 
   //EFECTO CAMBIAR DE RUTA
   useEffect(() => {
@@ -345,7 +350,7 @@ function App() {
         }}
       >
         {/* Navbar solo si no estás en /administracion */}
-        {location.pathname !== "/administracion" && !isMmansouletRoute && (
+        {location.pathname !== "/administracion" && location.pathname !== "/configurar-trabajos" && location.pathname !== "/dashboard" && location.pathname !== "/clientes" && location.pathname !== "/reservas" && location.pathname !== "/configurar-servicios" && location.pathname !== "/configurar-en-revision" && !isMmansouletRoute && (
           <Suspense fallback={null}>
             <Navbar contactoRef={contactoRef} informationsRef={informationsRef} videoReady={videoReady} />
           </Suspense>
@@ -749,6 +754,16 @@ function App() {
           </Button>
         </DialogActions>
       </Dialog>
+      {isAdminRoute && (
+        <DevTools
+          label={location.pathname.replace("/", "")}
+          checks={[
+            { label: "Sesión", status: sessionStorage.getItem("usuario") ? "ok" : "warn", detail: (() => { try { return JSON.parse(sessionStorage.getItem("usuario") || "{}").nombre || "—"; } catch { return "—"; } })() },
+            { label: "Supabase", status: "ok", detail: "conectado" },
+            { label: "Ambiente", status: "ok", detail: "QAS" },
+          ]}
+        />
+      )}
     </ThemeProvider >
   );
 }

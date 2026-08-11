@@ -18,7 +18,7 @@ import DialogClientesPaseMensual from "./DialogClientesPaseMensual";
 import DialogAgregarCliente from "./DialogAgregarCliente";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import * as XLSX from "xlsx";
+import { supabase } from "../../supabase/client";
 
 const baseDelay = 1.5; // segundos antes de comenzar la animaciÃ³n
 const letterDelay = 0.04;
@@ -222,41 +222,31 @@ const Clientes = () => {
         }));
 
         try {
-          // 2. Intentar cargar PaseMensual.xlsx
-          const resp = await fetch(
-            `https://plataformas-web-buckets.s3.us-east-2.amazonaws.com/PaseMensual.xlsx?t=${Date.now()}`
-          );
-          if (resp.ok) {
-            const buffer = await resp.arrayBuffer();
-            const workbook = XLSX.read(buffer, { type: "buffer" });
-            const hoja = workbook.Sheets[workbook.SheetNames[0]];
-            const paseMensual = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+          // 2. Cargar pase_mensual desde Supabase
+          const { data: paseMensual, error: pmError } = await supabase
+            .from('pase_mensual')
+            .select('sitio_web, compartir_anuncio, pagar_suscripcion_antes, conexion_mensual, visitas_mensual, conseguir_cliente');
 
+          if (!pmError && paseMensual) {
             // 3. Hacer el "left join"
             clientesConEstado = clientesConEstado.map((c) => {
               const filaPase = paseMensual.find(
-                (row) => String(row.SitioWeb || "").trim() === String(c.sitioWeb || "").trim()
+                (row) => String(row.sitio_web || "").trim() === String(c.sitioWeb || "").trim()
               );
 
-              let enRevision = false;
-              if (filaPase) {
-                enRevision =
-                  parseInt(filaPase.CompartirAnuncio) === 1 ||
-                  parseInt(filaPase.PagarSuscripcionAntes) === 1 ||
-                  parseInt(filaPase.ConexionMensual) === 1 ||
-                  parseInt(filaPase.VisitasMensual) === 1 ||
-                  parseInt(filaPase.ConseguirCliente) === 1;
-              } else {
-                console.warn(`⚠️ No match para cliente: ${c.sitioWeb}`);
-              }
+              const enRevision = filaPase
+                ? filaPase.compartir_anuncio === true ||
+                  filaPase.pagar_suscripcion_antes === true ||
+                  filaPase.conexion_mensual === true ||
+                  filaPase.visitas_mensual === true ||
+                  filaPase.conseguir_cliente === true
+                : false;
 
               return { ...c, enRevision };
             });
-          } else {
-            console.warn("⚠️ No se pudo cargar PaseMensual.xlsx, seguimos sin enRevision");
           }
         } catch (err) {
-          console.warn("⚠️ Error cargando PaseMensual.xlsx:", err);
+          console.warn("⚠️ Error cargando pase_mensual:", err);
         }
 
         // 4. Guardar en estado
@@ -866,8 +856,18 @@ const Clientes = () => {
       }}
     >
 
-      {/* ── Indicadores ── */}
-      <Box sx={{ display: "flex", gap: 1.5, mb: 2, width: "100%", px: isMobile ? 1.5 : 0, justifyContent: "center", alignItems: "stretch" }}>
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: isMobile ? "100%" : "80%",
+          px: isMobile ? 1 : 4,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+
+        {/* ── Indicadores ── */}
         {(() => {
           const total = clientes.length || 1;
           const cobrados = clientes.filter(esPagado).length;
@@ -875,7 +875,7 @@ const Clientes = () => {
           const pctCobrado = Math.round((cobrados / total) * 100);
 
           return (
-            <>
+            <Box sx={{ display: "flex", gap: 1.5, mb: 2, width: isMobile ? "100%" : "70%", alignItems: "stretch" }}>
               {/* Recaudado */}
               <Box sx={{
                 flex: "1 1 0", width: 0,
@@ -895,7 +895,6 @@ const Clientes = () => {
                 }} />
 
                 <Box sx={{ px: 1.5, pt: 0.6, pb: 0.4, position: "relative", zIndex: 1 }}>
-                  {/* Header */}
                   <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.3 }}>
                     <Typography sx={{ fontSize: "0.6rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.7px" }}>
                       Recaudado · {mesCapitalizado}
@@ -904,18 +903,12 @@ const Clientes = () => {
                       💰
                     </Box>
                   </Box>
-
-                  {/* Monto */}
                   <ContadorGanado valorFinal={totalGanado} valorInicial={totalGanadoAnterior} tipoCambio={tipoCambioVisual} />
-
-                  {/* Barra progreso */}
                   <Box sx={{ mt: 0.4, mb: 0.3 }}>
                     <Box sx={{ height: 3, borderRadius: 99, bgcolor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
                       <Box sx={{ height: "100%", width: `${pctCobrado}%`, borderRadius: 99, bgcolor: "rgba(255,255,255,0.6)", transition: "width 0.6s ease" }} />
                     </Box>
                   </Box>
-
-                  {/* Footer */}
                   <Typography sx={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
                     {cobrados} de {total} cobrados · {pctCobrado}%
                   </Typography>
@@ -932,7 +925,6 @@ const Clientes = () => {
                 position: "relative", overflow: "hidden",
               }}>
                 <Box sx={{ px: 1.5, pt: 0.6, pb: 0.4, position: "relative", zIndex: 1 }}>
-                  {/* Header */}
                   <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.3 }}>
                     <Typography sx={{ fontSize: "0.6rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.7px" }}>
                       Por cobrar
@@ -941,42 +933,24 @@ const Clientes = () => {
                       ⏳
                     </Box>
                   </Box>
-
-                  {/* Monto */}
                   <Typography fontWeight={800} sx={{ fontSize: "1rem", lineHeight: 1.3, color: "#fff", letterSpacing: "-0.3px" }}>
                     ${totalDeuda.toLocaleString("es-CL")}
                     <Typography component="span" sx={{ fontSize: "0.6rem", fontWeight: 500, color: "rgba(255,255,255,0.5)", ml: 0.5 }}>CLP</Typography>
                   </Typography>
-
-                  {/* Barra progreso invertida */}
                   <Box sx={{ mt: 0.4, mb: 0.3 }}>
                     <Box sx={{ height: 3, borderRadius: 99, bgcolor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
                       <Box sx={{ height: "100%", width: `${100 - pctCobrado}%`, borderRadius: 99, bgcolor: "rgba(255,255,255,0.6)", transition: "width 0.6s ease" }} />
                     </Box>
                   </Box>
-
-                  {/* Footer */}
                   <Typography sx={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
                     {pendientes} pendiente{pendientes !== 1 ? "s" : ""} · {100 - pctCobrado}%
                   </Typography>
                 </Box>
               </Box>
-            </>
+            </Box>
           );
         })()}
-      </Box>
 
-
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: isMobile ? "100%" : "80%",
-          px: isMobile ? 1 : 4,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
         {/* 🔹 Contenedor del título + botón */}
         <Box
           display="flex"

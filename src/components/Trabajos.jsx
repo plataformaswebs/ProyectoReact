@@ -70,7 +70,7 @@ const BarraAnimada = ({ porcentaje }) => {
 
 
 const Trabajos = ({ trabajo }) => {
-  const porcentaje = Math.min(100, Math.max(0, trabajo.Porcentaje || 0));
+  const porcentaje = Math.min(100, Math.max(0, trabajo.porcentaje || 0));
 
   const getColor = (val) => {
     if (val < 20) return "#e57373";
@@ -93,7 +93,7 @@ const Trabajos = ({ trabajo }) => {
       >
         <Typography
           component="a"
-          href={`https://${trabajo.SitioWeb}`}
+          href={`https://${trabajo.sitio_web}`}
           target="_blank"
           rel="noopener noreferrer"
           sx={{
@@ -109,9 +109,9 @@ const Trabajos = ({ trabajo }) => {
               textDecoration: porcentaje === 100 ? "underline" : "none" // 👈 subrayado solo si está 100%
             }
           }}
-          title={trabajo.SitioWeb}
+          title={trabajo.sitio_web}
         >
-          {trabajo.SitioWeb}
+          {trabajo.sitio_web}
         </Typography>
 
 

@@ -12,7 +12,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
 import DialogPaseMensual from "./DialogPaseMensual";
-import MenuInferior from './configuraciones/MenuInferior';
+import NavbarAdmin from './configuraciones/NavbarAdmin';
+import SidebarAdmin from './configuraciones/SidebarAdmin';
 
 const Contador = ({ valorFinal, texto, subtexto, delay = 0, variant = "h5", iniciar }) => {
     const [valor, setValor] = useState(0);
@@ -131,6 +132,10 @@ const Dashboard = () => {
     const [analyticsDisponible, setAnalyticsDisponible] = useState(true);
     const [conCupos, setConCupos] = useState(() => localStorage.getItem("ConCupos") === "true");
     const [guardandoConCupos, setGuardandoConCupos] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [temaOscuro, setTemaOscuro] = useState(() => localStorage.getItem("pw-tema") !== "claro");
+    const handleTema = (oscuro) => { setTemaOscuro(oscuro); localStorage.setItem("pw-tema", oscuro ? "oscuro" : "claro"); };
+    const [forzarPrd, setForzarPrd] = useState(false);
 
     //GOOGLE ANALYTICS
     useEffect(() => {
@@ -268,16 +273,26 @@ const Dashboard = () => {
 
 
     return (
-        <Box
-            sx={{
-                height: isMobile ? "100dvh" : "100vh",
-                width: "100vw",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                overflow: "hidden",
-            }}
-        >
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+            <NavbarAdmin
+                titulo="Dashboard"
+                temaOscuro={temaOscuro}
+                onMenuClick={() => setSidebarOpen(p => !p)}
+                forzarPrd={forzarPrd}
+                onForzarPrd={setForzarPrd}
+            />
+            <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+                <SidebarAdmin open={sidebarOpen} temaOscuro={temaOscuro} onTemaChange={handleTema} onClose={() => setSidebarOpen(false)} esPrd={forzarPrd} />
+                <Box
+                    sx={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        overflow: "hidden",
+                        position: "relative",
+                    }}
+                >
             {/* Mitad superior: video de fondo */}
             <Box
                 sx={{
@@ -330,7 +345,7 @@ const Dashboard = () => {
                 }}
             />
 
-            <Grid item sx={{ pt: isMobile ? 11 : 11 }}>
+            <Grid item sx={{ pt: isMobile ? 3 : 3 }}>
                 <Box
                     sx={{
                         display: "flex",
@@ -822,7 +837,6 @@ const Dashboard = () => {
                 </Grid>
 
 
-                <MenuInferior cardSize={cardSize} modo="dashboard" />
 
 
 
@@ -852,8 +866,9 @@ const Dashboard = () => {
                 analyticsDisponible={analyticsDisponible}
             />*/}
 
-        </Box >
-
+                </Box>
+            </Box>
+        </Box>
     );
 };
 

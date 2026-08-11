@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { supabase } from "../../supabase/client";
 import { Snackbar, Alert, Slider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, IconButton, Slide, Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
@@ -90,24 +91,22 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
 
     try {
       setLoading(true);
+      window.dispatchEvent(new CustomEvent("devtools-status", { detail: { message: modoEditar ? "Guardando trabajo..." : "Creando trabajo..." } }));
 
       if (modoEditar) {
-        const response = await fetch(`${base}/.netlify/functions/actualizarTrabajo`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            SitioWeb: trabajoEditar.SitioWeb,
-            nuevoNombre: form.trabajo,
-            nuevoTipoApp: form.tipoApp,
-            nuevoPorcentaje: Number(form.progreso),
-            nuevoNombreCliente: form.nombreCliente,
-            nuevoEmailCliente: form.emailCliente,
-            nuevoTelefonoCliente: form.telefonoCliente,
-            nuevoLogoCliente: form.logoCliente,
-          }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Error al editar");
+        const { error } = await supabase
+          .from("trabajos")
+          .update({
+            sitio_web: form.trabajo,
+            tipo_app: Number(form.tipoApp),
+            porcentaje: Number(form.progreso),
+            nombre_cliente: form.nombreCliente,
+            email_cliente: form.emailCliente,
+            telefono_cliente: form.telefonoCliente,
+            logo_cliente: form.logoCliente,
+          })
+          .eq("sitio_web", trabajoEditar.SitioWeb);
+        if (error) throw new Error(error.message);
       } else {
         const response = await fetch(`${base}/.netlify/functions/agregarTrabajo`, {
           method: "POST",
@@ -126,6 +125,7 @@ export default function DialogAgregarTrabajo({ open, onClose, onSave, trabajoIni
       setSnackbar({ open: true, type: "error", message: "Hubo un problema al guardar el trabajo." });
     } finally {
       setLoading(false);
+      window.dispatchEvent(new CustomEvent("devtools-status", { detail: { message: "" } }));
     }
   };
 

@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { cargarClientesDesdeExcel } from "../helpers/HelperClientes";
+import { supabase } from "../supabase/client";
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 
 const PAYPAL_TEST_CLIENT_IDS = new Set([1, 8, 9]);
@@ -35,7 +35,7 @@ export default function DialogOneClickMall({
   const [sitioValido, setSitioValido] = useState(false);
   const [cliente, setCliente] = useState(null);
   const [isRedirecting, setIsRedirecting] = useState(false);  // Estado para controlar la redirecciÃ³n
-  const esInternacional = Number(cliente?.clienteInternacional) === 1;
+  const esInternacional = cliente?.internacional === true;
   const esClientePaypalPrueba = PAYPAL_TEST_CLIENT_IDS.has(Number(cliente?.idCliente));
 
   useEffect(() => {
@@ -93,12 +93,17 @@ export default function DialogOneClickMall({
         .toLowerCase()
         .trim();
 
-      const listaClientes = await cargarClientesDesdeExcel();
+      const { data: listaClientes, error: dbError } = await supabase
+        .from('clientes')
+        .select('id, nombre, correo, sitio_web, logo_url, internacional')
+        .eq('estado', true);
 
-      const encontrado = listaClientes.find((c) => {
-        if (!c.sitioWeb) return false;
+      if (dbError) throw dbError;
 
-        const dominioCliente = c.sitioWeb
+      const encontrado = (listaClientes || []).find((c) => {
+        if (!c.sitio_web) return false;
+
+        const dominioCliente = c.sitio_web
           .replace(/^https?:\/\//, "")
           .replace(/^www\./, "")
           .replace(/\/$/, "")
@@ -114,29 +119,22 @@ export default function DialogOneClickMall({
 
       if (!encontrado) {
         console.warn("Cliente NO encontrado para dominio:", dominioIngresado);
-        setError("No se encontrado el Cliente en la base de datos.");
+        setError("No se encontró el Cliente en la base de datos.");
         return;
       }
 
-      const clienteInternacionalSeguro =
-        encontrado.clienteInternacional === 1 ||
-          encontrado.clienteInternacional === "1" ||
-          String(encontrado.clienteInternacional).toLowerCase() === "true"
-          ? 1
-          : 0;
-
       console.log(
-        `VALIDACIÓN EXITOSA ID: ${encontrado.idCliente} | Cliente: ${encontrado.cliente} | Internacional: ${clienteInternacionalSeguro}`
+        `VALIDACIÓN EXITOSA ID: ${encontrado.id} | Cliente: ${encontrado.nombre} | Internacional: ${encontrado.internacional}`
       );
 
       setCliente({
-        nombre: encontrado.cliente,
+        nombre: encontrado.nombre,
         correo: encontrado.correo,
-        idCliente: encontrado.idCliente,
-        logoCliente: encontrado.logoCliente,
-        clienteInternacional: clienteInternacionalSeguro,
+        idCliente: encontrado.id,
+        logoCliente: encontrado.logo_url,
+        internacional: encontrado.internacional === true,
         paypalPlanMode:
-          clienteInternacionalSeguro === 1 && PAYPAL_TEST_CLIENT_IDS.has(Number(encontrado.idCliente))
+          encontrado.internacional === true && PAYPAL_TEST_CLIENT_IDS.has(Number(encontrado.id))
             ? "test"
             : "standard",
       });

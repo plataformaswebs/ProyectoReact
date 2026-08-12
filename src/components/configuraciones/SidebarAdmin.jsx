@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Box, Typography, List, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Divider, useMediaQuery, useTheme } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
@@ -42,6 +42,8 @@ export default function SidebarAdmin({ open, temaOscuro = true, onTemaChange, on
   const email  = usuario.email || "";
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [appsAnchor, setAppsAnchor] = useState(null);
+  const [transitionEnabled, setTransitionEnabled] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setTransitionEnabled(true), 50); return () => clearTimeout(t); }, []);
   const t = temaOscuro;
   const mobileWidth = Math.min(window.innerWidth * 0.82, 300);
   const isPrd = IS_PROD || esPrd;
@@ -88,14 +90,14 @@ export default function SidebarAdmin({ open, temaOscuro = true, onTemaChange, on
         width: open ? W : 0,
         minWidth: 0,
         overflow: "hidden",
-        transition: "width 0.25s ease",
+        transition: transitionEnabled ? "width 0.25s ease" : "none",
         zIndex: 200,
       } : {
         width: open ? SIDEBAR_WIDTH : 0,
         minWidth: 0,
         flexShrink: 0,
         overflow: "hidden",
-        transition: "width 0.25s ease",
+        transition: transitionEnabled ? "width 0.25s ease" : "none",
         height: "100%",
         zIndex: 100,
         borderRight: `1px solid ${C.border}`,

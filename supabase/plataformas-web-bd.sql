@@ -185,3 +185,14 @@ create policy "allow_all_reservas"             on reservas              for all 
 create policy "allow_all_suscripciones_paypal" on suscripciones_paypal  for all using (true) with check (true);
 create policy "allow_all_tokens_tbk"           on tokens_tbk            for all using (true) with check (true);
 create policy "allow_all_config"               on config                for all using (true) with check (true);
+
+-- ============================================================
+-- FUNCIONES
+-- ============================================================
+
+create or replace function GET_CLIENTES()
+returns setof clientes
+language sql
+as $$
+  select * from clientes;
+$$;

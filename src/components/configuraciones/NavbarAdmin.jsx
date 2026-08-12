@@ -91,7 +91,7 @@ export default function NavbarAdmin({ titulo, onMenuClick, accion, temaOscuro = 
             component="img"
             src="/logo-plataformas-web.png"
             alt="Logo"
-            sx={{ height: 26, objectFit: "contain", filter: tc ? "brightness(0) invert(1)" : "none", opacity: tc ? 0.75 : 0.85, transition: "opacity 0.15s", "&:hover": { opacity: 1 } }}
+            sx={{ height: 26, objectFit: "contain", filter: tc ? "brightness(0) invert(1)" : "none", opacity: 1, transition: "opacity 0.15s", "&:hover": { opacity: 0.85 } }}
           />
         </Box>
       </Box>

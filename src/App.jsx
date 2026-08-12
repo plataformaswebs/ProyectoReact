@@ -170,7 +170,7 @@ function App() {
   // ⏳ CARGANDO
   useEffect(() => {
 
-    if (["/dashboard", "/administracion"].includes(location.pathname)) {
+    if (ADMIN_ROUTES.includes(location.pathname) || location.pathname === "/administracion") {
       setShowApp(true);
       return;
     }
@@ -360,7 +360,7 @@ function App() {
         <Box sx={{ position: "relative" }}>
           <Outlet context={{ showApp, informationsRef, triggerInformations, setHasSeenInformations }} />
 
-          {isFading && (
+          {isFading && !isAdminRoute && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

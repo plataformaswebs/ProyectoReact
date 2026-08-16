@@ -1,0 +1,17 @@
+trigger:
+  - master
+
+pool:
+  vmImage: "ubuntu-latest"
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "20.x"
+    displayName: "Install Node.js"
+
+  - script: cd backend && npm install
+    displayName: "Instalar dependencias"
+
+  - script: cd backend && npm test
+    displayName: "Ejecutar tests"
